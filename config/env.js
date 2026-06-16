@@ -14,10 +14,6 @@ const env = {
   mongoUri: process.env.MONGODB_URI || '',
   sessionSecret: process.env.SESSION_SECRET || 'change-this-development-secret',
   sessionTtlDays: Number(process.env.SESSION_TTL_DAYS || 7),
-  turnstile: {
-    siteKey: process.env.TURNSTILE_SITE_KEY || '',
-    secretKey: process.env.TURNSTILE_SECRET_KEY || ''
-  },
   smtp: {
     host: process.env.SMTP_HOST || '',
     port: Number(process.env.SMTP_PORT || 587),

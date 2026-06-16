@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
-const { verifyTurnstile } = require('../services/captchaService');
+const { createCaptchaId, renderCaptchaSvg, verifyTextCaptcha } = require('../services/captchaService');
 const { issueOtp, verifyOtp } = require('../services/otpService');
 const emailService = require('../services/emailService');
 const { getClientInfo } = require('../utils/device');
@@ -13,8 +13,18 @@ function validationOrThrow(req) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) throw new AppError(errors.array()[0].msg, 400, 'VALIDATION_ERROR');
 }
-function renderRegister(req, res) { res.render('auth/register', { title: 'Daftar', form: {} }); }
-function renderLogin(req, res) { res.render('auth/login', { title: 'Login', form: {} }); }
+function verifyCaptchaOrRedirect(req, res, redirectTo) {
+  try {
+    verifyTextCaptcha(req, req.body.captchaId, req.body.captchaText);
+    return true;
+  } catch (error) {
+    req.flash('error', error.message);
+    res.redirect(redirectTo);
+    return false;
+  }
+}
+function renderRegister(req, res) { res.render('auth/register', { title: 'Daftar', form: {}, captchaId: createCaptchaId() }); }
+function renderLogin(req, res) { res.render('auth/login', { title: 'Login', form: {}, captchaId: createCaptchaId() }); }
 function renderOtp(req, res) {
   const flow = req.params.flow;
   const pending = flow === 'register' ? req.session.pendingRegister : flow === 'login' ? req.session.pendingLogin : req.session.pendingReset;
@@ -24,7 +34,7 @@ function renderOtp(req, res) {
 
 async function register(req, res) {
   validationOrThrow(req);
-  await verifyTurnstile(req.body['cf-turnstile-response'], req.ip);
+  if (!verifyCaptchaOrRedirect(req, res, '/auth/register')) return;
   const { name, email, password } = req.body;
   const normalized = email.toLowerCase();
   let user = await User.findOne({ email: normalized }).select('+passwordHash');
@@ -40,7 +50,7 @@ async function register(req, res) {
 
 async function login(req, res) {
   validationOrThrow(req);
-  await verifyTurnstile(req.body['cf-turnstile-response'], req.ip);
+  if (!verifyCaptchaOrRedirect(req, res, '/auth/login')) return;
   const email = req.body.email.toLowerCase();
   const user = await User.findOne({ email }).select('+passwordHash');
   const invalid = () => { throw new AppError('Email atau password salah.', 401, 'INVALID_CREDENTIALS'); };
@@ -112,10 +122,10 @@ async function resendOtp(req, res) {
   res.redirect(`/auth/otp/${flow}`);
 }
 
-function renderForgot(req, res) { res.render('auth/forgot-password', { title: 'Lupa password' }); }
+function renderForgot(req, res) { res.render('auth/forgot-password', { title: 'Lupa password', captchaId: createCaptchaId() }); }
 async function forgot(req, res) {
   validationOrThrow(req);
-  await verifyTurnstile(req.body['cf-turnstile-response'], req.ip);
+  if (!verifyCaptchaOrRedirect(req, res, '/auth/forgot-password')) return;
   const email = req.body.email.toLowerCase();
   const user = await User.findOne({ email }).select('+passwordHash');
   let resetStarted = false;
@@ -150,5 +160,6 @@ async function resetPassword(req, res) {
   req.flash('success', 'Password berhasil diubah. Silakan login kembali.');
   res.redirect('/auth/login');
 }
+async function captchaImage(req, res) { await renderCaptchaSvg(req, res); }
 function logout(req, res) { req.session.destroy(() => res.redirect('/')); }
-module.exports = { renderRegister, renderLogin, renderOtp, register, login, verifyOtpFlow, resendOtp, renderForgot, forgot, renderReset, resetPassword, logout, establishLogin };
+module.exports = { captchaImage, renderRegister, renderLogin, renderOtp, register, login, verifyOtpFlow, resendOtp, renderForgot, forgot, renderReset, resetPassword, logout, establishLogin };

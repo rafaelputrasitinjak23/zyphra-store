@@ -6,7 +6,6 @@ function localsMiddleware(req, res, next) {
   res.locals.rupiah = rupiah;
   res.locals.formatDate = formatDate;
   res.locals.appUrl = env.appUrl;
-  res.locals.turnstileSiteKey = env.turnstile.siteKey;
   next();
 }
 module.exports = { localsMiddleware };

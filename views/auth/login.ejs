@@ -10,7 +10,7 @@
       <label>Email<input type="email" name="email" required autocomplete="email"></label>
       <label>Password<input type="password" name="password" required autocomplete="current-password"></label>
       <div class="form-between"><span></span><a href="/auth/forgot-password">Lupa password?</a></div>
-      <% if (turnstileSiteKey) { %><div class="cf-turnstile" data-sitekey="<%= turnstileSiteKey %>"></div><% } %>
+      <%- include('../partials/captcha', { captchaId }) %>
       <button class="button button-block" type="submit">Login dan kirim OTP</button>
     </form>
     <p class="auth-foot">Belum punya akun? <a href="/auth/register">Daftar</a></p>

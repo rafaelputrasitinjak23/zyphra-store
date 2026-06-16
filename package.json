@@ -1,8 +1,8 @@
 {
   "name": "zyphra-store",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
-  "description": "E-commerce produk digital dengan Express, MongoDB, autentikasi email, OTP, Turnstile, dan Pakasir.",
+  "description": "E-commerce produk digital dengan Express, MongoDB, autentikasi email, OTP, CAPTCHA teks, dan Pakasir.",
   "main": "server.js",
   "engines": {
     "node": ">=20"
