@@ -5,6 +5,7 @@ const { webhookEventKey } = require('../utils/webhook');
 const { authorizeOrderItem } = require('../services/downloadService');
 const { priceCartRow } = require('../services/cartService');
 const { AUTH_REQUIREMENTS, requirementsFor } = require('../services/authPolicy');
+const { createCaptchaId, generateCaptchaCode, renderCaptchaSvg, verifyTextCaptcha } = require('../services/captchaService');
 
 test('OTP kedaluwarsa ditolak', () => {
   assert.equal(isOtpUsable({ expiresAt: new Date(Date.now() - 1), consumedAt: null, attempts: 0, maxAttempts: 5 }), false);
@@ -40,4 +41,31 @@ test('autentikasi hanya menyediakan login email dengan CAPTCHA, password, dan OT
   assert.deepEqual(Object.keys(AUTH_REQUIREMENTS), ['email']);
   assert.deepEqual(requirementsFor('email'), { captcha: true, password: true, otp: true });
   assert.equal(requirementsFor('social'), null);
+});
+
+
+test('CAPTCHA teks menghasilkan kode yang mudah diketik', () => {
+  const id = createCaptchaId();
+  const code = generateCaptchaCode();
+  assert.match(id, /^[a-f0-9]{32}$/);
+  assert.match(code, /^[A-HJ-NP-Z2-9]{5}$/);
+});
+
+test('CAPTCHA teks valid hanya dapat digunakan sekali', async () => {
+  const id = createCaptchaId();
+  const session = {
+    save(callback) { callback(); }
+  };
+  const req = { query: { id }, session };
+  let svg = '';
+  const res = {
+    set() { return this; },
+    send(value) { svg = value; return this; }
+  };
+
+  await renderCaptchaSvg(req, res);
+  const code = [...svg.matchAll(/<text[^>]*>([A-Z2-9])<\/text>/g)].map((match) => match[1]).join('');
+  assert.equal(code.length, 5);
+  assert.equal(verifyTextCaptcha(req, id, code.toLowerCase()), true);
+  assert.throws(() => verifyTextCaptcha(req, id, code), /tidak ditemukan|sudah digunakan/);
 });

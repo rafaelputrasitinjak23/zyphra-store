@@ -4,6 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const auth = require('../controllers/authController');
 const { authLimiter, otpLimiter } = require('../middlewares/rateLimits');
 const passwordRule = body('password').matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/).withMessage('Password minimal 8 karakter dan harus memiliki huruf besar, kecil, dan angka.');
+router.get('/captcha.svg', asyncHandler(auth.captchaImage));
 router.get('/register', auth.renderRegister);
 router.post('/register', authLimiter, body('name').trim().isLength({ min: 2, max: 80 }).withMessage('Nama harus 2-80 karakter.'), body('email').isEmail().normalizeEmail().withMessage('Email tidak valid.'), passwordRule, body('confirmPassword').custom((value, { req }) => value === req.body.password).withMessage('Konfirmasi password tidak cocok.'), asyncHandler(auth.register));
 router.get('/login', auth.renderLogin);
