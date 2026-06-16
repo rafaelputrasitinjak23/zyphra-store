@@ -6,7 +6,6 @@ const helmet = require('helmet');
 const compression = require('compression');
 const methodOverride = require('method-override');
 const expressLayouts = require('express-ejs-layouts');
-const passport = require('./config/passport');
 const { env } = require('./config/env');
 const { connectDatabase } = require('./config/database');
 const { flashMiddleware } = require('./middlewares/flash');
@@ -14,6 +13,7 @@ const { csrfMiddleware } = require('./middlewares/csrf');
 const { localsMiddleware } = require('./middlewares/locals');
 const { sanitizeBody } = require('./middlewares/sanitize');
 const { globalLimiter } = require('./middlewares/rateLimits');
+const { attachUser } = require('./middlewares/auth');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 const asyncHandler = require('./utils/asyncHandler');
 const productController = require('./controllers/productController');
@@ -36,8 +36,7 @@ app.use(session({
   store: MongoStore.create({ mongoUrl: env.mongoUri, collectionName: 'sessions', ttl: env.sessionTtlDays * 86400, autoRemove: 'native' }),
   cookie: { httpOnly: true, secure: env.isProduction, sameSite: 'lax', maxAge: env.sessionTtlDays * 86400000 }
 }));
-app.use(passport.initialize());
-app.use(passport.session());
+app.use(attachUser);
 app.use(flashMiddleware);
 app.use(localsMiddleware);
 app.use(sanitizeBody);

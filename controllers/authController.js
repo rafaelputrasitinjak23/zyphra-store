@@ -66,11 +66,9 @@ async function establishLogin(req, user) {
   return new Promise((resolve, reject) => {
     req.session.regenerate((regenError) => {
       if (regenError) return reject(regenError);
-      req.login(user, (loginError) => {
-        if (loginError) return reject(loginError);
-        req.session.authVersion = user.sessionVersion;
-        req.session.save((saveError) => saveError ? reject(saveError) : resolve(returnTo));
-      });
+      req.session.userId = String(user._id);
+      req.session.authVersion = user.sessionVersion;
+      req.session.save((saveError) => saveError ? reject(saveError) : resolve(returnTo));
     });
   });
 }
@@ -121,7 +119,7 @@ async function forgot(req, res) {
   const email = req.body.email.toLowerCase();
   const user = await User.findOne({ email }).select('+passwordHash');
   let resetStarted = false;
-  if (user && user.status === 'active' && user.passwordHash) {
+  if (user && user.status === 'active') {
     try {
       await issueOtp({ user, email, purpose: 'password_reset' });
       req.session.pendingReset = { userId: String(user._id), email };
@@ -152,5 +150,5 @@ async function resetPassword(req, res) {
   req.flash('success', 'Password berhasil diubah. Silakan login kembali.');
   res.redirect('/auth/login');
 }
-function logout(req, res, next) { req.logout((error) => { if (error) return next(error); req.session.destroy(() => res.redirect('/')); }); }
+function logout(req, res) { req.session.destroy(() => res.redirect('/')); }
 module.exports = { renderRegister, renderLogin, renderOtp, register, login, verifyOtpFlow, resendOtp, renderForgot, forgot, renderReset, resetPassword, logout, establishLogin };
