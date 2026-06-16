@@ -1,0 +1,1 @@
+<section class="error-page"><div><span class="error-code"><%= status %></span><h1>Terjadi kesalahan</h1><p><%= message %></p><a class="button" href="/">Kembali ke beranda</a><% if (stack) { %><details class="debug"><summary>Detail development</summary><pre><%= stack %></pre></details><% } %></div></section>

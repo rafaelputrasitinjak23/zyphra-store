@@ -1,0 +1,1 @@
+const router = require('express').Router(); const asyncHandler = require('../utils/asyncHandler'); const c = require('../controllers/downloadController'); const { requireAuth } = require('../middlewares/auth'); router.use(requireAuth); router.get('/:orderId/:productId/token', asyncHandler(c.token)); router.get('/file', asyncHandler(c.file)); module.exports = router;

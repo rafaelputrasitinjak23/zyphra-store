@@ -1,0 +1,1 @@
+const router = require('express').Router(); const asyncHandler = require('../utils/asyncHandler'); const { webhook } = require('../controllers/paymentController'); router.post('/pakasir', asyncHandler(webhook)); module.exports = router;

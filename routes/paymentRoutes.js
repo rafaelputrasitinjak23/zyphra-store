@@ -1,0 +1,1 @@
+const router = require('express').Router(); const asyncHandler = require('../utils/asyncHandler'); const c = require('../controllers/paymentController'); const { requireAuth } = require('../middlewares/auth'); router.use(requireAuth); router.get('/:orderNumber', asyncHandler(c.show)); router.post('/:orderNumber/check', asyncHandler(c.check)); module.exports = router;
