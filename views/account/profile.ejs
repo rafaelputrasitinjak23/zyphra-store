@@ -1,1 +1,36 @@
-<section class="page-head"><div class="container"><span class="eyebrow">PROFIL</span><h1>Pengaturan akun</h1></div></section><section class="section pt-small"><div class="container settings-grid"><div class="panel"><h2>Profil</h2><form method="post" action="/account/profile" class="form-stack"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label>Nama<input name="name" value="<%= currentUser.name %>" required minlength="2" maxlength="80"></label><label>Email<input value="<%= currentUser.email %>" disabled></label><button class="button" type="submit">Simpan profil</button></form></div><div class="panel"><h2>Akun tertaut</h2><div class="provider-list"><% if (currentUser.providers?.length) { currentUser.providers.forEach(provider => { %><div><strong><%= provider.provider %></strong><span>Terhubung sejak <%= formatDate(provider.linkedAt) %></span></div><% }) } else { %><p class="muted">Belum ada akun OAuth tertaut.</p><% } %></div></div><div class="panel"><h2>Ubah password</h2><% if (!hasPassword) { %><p class="muted">Form ini hanya untuk akun yang sudah memiliki password manual.</p><% } %><form method="post" action="/account/password" class="form-stack"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label>Password saat ini<input type="password" name="currentPassword" required></label><label>Password baru<input type="password" name="newPassword" required minlength="8"></label><label>Konfirmasi password<input type="password" name="confirmPassword" required minlength="8"></label><button class="button" type="submit">Ubah password</button></form></div><div class="panel danger-panel"><h2>Logout seluruh perangkat</h2><p>Semua session aktif, termasuk perangkat ini, akan dinonaktifkan.</p><form method="post" action="/account/logout-all"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="button button-danger" type="submit">Logout seluruh perangkat</button></form></div></div></section>
+<section class="page-head"><div class="container"><span class="eyebrow">PROFIL</span><h1>Pengaturan akun</h1></div></section>
+<section class="section pt-small">
+  <div class="container settings-grid">
+    <div class="panel">
+      <h2>Profil</h2>
+      <form method="post" action="/account/profile" class="form-stack">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <label>Nama<input name="name" value="<%= currentUser.name %>" required minlength="2" maxlength="80"></label>
+        <label>Email<input value="<%= currentUser.email %>" disabled></label>
+        <button class="button" type="submit">Simpan profil</button>
+      </form>
+    </div>
+    <div class="panel">
+      <h2>Keamanan login</h2>
+      <p class="muted">Akun menggunakan email, password, CAPTCHA, dan OTP yang dikirim ke email saat login.</p>
+    </div>
+    <div class="panel">
+      <h2>Ubah password</h2>
+      <form method="post" action="/account/password" class="form-stack">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <label>Password saat ini<input type="password" name="currentPassword" required autocomplete="current-password"></label>
+        <label>Password baru<input type="password" name="newPassword" required minlength="8" autocomplete="new-password"></label>
+        <label>Konfirmasi password<input type="password" name="confirmPassword" required minlength="8" autocomplete="new-password"></label>
+        <button class="button" type="submit">Ubah password</button>
+      </form>
+    </div>
+    <div class="panel danger-panel">
+      <h2>Logout seluruh perangkat</h2>
+      <p>Semua session aktif, termasuk perangkat ini, akan dinonaktifkan.</p>
+      <form method="post" action="/account/logout-all">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="button button-danger" type="submit">Logout seluruh perangkat</button>
+      </form>
+    </div>
+  </div>
+</section>

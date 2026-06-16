@@ -1,1 +1,19 @@
-<section class="auth-section"><div class="auth-card"><div class="auth-heading"><span class="brand-mark">Z</span><h1>Buat akun</h1><p>Daftar dengan email dan verifikasi OTP.</p></div><form method="post" action="/auth/register" class="form-stack"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label>Nama<input name="name" required minlength="2" maxlength="80" autocomplete="name"></label><label>Email<input type="email" name="email" required autocomplete="email"></label><label>Password<input type="password" name="password" required minlength="8" autocomplete="new-password"><small>Minimal 8 karakter, huruf besar, kecil, dan angka.</small></label><label>Konfirmasi password<input type="password" name="confirmPassword" required autocomplete="new-password"></label><% if (turnstileSiteKey) { %><div class="cf-turnstile" data-sitekey="<%= turnstileSiteKey %>"></div><% } %><button class="button button-block" type="submit">Daftar dan kirim OTP</button></form><div class="divider"><span>atau</span></div><div class="oauth-grid"><a class="button button-ghost" href="/auth/google">Google</a><a class="button button-ghost" href="/auth/github">GitHub</a></div><p class="auth-foot">Sudah punya akun? <a href="/auth/login">Login</a></p></div></section>
+<section class="auth-section">
+  <div class="auth-card">
+    <div class="auth-heading">
+      <span class="brand-mark">Z</span>
+      <h1>Buat akun</h1>
+      <p>Daftar menggunakan email, password, CAPTCHA, dan verifikasi OTP.</p>
+    </div>
+    <form method="post" action="/auth/register" class="form-stack">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>Nama<input name="name" required minlength="2" maxlength="80" autocomplete="name"></label>
+      <label>Email<input type="email" name="email" required autocomplete="email"></label>
+      <label>Password<input type="password" name="password" required minlength="8" autocomplete="new-password"><small>Minimal 8 karakter, huruf besar, kecil, dan angka.</small></label>
+      <label>Konfirmasi password<input type="password" name="confirmPassword" required autocomplete="new-password"></label>
+      <% if (turnstileSiteKey) { %><div class="cf-turnstile" data-sitekey="<%= turnstileSiteKey %>"></div><% } %>
+      <button class="button button-block" type="submit">Daftar dan kirim OTP</button>
+    </form>
+    <p class="auth-foot">Sudah punya akun? <a href="/auth/login">Login</a></p>
+  </div>
+</section>

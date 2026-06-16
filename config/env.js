@@ -14,16 +14,6 @@ const env = {
   mongoUri: process.env.MONGODB_URI || '',
   sessionSecret: process.env.SESSION_SECRET || 'change-this-development-secret',
   sessionTtlDays: Number(process.env.SESSION_TTL_DAYS || 7),
-  google: {
-    clientId: process.env.GOOGLE_CLIENT_ID || '',
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    callbackUrl: process.env.GOOGLE_CALLBACK_URL || `${process.env.APP_URL || 'http://localhost:3000'}/auth/google/callback`
-  },
-  github: {
-    clientId: process.env.GITHUB_CLIENT_ID || '',
-    clientSecret: process.env.GITHUB_CLIENT_SECRET || '',
-    callbackUrl: process.env.GITHUB_CALLBACK_URL || `${process.env.APP_URL || 'http://localhost:3000'}/auth/github/callback`
-  },
   turnstile: {
     siteKey: process.env.TURNSTILE_SITE_KEY || '',
     secretKey: process.env.TURNSTILE_SECRET_KEY || ''
