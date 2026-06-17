@@ -28,6 +28,8 @@ router.get('/wallets', asyncHandler(controller.wallets));
 router.post('/wallets/:userId/adjust', asyncHandler(controller.adjustWallet));
 router.post('/wallets/:userId/status', asyncHandler(controller.updateWalletStatus));
 router.post('/users/:id', asyncHandler(controller.updateUser));
+router.get('/reviews', asyncHandler(controller.reviews));
+router.post('/reviews/:id/toggle', asyncHandler(controller.toggleReview));
 router.get('/orders', asyncHandler(controller.orders));
 router.get('/orders/:orderNumber', asyncHandler(controller.orderDetail));
 router.post('/orders/:orderNumber/recheck', asyncHandler(controller.recheckOrder));

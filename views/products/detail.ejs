@@ -11,6 +11,11 @@
       <div class="meta-row"><span class="badge"><%= product.category?.name %></span><span class="badge">v<%= product.version %></span></div>
       <h1><%= product.name %></h1>
       <p class="lead"><%= product.shortDescription %></p>
+      <a class="product-rating-summary" href="#reviews" aria-label="Lihat ulasan produk">
+        <span class="review-stars"><% for (let i = 1; i <= 5; i += 1) { %><span class="<%= i <= Math.round(product.ratingAverage || 0) ? 'active' : '' %>">★</span><% } %></span>
+        <strong><%= Number(product.ratingAverage || 0).toFixed(1) %></strong>
+        <span><%= reviewTotal %> ulasan</span>
+      </a>
       <div class="price-label">Harga produk</div>
       <div class="detail-price">
         <% if (pricing.compareAtPrice) { %><span class="old-price"><%= rupiah(pricing.compareAtPrice) %></span><% } %>
@@ -61,6 +66,80 @@
   <% if (product.instructions) { %><article class="panel"><h2>Instruksi penggunaan</h2><div class="prose preserve-lines"><%= product.instructions %></div></article><% } %>
 </div></section>
 <% } %>
+<section class="section section-soft" id="reviews">
+  <div class="container review-section">
+    <div class="section-head">
+      <div><span class="eyebrow">ULASAN PEMBELI</span><h2>Rating & pengalaman pembeli</h2></div>
+    </div>
+    <div class="review-layout">
+      <aside class="rating-overview panel">
+        <div class="rating-score"><strong><%= Number(product.ratingAverage || 0).toFixed(1) %></strong><span>/ 5</span></div>
+        <div class="review-stars review-stars-large"><% for (let i = 1; i <= 5; i += 1) { %><span class="<%= i <= Math.round(product.ratingAverage || 0) ? 'active' : '' %>">★</span><% } %></div>
+        <p>Berdasarkan <strong><%= reviewTotal %></strong> ulasan pembelian.</p>
+        <div class="rating-bars">
+          <% [5,4,3,2,1].forEach(star => { const count = ratingBreakdown[star] || 0; const percent = reviewTotal ? Math.round((count / reviewTotal) * 100) : 0; %>
+            <div><span><%= star %> ★</span><progress value="<%= percent %>" max="100"></progress><small><%= count %></small></div>
+          <% }) %>
+        </div>
+      </aside>
+
+      <div class="review-main">
+        <% if (currentUser && canReview) { %>
+          <form class="panel review-form" method="post" action="/reviews/products/<%= product._id %>">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="review-form-head"><div><span class="eyebrow">PEMBELIAN TERVERIFIKASI</span><h3><%= currentUserReview ? 'Perbarui ulasan Anda' : 'Bagikan pengalaman Anda' %></h3></div><span class="verified-review-badge">✓ Terverifikasi</span></div>
+            <% if (currentUserReview?.status === 'hidden') { %><div class="notice"><strong>Ulasan sedang disembunyikan</strong><p>Perubahan tetap dapat disimpan, tetapi status moderasi tidak berubah otomatis.</p></div><% } %>
+            <fieldset class="star-input">
+              <legend>Berikan rating</legend>
+              <% [5,4,3,2,1].forEach(star => { %>
+                <input id="rating-<%= star %>" type="radio" name="rating" value="<%= star %>" <%= Number(currentUserReview?.rating) === star ? 'checked' : '' %> required>
+                <label for="rating-<%= star %>" title="<%= star %> bintang">★</label>
+              <% }) %>
+            </fieldset>
+            <label class="review-textarea">Ulasan <small>Opsional, maksimal 1.200 karakter</small><textarea name="comment" rows="4" maxlength="1200" placeholder="Ceritakan pengalaman Anda menggunakan produk ini..."><%= currentUserReview?.comment || '' %></textarea></label>
+            <div class="review-form-actions"><button class="button" type="submit"><%= currentUserReview ? 'Simpan perubahan' : 'Kirim ulasan' %></button></div>
+          </form>
+          <% if (currentUserReview) { %>
+            <form class="review-delete-form" method="post" action="/reviews/<%= currentUserReview._id %>/delete" data-confirm="Hapus ulasan ini?">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="button button-ghost button-sm" type="submit">Hapus ulasan</button>
+            </form>
+          <% } %>
+        <% } else if (currentUser) { %>
+          <div class="panel review-eligibility"><h3>Ulasan pembelian</h3><p>Anda dapat memberikan rating setelah memiliki produk ini melalui pesanan yang berhasil.</p></div>
+        <% } else { %>
+          <div class="panel review-eligibility"><h3>Sudah menggunakan produk ini?</h3><p>Login dengan akun pembelian Anda untuk memberikan rating.</p><a class="button button-ghost button-sm" href="/auth/login">Login</a></div>
+        <% } %>
+
+        <% if (reviews.length) { %>
+          <div class="review-list">
+            <% reviews.forEach(review => { %>
+              <article class="review-card">
+                <div class="review-author">
+                  <div class="review-avatar"><% if (review.user?.avatar) { %><img src="<%= review.user.avatar %>" alt="Foto <%= review.user.name %>"><% } else { %><span><%= String(review.user?.name || 'P').charAt(0).toUpperCase() %></span><% } %></div>
+                  <div><strong><%= review.user?.name || 'Pembeli' %></strong><span class="verified-review-badge">✓ Pembelian terverifikasi</span></div>
+                  <time><%= formatDate(review.createdAt) %></time>
+                </div>
+                <div class="review-stars"><% for (let i = 1; i <= 5; i += 1) { %><span class="<%= i <= review.rating ? 'active' : '' %>">★</span><% } %></div>
+                <% if (review.comment) { %><p class="review-comment"><%= review.comment %></p><% } %>
+                <% if (String(review.user?._id) === String(currentUser?._id) && review.updatedAt > review.createdAt) { %><small class="review-edited">Diperbarui</small><% } %>
+              </article>
+            <% }) %>
+          </div>
+          <% if (reviewPagination.totalPages > 1) { %>
+            <nav class="pagination" aria-label="Halaman ulasan">
+              <a class="button button-sm button-ghost <%= reviewPagination.page <= 1 ? 'disabled' : '' %>" href="<%= reviewPagination.page > 1 ? `/products/${product.slug}?reviewPage=${reviewPagination.page - 1}#reviews` : '#' %>">Sebelumnya</a>
+              <span>Halaman <strong><%= reviewPagination.page %></strong> dari <strong><%= reviewPagination.totalPages %></strong></span>
+              <a class="button button-sm button-ghost <%= reviewPagination.page >= reviewPagination.totalPages ? 'disabled' : '' %>" href="<%= reviewPagination.page < reviewPagination.totalPages ? `/products/${product.slug}?reviewPage=${reviewPagination.page + 1}#reviews` : '#' %>">Berikutnya</a>
+            </nav>
+          <% } %>
+        <% } else { %>
+          <div class="empty compact"><h3>Belum ada ulasan</h3><p>Jadilah pembeli pertama yang memberikan rating.</p></div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</section>
 <% if (related?.length) { %>
 <section class="section"><div class="container"><div class="section-head"><div><span class="eyebrow">REKOMENDASI</span><h2>Produk terkait</h2></div></div><div class="product-grid"><% related.forEach(item => { %><%- include('../partials/product-card', { product: item }) %><% }) %></div></div></section>
 <% } %>

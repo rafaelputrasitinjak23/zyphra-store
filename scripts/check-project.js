@@ -24,7 +24,12 @@ const required = [
   'routes/walletRoutes.js',
   'views/wallet/index.ejs',
   'views/wallet/deposit.ejs',
-  'views/admin/wallets.ejs'
+  'views/admin/wallets.ejs',
+  'models/Review.js',
+  'services/reviewService.js',
+  'controllers/reviewController.js',
+  'routes/reviewRoutes.js',
+  'views/admin/reviews.ejs'
 ];
 
 let failed = false;

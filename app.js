@@ -52,6 +52,7 @@ app.use('/orders', require('./routes/orderRoutes'));
 app.use('/payments', require('./routes/paymentRoutes'));
 app.use('/account', require('./routes/accountRoutes'));
 app.use('/wallet', require('./routes/walletRoutes'));
+app.use('/reviews', require('./routes/reviewRoutes'));
 app.use('/downloads', require('./routes/downloadRoutes'));
 app.use('/admin', require('./routes/adminRoutes'));
 app.use('/webhooks', require('./routes/webhookRoutes'));

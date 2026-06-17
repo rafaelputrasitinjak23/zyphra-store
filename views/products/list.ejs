@@ -21,6 +21,7 @@
       <select name="sort">
         <option value="newest" <%= (filters.sort || 'newest') === 'newest' ? 'selected' : '' %>>Terbaru</option>
         <option value="popular" <%= filters.sort === 'popular' ? 'selected' : '' %>>Paling populer</option>
+        <option value="rating" <%= filters.sort === 'rating' ? 'selected' : '' %>>Rating tertinggi</option>
         <option value="price_low" <%= filters.sort === 'price_low' ? 'selected' : '' %>>Harga terendah</option>
         <option value="price_high" <%= filters.sort === 'price_high' ? 'selected' : '' %>>Harga tertinggi</option>
       </select>

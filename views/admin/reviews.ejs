@@ -1,0 +1,38 @@
+<div class="admin-shell">
+  <%- include('../partials/admin-nav') %>
+  <section class="admin-content">
+    <div class="admin-heading">
+      <div><span class="eyebrow">MODERASI</span><h1>Ulasan pembeli</h1><p>Kelola rating dari pembeli yang sudah menyelesaikan pesanan.</p></div>
+      <form method="get" class="inline-actions">
+        <select name="status">
+          <option value="" <%= !status ? 'selected' : '' %>>Semua status</option>
+          <option value="published" <%= status === 'published' ? 'selected' : '' %>>Ditampilkan</option>
+          <option value="hidden" <%= status === 'hidden' ? 'selected' : '' %>>Disembunyikan</option>
+        </select>
+        <button class="button button-sm button-ghost" type="submit">Terapkan</button>
+      </form>
+    </div>
+
+    <% if (!reviews.length) { %>
+      <div class="empty"><h3>Belum ada ulasan</h3><p>Ulasan pembelian akan tampil di sini.</p></div>
+    <% } else { %>
+      <div class="admin-review-list">
+        <% reviews.forEach(review => { %>
+          <article class="admin-review-card">
+            <div class="admin-review-product">
+              <% if (review.product?.thumbnail) { %><img src="<%= review.product.thumbnail %>" alt="<%= review.product.name %>"><% } %>
+              <div><a href="/products/<%= review.product?.slug || '' %>" target="_blank"><strong><%= review.product?.name || 'Produk tidak tersedia' %></strong></a><small><%= review.user?.name || 'Pengguna' %> · <%= review.user?.email || '-' %></small></div>
+            </div>
+            <div class="review-stars" aria-label="<%= review.rating %> dari 5 bintang"><% for (let i = 1; i <= 5; i += 1) { %><span class="<%= i <= review.rating ? 'active' : '' %>">★</span><% } %></div>
+            <p class="review-comment"><%= review.comment || 'Tidak ada komentar.' %></p>
+            <div class="admin-review-meta"><span class="badge <%= review.status === 'published' ? 'badge-accent' : '' %>"><%= review.status === 'published' ? 'Ditampilkan' : 'Disembunyikan' %></span><span><%= formatDate(review.createdAt) %></span><span>Pembelian terverifikasi</span></div>
+            <form method="post" action="/admin/reviews/<%= review._id %>/toggle">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="button button-sm <%= review.status === 'published' ? 'button-ghost' : '' %>" type="submit"><%= review.status === 'published' ? 'Sembunyikan' : 'Tampilkan kembali' %></button>
+            </form>
+          </article>
+        <% }) %>
+      </div>
+    <% } %>
+  </section>
+</div>

@@ -23,6 +23,8 @@ const schema = new mongoose.Schema({
   downloadLimit: { type: Number, min: 1, default: 5 },
   viewCount: { type: Number, min: 0, default: 0, index: true },
   soldCount: { type: Number, min: 0, default: 0, index: true },
+  ratingAverage: { type: Number, min: 0, max: 5, default: 0 },
+  ratingCount: { type: Number, min: 0, default: 0 },
   flashSale: {
     enabled: { type: Boolean, default: false },
     price: { type: Number, min: 0, default: null },

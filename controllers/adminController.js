@@ -10,6 +10,8 @@ const DiscountCode = require('../models/DiscountCode');
 const Wallet = require('../models/Wallet');
 const WalletTransaction = require('../models/WalletTransaction');
 const WalletDeposit = require('../models/WalletDeposit');
+const Review = require('../models/Review');
+const reviewService = require('../services/reviewService');
 const { getStoreSettings } = require('../services/settingService');
 const { slugify } = require('../utils/helpers');
 const { AppError } = require('../utils/errors');
@@ -221,6 +223,30 @@ async function updateWalletStatus(req, res) {
   res.redirect('/admin/wallets');
 }
 
+
+async function reviews(req, res) {
+  const query = {};
+  if (['published', 'hidden'].includes(req.query.status)) query.status = req.query.status;
+  const reviews = await Review.find(query)
+    .populate('user', 'name email avatar')
+    .populate('product', 'name slug thumbnail')
+    .sort({ createdAt: -1 })
+    .limit(500);
+  res.render('admin/reviews', { title: 'Ulasan pembeli', reviews, status: req.query.status || '' });
+}
+
+async function toggleReview(req, res) {
+  const review = await Review.findById(req.params.id);
+  if (!review) throw new AppError('Ulasan tidak ditemukan.', 404, 'REVIEW_NOT_FOUND');
+  review.status = review.status === 'published' ? 'hidden' : 'published';
+  review.moderatedAt = new Date();
+  review.moderatedBy = req.user._id;
+  await review.save();
+  await reviewService.recalculateProductRating(review.product);
+  req.flash('success', review.status === 'published' ? 'Ulasan ditampilkan kembali.' : 'Ulasan disembunyikan.');
+  res.redirect(req.get('referer') || '/admin/reviews');
+}
+
 async function webhookLogs(req, res) { res.render('admin/logs/webhooks', { title: 'Log webhook', logs: await WebhookLog.find().sort({ createdAt: -1 }).limit(200) }); }
 async function emailLogs(req, res) { res.render('admin/logs/emails', { title: 'Log email', logs: await EmailLog.find().select('+retryType').sort({ createdAt: -1 }).limit(200) }); }
 
@@ -241,4 +267,4 @@ async function retryEmail(req, res) {
   res.redirect('/admin/logs/emails');
 }
 
-module.exports = { dashboard, products, newProduct, createProduct, editProduct, updateProduct, toggleProduct, discounts, newDiscount, createDiscount, editDiscount, updateDiscount, toggleDiscount, categories, createCategory, updateCategory, users, updateUser, orders, orderDetail, recheckOrder, cancelOrder, resendInvoice, settings, updateSettings, wallets, adjustWallet, updateWalletStatus, webhookLogs, emailLogs, retryEmail };
+module.exports = { dashboard, products, newProduct, createProduct, editProduct, updateProduct, toggleProduct, discounts, newDiscount, createDiscount, editDiscount, updateDiscount, toggleDiscount, categories, createCategory, updateCategory, users, updateUser, orders, orderDetail, recheckOrder, cancelOrder, resendInvoice, settings, updateSettings, wallets, adjustWallet, updateWalletStatus, reviews, toggleReview, webhookLogs, emailLogs, retryEmail };

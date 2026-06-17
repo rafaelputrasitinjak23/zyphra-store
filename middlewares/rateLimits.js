@@ -14,6 +14,7 @@ const authLimiter = rateLimit({ ...common, windowMs: 15 * 60 * 1000, limit: 20 }
 const otpLimiter = rateLimit({ ...common, windowMs: 10 * 60 * 1000, limit: 8 });
 const checkoutLimiter = rateLimit({ ...common, windowMs: 10 * 60 * 1000, limit: 10 });
 const cancelLimiter = rateLimit({ ...common, windowMs: 10 * 60 * 1000, limit: 8 });
+const reviewLimiter = rateLimit({ ...common, windowMs: 10 * 60 * 1000, limit: 12 });
 const aiLimiter = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false,
@@ -22,4 +23,4 @@ const aiLimiter = rateLimit({
   handler: (req, res) => res.status(429).json({ ok: false, message: 'Batas penggunaan AI tercapai. Silakan coba lagi beberapa saat.' })
 });
 
-module.exports = { globalLimiter, authLimiter, otpLimiter, checkoutLimiter, aiLimiter, cancelLimiter };
+module.exports = { globalLimiter, authLimiter, otpLimiter, checkoutLimiter, aiLimiter, cancelLimiter, reviewLimiter };
