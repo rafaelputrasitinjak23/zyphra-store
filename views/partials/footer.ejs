@@ -1,1 +1,55 @@
-<footer class="site-footer"><div class="container footer-grid"><div><div class="brand"><span class="brand-mark">Z</span><span>Zyphra Store</span></div><p>Source code, script, bot, template, plugin, dan produk digital pilihan.</p></div><div><strong>Jelajahi</strong><a href="/products">Produk</a><a href="/account">Akun</a><a href="/wallet">Dompet</a></div><div><strong>Layanan</strong><p>Belanja praktis, akses produk cepat, dan bantuan langsung dari akun Anda.</p></div></div><div class="container footer-bottom">© <%= new Date().getFullYear() %> Zyphra Store.</div></footer>
+<footer class="site-footer site-footer-modern">
+  <div class="container footer-modern-grid">
+    <section class="footer-brand-column" aria-labelledby="footer-brand-title">
+      <a class="brand footer-brand" href="/" aria-label="Zyphra Store">
+        <span class="brand-mark">Z</span>
+        <span id="footer-brand-title">Zyphra Store</span>
+      </a>
+      <p class="footer-description">Temukan script, bot, template, plugin, dan produk digital pilihan untuk membantu proyek Anda berkembang lebih cepat.</p>
+      <div class="footer-benefits" aria-label="Keunggulan layanan">
+        <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 2.9 7.8 7.5 9.5 4.6-1.7 7.5-4.9 7.5-9.5V6z"/><path d="m9 12 2 2 4-4"/></svg>Transaksi nyaman</span>
+        <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4.5 13H11l-1 9L19.5 10H13z"/></svg>Akses cepat</span>
+      </div>
+    </section>
+
+    <nav class="footer-link-column" aria-label="Jelajahi Zyphra Store">
+      <h2>Jelajahi</h2>
+      <a href="/products"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16l-1 13H5z"/><path d="M8 7a4 4 0 0 1 8 0"/></svg><span>Semua produk</span></a>
+      <a href="/cart"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M3 4h2l2.5 11h10l2-8H6"/></svg><span>Keranjang</span></a>
+      <a href="/orders"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><span>Pesanan</span></a>
+    </nav>
+
+    <nav class="footer-link-column" aria-label="Menu akun">
+      <h2>Akun</h2>
+      <% if (currentUser) { %>
+        <a href="/account"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4.6 3.5-7 8-7s7.2 2.4 8 7"/></svg><span>Profil saya</span></a>
+        <a href="/wallet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h14a2 2 0 0 1 2 2v10H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><path d="M16 10h6v5h-6a2.5 2.5 0 0 1 0-5Z"/></svg><span>Dompet</span></a>
+        <a href="/account/purchases"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg><span>Produk saya</span></a>
+      <% } else { %>
+        <a href="/auth/login"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17 15 12 10 7M15 12H3"/><path d="M14 4h6v16h-6"/></svg><span>Masuk</span></a>
+        <a href="/auth/register"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c.8-4.6 3.2-7 7-7M17 8v8M13 12h8"/></svg><span>Buat akun</span></a>
+      <% } %>
+    </nav>
+
+    <section class="footer-support-card" aria-labelledby="footer-support-title">
+      <span class="footer-support-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13a8 8 0 0 1 16 0"/><path d="M4 13v5h4v-6H4M20 13v5h-4v-6h4M16 19c-1 1.3-2.3 2-4 2"/></svg></span>
+      <div>
+        <small>BUTUH BANTUAN?</small>
+        <h2 id="footer-support-title">Kami siap membantu</h2>
+        <p>Kelola pembelian dan temukan bantuan langsung melalui akun Anda.</p>
+      </div>
+      <a class="footer-support-link" href="<%= currentUser ? '/account' : '/products' %>">
+        <span><%= currentUser ? 'Buka akun' : 'Mulai belanja' %></span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </section>
+  </div>
+
+  <div class="container footer-modern-bottom">
+    <p>© <%= new Date().getFullYear() %> Zyphra Store. Semua hak dilindungi.</p>
+    <div class="footer-bottom-features" aria-label="Informasi layanan">
+      <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 2.9 7.8 7.5 9.5 4.6-1.7 7.5-4.9 7.5-9.5V6z"/></svg>Belanja aman</span>
+      <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M12 4v16"/></svg>Produk digital pilihan</span>
+    </div>
+  </div>
+</footer>

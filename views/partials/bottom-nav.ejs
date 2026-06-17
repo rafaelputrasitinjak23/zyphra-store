@@ -1,9 +1,24 @@
 <% if (currentUser) { %>
 <nav class="mobile-bottom-nav" aria-label="Navigasi utama pengguna">
-  <a class="<%= currentPath === '/' ? 'active' : '' %>" href="/"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3z"/></svg><span>Beranda</span></a>
-  <a class="<%= currentPath.startsWith('/products') || currentPath.startsWith('/cart') || currentPath.startsWith('/checkout') ? 'active' : '' %>" href="/products"><svg viewBox="0 0 24 24"><path d="M4 7h16l-1 14H5zM8 7a4 4 0 0 1 8 0"/></svg><span>Belanja</span></a>
-  <a class="<%= currentPath.startsWith('/wallet') ? 'active' : '' %>" href="/wallet"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM16 11h5v5h-5z"/></svg><span>Dompet</span></a>
-  <a class="<%= currentPath.startsWith('/orders') || currentPath.startsWith('/payments') ? 'active' : '' %>" href="/orders"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h8"/></svg><span>Pesanan</span></a>
-  <a class="<%= currentPath.startsWith('/account') ? 'active' : '' %>" href="/account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/></svg><span>Akun</span></a>
+  <a class="<%= currentPath === '/' ? 'active' : '' %>" href="/" <%- currentPath === '/' ? 'aria-current="page"' : '' %>>
+    <span class="mobile-nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v11h5v-6h4v6h5V10"/></svg></span>
+    <span>Beranda</span>
+  </a>
+  <a class="<%= currentPath.startsWith('/products') || currentPath.startsWith('/cart') || currentPath.startsWith('/checkout') ? 'active' : '' %>" href="/products" <%- currentPath.startsWith('/products') ? 'aria-current="page"' : '' %>>
+    <span class="mobile-nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>
+    <span>Belanja</span>
+  </a>
+  <a class="mobile-nav-wallet <%= currentPath.startsWith('/wallet') ? 'active' : '' %>" href="/wallet" <%- currentPath.startsWith('/wallet') ? 'aria-current="page"' : '' %>>
+    <span class="mobile-nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h14a2 2 0 0 1 2 2v10H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><path d="M16 10h6v5h-6a2.5 2.5 0 0 1 0-5Z"/></svg></span>
+    <span>Dompet</span>
+  </a>
+  <a class="<%= currentPath.startsWith('/orders') || currentPath.startsWith('/payments') ? 'active' : '' %>" href="/orders" <%- currentPath.startsWith('/orders') ? 'aria-current="page"' : '' %>>
+    <span class="mobile-nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></span>
+    <span>Pesanan</span>
+  </a>
+  <a class="<%= currentPath.startsWith('/account') ? 'active' : '' %>" href="/account" <%- currentPath.startsWith('/account') ? 'aria-current="page"' : '' %>>
+    <span class="mobile-nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4.6 3.5-7 8-7s7.2 2.4 8 7"/></svg></span>
+    <span>Akun</span>
+  </a>
 </nav>
 <% } %>

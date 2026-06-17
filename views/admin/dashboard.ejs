@@ -1,1 +1,48 @@
-<section class="admin-shell"><%- include('../partials/admin-nav') %><div class="admin-content"><div class="admin-head"><div><span class="eyebrow">ADMIN</span><h1>Dashboard</h1></div></div><div class="stat-grid"><article><span>Pengguna</span><strong><%= stats.users %></strong></article><article><span>Produk</span><strong><%= stats.products %></strong></article><article><span>Pesanan</span><strong><%= stats.orders %></strong></article><article><span>Transaksi berhasil</span><strong><%= stats.count %></strong></article><article><span>Pendapatan kotor</span><strong><%= rupiah(stats.gross) %></strong></article><article><span>Fee pengguna</span><strong><%= rupiah(stats.userFees) %></strong></article><article><span>Fee merchant</span><strong><%= rupiah(stats.merchantFees) %></strong></article><article><span>Net merchant</span><strong><%= rupiah(stats.net) %></strong></article></div><div class="panel"><div class="panel-head"><h2>Transaksi 30 hari</h2></div><div class="bar-chart"><% const max = Math.max(1, ...chart.map(i => i.total)); chart.forEach(item => { %><div class="bar-item" title="<%= item._id %>: <%= rupiah(item.total) %>"><div style="height:<%= Math.max(6, Math.round(item.total / max * 100)) %>%"></div><span><%= item._id.slice(5) %></span></div><% }) %><% if (!chart.length) { %><div class="empty compact">Belum ada transaksi berhasil.</div><% } %></div></div><div class="panel"><div class="panel-head"><h2>Pesanan terbaru</h2><a href="/admin/orders">Lihat semua</a></div><div class="table-wrap"><table><thead><tr><th>Pesanan</th><th>Pengguna</th><th>Total</th><th>Status</th></tr></thead><tbody><% recent.forEach(order => { %><tr><td><a href="/admin/orders/<%= order.orderNumber %>"><%= order.orderNumber %></a></td><td><%= order.user?.email || order.buyerSnapshot.email %></td><td><%= rupiah(order.total) %></td><td><span class="status status-<%= order.paymentStatus %>"><%= order.paymentStatus %></span></td></tr><% }) %></tbody></table></div></div></div></section>
+<section class="admin-shell">
+  <%- include('../partials/admin-nav') %>
+  <div class="admin-content admin-dashboard-modern">
+    <div class="admin-head admin-dashboard-head">
+      <div>
+        <span class="eyebrow">RINGKASAN TOKO</span>
+        <h1>Dashboard</h1>
+        <p>Pantau perkembangan toko dan aktivitas terbaru dalam satu tampilan.</p>
+      </div>
+      <a class="button button-sm" href="/admin/products/new"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Tambah produk</a>
+    </div>
+
+    <div class="stat-grid admin-stat-grid-modern">
+      <article><span class="admin-stat-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21c.8-4.6 3.2-7 7-7M17 8v8M13 12h8"/></svg></span><div><small>Pengguna</small><strong><%= stats.users %></strong></div></article>
+      <article><span class="admin-stat-icon"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span><div><small>Produk</small><strong><%= stats.products %></strong></div></article>
+      <article><span class="admin-stat-icon"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></span><div><small>Pesanan</small><strong><%= stats.orders %></strong></div></article>
+      <article><span class="admin-stat-icon success"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg></span><div><small>Transaksi berhasil</small><strong><%= stats.count %></strong></div></article>
+      <article class="admin-stat-wide"><span class="admin-stat-icon accent"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-8M22 19V3"/></svg></span><div><small>Pendapatan kotor</small><strong><%= rupiah(stats.gross) %></strong></div></article>
+      <article><span class="admin-stat-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM8 11h8M8 15h5"/></svg></span><div><small>Total fee pengguna</small><strong><%= rupiah(stats.userFees) %></strong></div></article>
+      <article><span class="admin-stat-icon"><svg viewBox="0 0 24 24"><path d="M12 3v18M17 7.5c0-2-2-3-5-3s-5 1.2-5 3 1.7 2.8 5 3.5 5 1.5 5 3.5-2 4-5 4-5-1.2-5-3"/></svg></span><div><small>Pendapatan bersih</small><strong><%= rupiah(stats.net) %></strong></div></article>
+    </div>
+
+    <div class="panel admin-chart-panel">
+      <div class="panel-head admin-chart-head">
+        <div>
+          <span class="eyebrow">30 HARI TERAKHIR</span>
+          <h2>Performa penjualan</h2>
+          <p>Perbandingan pendapatan dan jumlah transaksi berhasil.</p>
+        </div>
+        <div class="admin-chart-legend" aria-hidden="true"><span><i class="legend-revenue"></i>Pendapatan</span><span><i class="legend-orders"></i>Transaksi</span></div>
+      </div>
+      <div class="admin-chart-container">
+        <canvas id="adminSalesChart" data-chart='<%- JSON.stringify(chart || []).replace(/</g, "\\u003c") %>' aria-label="Grafik performa penjualan 30 hari" role="img"></canvas>
+        <noscript><div class="empty compact">Aktifkan JavaScript untuk menampilkan grafik.</div></noscript>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div><span class="eyebrow">AKTIVITAS TERBARU</span><h2>Pesanan terbaru</h2></div><a href="/admin/orders">Lihat semua</a></div>
+      <div class="table-wrap"><table><thead><tr><th>Pesanan</th><th>Pengguna</th><th>Total</th><th>Status</th></tr></thead><tbody>
+        <% recent.forEach(order => { %><tr><td><a href="/admin/orders/<%= order.orderNumber %>"><%= order.orderNumber %></a></td><td><%= order.user?.email || order.buyerSnapshot.email %></td><td><%= rupiah(order.total) %></td><td><span class="status status-<%= order.paymentStatus %>"><%= order.paymentStatus %></span></td></tr><% }) %>
+        <% if (!recent.length) { %><tr><td colspan="4"><div class="empty compact">Belum ada pesanan terbaru.</div></td></tr><% } %>
+      </tbody></table></div>
+    </div>
+  </div>
+</section>
+<script src="/public/js/vendor/chart.umd.min.js?v=4.5.1" defer></script>
+<script src="/public/js/admin-dashboard.js?v=1.0.0" defer></script>
