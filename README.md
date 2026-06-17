@@ -1,8 +1,17 @@
 # Zyphra Store
 
-Zyphra Store adalah proyek e-commerce produk digital berbasis Node.js, Express.js, MongoDB, Mongoose, EJS, autentikasi email, OTP, CAPTCHA teks bawaan, dan Pakasir. Proyek ini menyediakan katalog produk, keranjang, checkout, invoice, dashboard pengguna/admin, proteksi download, webhook idempoten, dan pencatatan kegagalan email.
+Zyphra Store adalah proyek e-commerce produk digital berbasis Node.js, Express.js, MongoDB, Mongoose, EJS, autentikasi email, OTP, CAPTCHA teks bawaan, dan Pakasir. Proyek ini menyediakan katalog produk, keranjang, checkout, invoice, dashboard pengguna/admin, proteksi download, pembatalan transaksi pending, chatbot AI berbasis katalog, generator deskripsi produk, webhook idempoten, dan pencatatan kegagalan email.
 
 ## Fitur utama
+
+### Pengalaman akun marketplace
+
+- Dashboard akun modern dengan foto profil, statistik pesanan, total belanja, pesanan terbaru, dan akses cepat.
+- Pengguna dapat mengunggah foto profil JPG/PNG/WebP hingga 750 KB; foto disimpan di MongoDB agar kompatibel dengan Vercel tanpa filesystem lokal.
+- Profil mendukung nama, nomor telepon, bio singkat, dan preferensi notifikasi.
+- Navigasi bawah mobile menggunakan ikon SVG untuk Beranda, Belanja, Pesanan, Koleksi, dan Akun.
+- Halaman keamanan untuk perubahan password dan logout seluruh perangkat.
+
 
 - Register manual dengan CAPTCHA, password bcrypt, OTP enam digit, kedaluwarsa 10 menit, cooldown, batas percobaan, dan verifikasi email.
 - Login manual dengan CAPTCHA, password, OTP, proteksi brute force, session regeneration, serta notifikasi IP, perangkat, dan user-agent.
@@ -11,6 +20,10 @@ Zyphra Store adalah proyek e-commerce produk digital berbasis Node.js, Express.j
 - Produk digital, kategori, promo, stok/unlimited, galeri, versi, changelog, instruksi, URL file rahasia, dan batas download.
 - Keranjang MongoDB dan seluruh perhitungan harga ulang di server.
 - Integrasi Pakasir via API untuk QRIS dan Virtual Account, cek status, cancel, simulasi sandbox, serta webhook.
+- Pengguna dan admin dapat membatalkan transaksi pending. Server mengecek status Pakasir sebelum dan setelah pembatalan agar transaksi yang sudah lunas tidak ikut dibatalkan.
+- Chatbot Zyphra Assistant mengambil konteks produk aktif, kategori, harga, stok, serta aturan website langsung dari database tanpa mengirim URL file digital atau credential.
+- Tombol AI pada form admin dapat membuat deskripsi singkat, deskripsi lengkap, tag, instruksi, dan changelog; fallback lokal tetap tersedia saat API AI gagal.
+- Harga terlihat pada kartu dan halaman detail, tersedia tombol Beli Sekarang, produk terkait, riwayat produk dilihat, sorting, pagination, statistik terjual/dilihat, dan countdown pembayaran.
 - Pembagian fee: di bawah batas fee dibagi dua; tepat/di atas batas seluruh fee dibayar pengguna.
 - Invoice web/cetak/email dengan subtotal, gateway fee, bagian pengguna, bagian merchant, total, dan merchant net.
 - Endpoint download memakai session, pemeriksaan kepemilikan, token sementara, batas download, dan proxy stream agar URL file asli tidak tampil pada frontend.
@@ -64,6 +77,7 @@ Salin `.env.example`, lalu isi seluruh nilai rahasia. Jangan commit `.env`.
 - `PAKASIR_*`: slug, API key, base URL, dan secret webhook opsional.
 - `FEE_SPLIT_THRESHOLD`: default `50000`.
 - `DOWNLOAD_TOKEN_SECRET`: string acak khusus token download.
+- `AI_ENABLED`, `AI_BASE_URL`, `AI_PATH`, `AI_TEMPERATURE`, dan `AI_TIMEOUT_MS`: konfigurasi chatbot serta generator konten produk.
 
 Buat secret dengan Node.js:
 
@@ -133,7 +147,7 @@ Metode yang disediakan:
 - `artha_graha_va`
 - `bri_va`
 
-Konfigurasi fee awal mengikuti halaman biaya Pakasir per 11 Juni 2026: QRIS 0,7% + Rp310, QRIS di atas Rp105.000 menjadi 1%, VA tertentu Rp3.500, serta Artha Graha/Sampoerna Rp2.000. Karena biaya dapat berubah, admin dapat memperbaruinya melalui `/admin/settings`.
+Konfigurasi fee awal mengikuti halaman biaya Pakasir yang tersedia saat proyek diperbarui: QRIS 0,7% + Rp310, QRIS di atas Rp105.000 menjadi 1%, VA tertentu Rp3.500, serta Artha Graha/Sampoerna Rp2.000. Karena biaya dapat berubah, admin dapat memperbaruinya melalui `/admin/settings`.
 
 ### Cara kerja pembagian fee dengan API Pakasir
 
@@ -165,7 +179,35 @@ npm test
 npm run check
 ```
 
-Test mencakup fee di bawah/tepat/di atas batas, pembulatan fee ganjil, OTP kedaluwarsa dan sekali pakai, CAPTCHA teks sekali pakai, event key webhook idempoten, proteksi kepemilikan download, serta harga database yang tidak dapat diganti dari frontend.
+Test mencakup fee di bawah/tepat/di atas batas, pembulatan fee ganjil, OTP kedaluwarsa dan sekali pakai, CAPTCHA teks sekali pakai, event key webhook idempoten, proteksi kepemilikan download, harga database, parser respons AI, fallback konten produk, dan aturan pembatalan transaksi.
+
+## Chatbot AI dan auto-deskripsi produk
+
+API default mengikuti endpoint yang diminta:
+
+```env
+AI_ENABLED=true
+AI_BASE_URL=https://api.siputzx.my.id
+AI_PATH=/api/ai/glm47flash
+AI_TEMPERATURE=0.7
+AI_TIMEOUT_MS=30000
+```
+
+Chatbot hanya menerima konteks publik yang dipilih server: nama produk, deskripsi singkat, kategori, harga, stok, versi, tag, batas download, dan URL halaman publik. `digitalFileUrl`, data SMTP, session secret, API key Pakasir, dan data pribadi pengguna tidak dimasukkan ke prompt. Riwayat percakapan dibatasi di session dan endpoint dilindungi CSRF serta rate limit.
+
+Pada dashboard admin, buka form tambah/edit produk lalu isi minimal nama dan kategori. Tekan **Generate dengan AI**. Jika API tidak tersedia atau respons bukan JSON valid, server mengisi template konten lokal agar form tetap dapat digunakan. Chatbot juga memiliki jawaban fallback untuk bantuan dasar dan rekomendasi produk saat layanan AI eksternal sedang gagal.
+
+## Pembatalan transaksi
+
+Pengguna dapat membatalkan order melalui halaman pembayaran atau detail pesanan selama status masih `pending`. Admin juga dapat membatalkan dari detail order. Alurnya:
+
+1. Server memastikan order milik pengguna dan belum dibayar.
+2. Server mengecek Transaction Detail Pakasir.
+3. Jika sudah `completed`, order diproses sebagai paid dan pembatalan ditolak.
+4. Jika masih pending, server memanggil Transaction Cancel Pakasir.
+5. Server mengecek ulang status dan menyimpan waktu, pelaku, alasan, serta respons pembatalan.
+
+Pembatalan dibuat idempoten dan menggunakan lock database agar klik berulang tidak menjalankan proses bersamaan.
 
 ## Menguji pembayaran sandbox
 
@@ -194,14 +236,14 @@ Jangan menggunakan nilai total yang terlihat di browser sebagai input API. Contr
 ```text
 api/                 entry point Vercel
 config/              environment dan database
-controllers/         auth, produk, cart, checkout, order, payment, admin
+controllers/         auth, produk, cart, checkout, order, payment, AI, admin
 emails/              template HTML email
 middlewares/         auth, CSRF, rate limit, sanitasi, error
 models/              schema Mongoose
 public/               CSS dan JavaScript frontend
 routes/               route modular
 scripts/              seed admin dan pemeriksaan proyek
-services/             OTP, email, CAPTCHA, Pakasir, fee, order, download
+services/             OTP, email, CAPTCHA, Pakasir, fee, order, pembatalan, AI, download
 utils/                helper keamanan dan format
 views/                EJS publik, akun, invoice, dan admin
 tests/                test dasar

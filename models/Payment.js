@@ -13,6 +13,8 @@ const schema = new mongoose.Schema({
   createRequest: mongoose.Schema.Types.Mixed,
   createResponse: mongoose.Schema.Types.Mixed,
   lastCheckResponse: mongoose.Schema.Types.Mixed,
-  lastCheckedAt: Date
+  lastCheckedAt: Date,
+  cancelResponse: mongoose.Schema.Types.Mixed,
+  cancelledAt: Date
 }, { timestamps: true });
 module.exports = mongoose.model('Payment', schema);

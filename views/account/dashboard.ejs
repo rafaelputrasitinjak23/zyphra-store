@@ -1,1 +1,99 @@
-<section class="page-head"><div class="container"><span class="eyebrow">AKUN</span><h1>Halo, <%= currentUser.name %></h1><p>Kelola pesanan, produk, dan keamanan akun.</p></div><form class="inline-center" method="post" action="/auth/logout"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="button button-ghost" type="submit">Logout</button></form></section><section class="section pt-small"><div class="container account-grid"><a class="account-card" href="/orders"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h8"/></svg><div><h3>Riwayat pesanan</h3><p>Lihat status transaksi dan invoice.</p></div><span>→</span></a><a class="account-card" href="/account/purchases"><svg viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M5 19h14"/></svg><div><h3>Produk saya</h3><p>Download produk yang sudah dibeli.</p></div><span>→</span></a><a class="account-card" href="/account/profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/></svg><div><h3>Profil dan keamanan</h3><p>Ubah nama, password, dan sesi akun.</p></div><span>→</span></a><% if (currentUser.role === 'admin') { %><a class="account-card" href="/admin"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg><div><h3>Dashboard admin</h3><p>Kelola toko dan transaksi.</p></div><span>→</span></a><% } %></div><form class="inline-center" method="post" action="/auth/logout"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="button button-ghost" type="submit">Logout</button></form></section>
+<section class="account-marketplace">
+  <div class="container">
+    <div class="account-hero-card">
+      <div class="account-avatar account-avatar-lg">
+        <% if (currentUser.avatar) { %>
+          <img src="<%= currentUser.avatar %>" alt="Foto profil <%= currentUser.name %>">
+        <% } else { %>
+          <span><%= currentUser.name.charAt(0).toUpperCase() %></span>
+        <% } %>
+      </div>
+      <div class="account-identity">
+        <div class="account-title-row">
+          <div>
+            <span class="eyebrow">AKUN SAYA</span>
+            <h1><%= currentUser.name %></h1>
+          </div>
+          <span class="account-verified"><svg viewBox="0 0 24 24"><path d="m9 12 2 2 4-5"/><circle cx="12" cy="12" r="9"/></svg>Email terverifikasi</span>
+        </div>
+        <p><%= currentUser.bio || 'Kelola belanja, produk digital, dan keamanan akun Anda dari satu tempat.' %></p>
+        <div class="account-contact-row">
+          <span><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 7l8 6 8-6"/></svg><%= currentUser.email %></span>
+          <% if (currentUser.phone) { %><span><svg viewBox="0 0 24 24"><path d="M6 3h4l2 5-3 2c1.5 3 3 4.5 6 6l2-3 4 2v4c0 1-1 2-2 2C10 20 4 14 3 5c0-1 1-2 3-2z"/></svg><%= currentUser.phone %></span><% } %>
+          <span><svg viewBox="0 0 24 24"><path d="M7 3v3M17 3v3M4 8h16M5 5h14v16H5z"/></svg>Bergabung <%= formatDate(currentUser.createdAt) %></span>
+        </div>
+        <div class="actions account-hero-actions">
+          <a class="button" href="/account/profile"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/></svg>Edit profil</a>
+          <a class="button button-ghost" href="/products"><svg viewBox="0 0 24 24"><path d="M4 7h16l-1 14H5zM8 7a4 4 0 0 1 8 0"/></svg>Belanja produk</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="account-stat-grid">
+      <article><span class="account-stat-icon"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h8"/></svg></span><div><small>Total pesanan</small><strong><%= stats.totalOrders %></strong></div></article>
+      <article><span class="account-stat-icon success"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><div><small>Pesanan selesai</small><strong><%= stats.paidOrders %></strong></div></article>
+      <article><span class="account-stat-icon warning"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><small>Menunggu bayar</small><strong><%= stats.pendingOrders %></strong></div></article>
+      <article><span class="account-stat-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg></span><div><small>Produk dimiliki</small><strong><%= stats.purchasedProducts %></strong></div></article>
+    </div>
+
+    <div class="account-layout">
+      <div class="account-main-column">
+        <section class="market-panel">
+          <div class="market-panel-head"><div><span class="eyebrow">AKTIVITAS</span><h2>Pesanan terbaru</h2></div><a href="/orders">Lihat semua</a></div>
+          <% if (!latestOrders.length) { %>
+            <div class="empty compact"><h3>Belum ada pesanan</h3><p>Temukan produk digital yang cocok untuk proyek Anda.</p><a class="button button-sm" href="/products">Mulai belanja</a></div>
+          <% } else { %>
+            <div class="market-order-list">
+              <% latestOrders.forEach(order => { %>
+                <a href="/orders/<%= order.orderNumber %>" class="market-order-item">
+                  <span class="order-file-icon"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h5"/></svg></span>
+                  <div><strong><%= order.orderNumber %></strong><small><%= order.items.length %> produk • <%= formatDate(order.createdAt) %></small></div>
+                  <div class="market-order-value"><strong><%= rupiah(order.total) %></strong><span class="status status-<%= order.paymentStatus %>"><%= order.paymentStatus %></span></div>
+                  <svg class="market-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                </a>
+              <% }) %>
+            </div>
+          <% } %>
+        </section>
+
+        <section class="market-panel">
+          <div class="market-panel-head"><div><span class="eyebrow">AKSES CEPAT</span><h2>Kelola aktivitas</h2></div></div>
+          <div class="market-shortcut-grid">
+            <a href="/orders"><span><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h8"/></svg></span><strong>Pesanan</strong><small>Cek status & invoice</small></a>
+            <a href="/account/purchases"><span><svg viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M5 19h14"/></svg></span><strong>Produk saya</strong><small>Akses file pembelian</small></a>
+            <a href="/cart"><span><svg viewBox="0 0 24 24"><path d="M3 4h2l2 11h10l3-8H6M9 20h.01M17 20h.01"/></svg></span><strong>Keranjang</strong><small>Lanjutkan belanja</small></a>
+            <a href="/account/profile"><span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/></svg></span><strong>Pengaturan</strong><small>Profil & keamanan</small></a>
+            <% if (currentUser.role === 'admin') { %><a href="/admin"><span><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg></span><strong>Admin</strong><small>Kelola toko</small></a><% } %>
+          </div>
+        </section>
+      </div>
+
+      <aside class="account-side-column">
+        <section class="market-panel account-balance-card">
+          <span class="eyebrow">RINGKASAN BELANJA</span>
+          <small>Total transaksi berhasil</small>
+          <strong><%= rupiah(stats.totalSpent) %></strong>
+          <p>Nilai dihitung dari seluruh pesanan yang sudah terverifikasi lunas.</p>
+        </section>
+        <section class="market-panel account-security-card">
+          <div class="security-icon"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v5c0 5 3 8 8 10 5-2 8-5 8-10V6zM9 12l2 2 4-5"/></svg></div>
+          <h3>Keamanan akun aktif</h3>
+          <p>Login dilindungi password, CAPTCHA teks, dan OTP email.</p>
+          <a href="/account/profile#security">Kelola keamanan →</a>
+        </section>
+        <form method="post" action="/auth/logout" class="account-logout-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="button button-ghost button-block" type="submit"><svg viewBox="0 0 24 24"><path d="M10 4H5v16h5M14 8l4 4-4 4M8 12h10"/></svg>Logout</button>
+        </form>
+      </aside>
+    </div>
+
+    <div class="account-bottom-shortcuts" aria-label="Menu cepat akun">
+      <a href="/"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3z"/></svg><span>Beranda</span></a>
+      <a href="/products"><svg viewBox="0 0 24 24"><path d="M4 7h16l-1 14H5zM8 7a4 4 0 0 1 8 0"/></svg><span>Belanja</span></a>
+      <a href="/orders"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h8"/></svg><span>Pesanan</span></a>
+      <a href="/account/purchases"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg><span>Koleksi</span></a>
+      <a class="active" href="/account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/></svg><span>Akun</span></a>
+    </div>
+  </div>
+</section>

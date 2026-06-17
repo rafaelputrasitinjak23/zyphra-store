@@ -2,6 +2,7 @@ const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const { getPricedCart } = require('../services/cartService');
 const { AppError } = require('../utils/errors');
+const { safeReturnTo } = require('../utils/helpers');
 async function show(req, res) { const data = await getPricedCart(req.user._id); res.render('cart/index', { title: 'Keranjang', ...data }); }
 async function add(req, res) {
   const product = await Product.findOne({ _id: req.body.productId, active: true });
@@ -13,7 +14,7 @@ async function add(req, res) {
   const existing = cart.items.find((item) => String(item.product) === String(product._id));
   if (existing) existing.quantity = product.allowMultipleQuantity ? Math.min(99, existing.quantity + quantity) : 1;
   else cart.items.push({ product: product._id, quantity });
-  await cart.save(); req.flash('success', 'Produk ditambahkan ke keranjang.'); res.redirect('/cart');
+  await cart.save(); req.flash('success', 'Produk ditambahkan ke keranjang.'); res.redirect(safeReturnTo(req.body.next, '/cart'));
 }
 async function update(req, res) {
   const cart = await Cart.findOne({ user: req.user._id }).populate('items.product');

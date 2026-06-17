@@ -1,8 +1,8 @@
 {
   "name": "zyphra-store",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "private": true,
-  "description": "E-commerce produk digital dengan Express, MongoDB, autentikasi email, OTP, CAPTCHA teks, dan Pakasir.",
+  "description": "E-commerce produk digital dengan akun marketplace, foto profil, navigasi SVG mobile, login email OTP, CAPTCHA teks, Pakasir, pembatalan transaksi, dan chatbot AI.",
   "main": "server.js",
   "engines": {
     "node": ">=20"
@@ -30,7 +30,7 @@
     "jsonwebtoken": "^9.0.2",
     "method-override": "^3.0.0",
     "mongoose": "^8.15.1",
-    "nodemailer": "^7.0.3",
+    "nodemailer": "^9.0.0",
     "qrcode": "^1.5.4"
   },
   "devDependencies": {

@@ -13,6 +13,7 @@ const { assertSafeExternalUrl } = require('../utils/urlSafety');
 const pakasir = require('../services/pakasirService');
 const orderService = require('../services/orderService');
 const emailService = require('../services/emailService');
+const cancellationService = require('../services/orderCancellationService');
 
 function number(value, fallback = 0) { const parsed = Number(value); return Number.isFinite(parsed) ? Math.round(parsed) : fallback; }
 function bool(value) { return value === 'on' || value === 'true' || value === true; }
@@ -50,6 +51,11 @@ async function updateUser(req, res) { const user = await User.findById(req.param
 async function orders(req, res) { const query = req.query.status ? { paymentStatus: req.query.status } : {}; res.render('admin/orders/list', { title: 'Pesanan', orders: await Order.find(query).populate('user', 'name email').sort({ createdAt: -1 }).limit(500), status: req.query.status || '' }); }
 async function orderDetail(req, res) { const order = await Order.findOne({ orderNumber: req.params.orderNumber }).populate('user', 'name email'); if (!order) throw new AppError('Pesanan tidak ditemukan.', 404); const payment = await Payment.findOne({ order: order._id }); res.render('admin/orders/detail', { title: order.orderNumber, order, payment }); }
 async function recheckOrder(req, res) { const order = await Order.findOne({ orderNumber: req.params.orderNumber }); if (!order) throw new AppError('Pesanan tidak ditemukan.', 404); const transaction = await pakasir.getTransactionDetail({ orderId: order.orderNumber, amount: order.pakasirAmount }); if (['completed', 'paid'].includes(transaction.status)) await orderService.markPaid(order._id, transaction); else if (['failed', 'expired', 'cancelled'].includes(transaction.status)) await orderService.updateNonPaidStatus(order, transaction.status, transaction); req.flash('success', `Status Pakasir: ${transaction.status}`); res.redirect(`/admin/orders/${order.orderNumber}`); }
+async function cancelOrder(req, res) {
+  const order = await cancellationService.cancelOrder({ orderNumber: req.params.orderNumber, userId: req.user._id, isAdmin: true, reason: req.body.reason || 'Dibatalkan oleh admin' });
+  req.flash('success', `Transaksi ${order.orderNumber} berhasil dibatalkan.`);
+  res.redirect(`/admin/orders/${order.orderNumber}`);
+}
 async function resendInvoice(req, res) { const order = await Order.findOne({ orderNumber: req.params.orderNumber }).populate('user'); if (!order) throw new AppError('Pesanan tidak ditemukan.', 404); const result = await emailService.sendInvoice(order.user.email, order); if (!result.sent) throw new AppError('Invoice gagal dikirim. Lihat log email.', 503); req.flash('success', 'Invoice dikirim ulang.'); res.redirect(`/admin/orders/${order.orderNumber}`); }
 async function settings(req, res) { res.render('admin/settings', { title: 'Pengaturan toko', settings: await getStoreSettings() }); }
 async function updateSettings(req, res) {
@@ -84,4 +90,4 @@ async function retryEmail(req, res) {
   res.redirect('/admin/logs/emails');
 }
 
-module.exports = { dashboard, products, newProduct, createProduct, editProduct, updateProduct, toggleProduct, categories, createCategory, updateCategory, users, updateUser, orders, orderDetail, recheckOrder, resendInvoice, settings, updateSettings, webhookLogs, emailLogs, retryEmail };
+module.exports = { dashboard, products, newProduct, createProduct, editProduct, updateProduct, toggleProduct, categories, createCategory, updateCategory, users, updateUser, orders, orderDetail, recheckOrder, cancelOrder, resendInvoice, settings, updateSettings, webhookLogs, emailLogs, retryEmail };

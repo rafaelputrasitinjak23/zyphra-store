@@ -36,6 +36,11 @@ const schema = new mongoose.Schema({
   lastWebhookData: mongoose.Schema.Types.Mixed,
   stockCommitted: { type: Boolean, default: false },
   accessGranted: { type: Boolean, default: false },
+  cancellationInProgress: { type: Boolean, default: false, select: false },
+  cancelledAt: Date,
+  cancellationReason: { type: String, maxlength: 300, default: '' },
+  cancelledBy: { type: String, enum: ['user', 'admin', 'system'], default: undefined },
+  cancellationResponse: mongoose.Schema.Types.Mixed,
   notifications: {
     paidSent: { type: Boolean, default: false },
     expiredSent: { type: Boolean, default: false },

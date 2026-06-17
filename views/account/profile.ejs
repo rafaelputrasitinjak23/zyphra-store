@@ -1,36 +1,78 @@
-<section class="page-head"><div class="container"><span class="eyebrow">PROFIL</span><h1>Pengaturan akun</h1></div></section>
-<section class="section pt-small">
-  <div class="container settings-grid">
-    <div class="panel">
-      <h2>Profil</h2>
-      <form method="post" action="/account/profile" class="form-stack">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <label>Nama<input name="name" value="<%= currentUser.name %>" required minlength="2" maxlength="80"></label>
-        <label>Email<input value="<%= currentUser.email %>" disabled></label>
-        <button class="button" type="submit">Simpan profil</button>
-      </form>
+<section class="account-settings-page">
+  <div class="container">
+    <div class="settings-page-head">
+      <div><a class="back-link" href="/account"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>Kembali ke akun</a><span class="eyebrow">PENGATURAN</span><h1>Profil dan keamanan</h1><p>Atur identitas akun, foto profil, preferensi, dan keamanan login.</p></div>
     </div>
-    <div class="panel">
-      <h2>Keamanan login</h2>
-      <p class="muted">Akun menggunakan email, password, CAPTCHA, dan OTP yang dikirim ke email saat login.</p>
-    </div>
-    <div class="panel">
-      <h2>Ubah password</h2>
-      <form method="post" action="/account/password" class="form-stack">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <label>Password saat ini<input type="password" name="currentPassword" required autocomplete="current-password"></label>
-        <label>Password baru<input type="password" name="newPassword" required minlength="8" autocomplete="new-password"></label>
-        <label>Konfirmasi password<input type="password" name="confirmPassword" required minlength="8" autocomplete="new-password"></label>
-        <button class="button" type="submit">Ubah password</button>
-      </form>
-    </div>
-    <div class="panel danger-panel">
-      <h2>Logout seluruh perangkat</h2>
-      <p>Semua session aktif, termasuk perangkat ini, akan dinonaktifkan.</p>
-      <form method="post" action="/account/logout-all">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button class="button button-danger" type="submit">Logout seluruh perangkat</button>
-      </form>
+
+    <div class="market-settings-layout">
+      <aside class="settings-side-nav">
+        <a href="#profile" class="active"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/></svg>Profil</a>
+        <a href="#notifications"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>Notifikasi</a>
+        <a href="#security"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v5c0 5 3 8 8 10 5-2 8-5 8-10V6z"/></svg>Keamanan</a>
+      </aside>
+
+      <div class="settings-content-stack">
+        <form method="post" action="/account/profile" class="market-panel profile-settings-form" id="profile">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="avatarData" value="" data-avatar-data>
+          <input type="hidden" name="removeAvatar" value="0" data-avatar-remove-value>
+
+          <div class="market-panel-head"><div><span class="eyebrow">PROFIL PUBLIK</span><h2>Informasi akun</h2><p>Informasi ini digunakan pada pesanan, invoice, dan area akun Anda.</p></div></div>
+
+          <div class="avatar-editor">
+            <div class="account-avatar account-avatar-xl" data-avatar-preview-wrap>
+              <% if (currentUser.avatar) { %>
+                <img src="<%= currentUser.avatar %>" alt="Foto profil" data-avatar-preview>
+                <span data-avatar-fallback hidden><%= currentUser.name.charAt(0).toUpperCase() %></span>
+              <% } else { %>
+                <img src="" alt="Preview foto profil" data-avatar-preview hidden>
+                <span data-avatar-fallback><%= currentUser.name.charAt(0).toUpperCase() %></span>
+              <% } %>
+            </div>
+            <div class="avatar-editor-copy">
+              <strong>Foto profil</strong>
+              <p>Gunakan foto JPG, PNG, atau WebP. Maksimal 750 KB.</p>
+              <div class="avatar-actions">
+                <label class="button button-sm" for="avatarFile"><svg viewBox="0 0 24 24"><path d="M4 5h4l2-2h4l2 2h4v15H4z"/><circle cx="12" cy="12" r="4"/></svg>Pilih foto</label>
+                <input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp" data-avatar-input hidden>
+                <button class="button button-sm button-ghost" type="button" data-avatar-remove>Hapus foto</button>
+              </div>
+              <small data-avatar-message></small>
+            </div>
+          </div>
+
+          <div class="profile-form-grid">
+            <label>Nama lengkap<input name="name" value="<%= currentUser.name %>" required minlength="2" maxlength="80" autocomplete="name"></label>
+            <label>Email<input value="<%= currentUser.email %>" disabled><small>Email tidak dapat diubah langsung demi keamanan akun.</small></label>
+            <label>Nomor telepon<input name="phone" value="<%= currentUser.phone || '' %>" maxlength="24" placeholder="Contoh: +6281234567890" autocomplete="tel"></label>
+            <label class="span-2">Bio singkat<textarea name="bio" rows="3" maxlength="160" placeholder="Ceritakan sedikit tentang Anda"><%= currentUser.bio || '' %></textarea><small><span data-bio-count><%= (currentUser.bio || '').length %></span>/160 karakter</small></label>
+          </div>
+
+          <div id="notifications" class="settings-section-divider"></div>
+          <div class="notification-settings">
+            <div><span class="eyebrow">NOTIFIKASI</span><h3>Preferensi email</h3><p>Pilih informasi yang ingin diterima melalui email.</p></div>
+            <label class="market-switch-row"><div><strong>Status pesanan</strong><small>Invoice, pembayaran, pembatalan, dan akses produk.</small></div><input type="checkbox" name="orderUpdates" <%= currentUser.notificationPreferences?.orderUpdates !== false ? 'checked' : '' %>><span class="market-switch"></span></label>
+            <label class="market-switch-row"><div><strong>Produk dan pembaruan</strong><small>Informasi produk baru dan promo dari Zyphra Store.</small></div><input type="checkbox" name="productNews" <%= currentUser.notificationPreferences?.productNews ? 'checked' : '' %>><span class="market-switch"></span></label>
+          </div>
+
+          <div class="settings-submit-row"><button class="button" type="submit" data-submit-lock><svg viewBox="0 0 24 24"><path d="M5 4h12l2 2v14H5zM8 4v6h8V4M8 17h8"/></svg>Simpan perubahan</button></div>
+        </form>
+
+        <section class="market-panel" id="security">
+          <div class="market-panel-head"><div><span class="eyebrow">KEAMANAN</span><h2>Ubah password</h2><p>Password baru harus memiliki huruf besar, huruf kecil, angka, dan minimal 8 karakter.</p></div><span class="security-badge"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v5c0 5 3 8 8 10 5-2 8-5 8-10V6zM9 12l2 2 4-5"/></svg>Terlindungi</span></div>
+          <form method="post" action="/account/password" class="form-stack security-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label>Password saat ini<input type="password" name="currentPassword" required autocomplete="current-password"></label>
+            <div class="profile-form-grid"><label>Password baru<input type="password" name="newPassword" required minlength="8" autocomplete="new-password"></label><label>Konfirmasi password<input type="password" name="confirmPassword" required minlength="8" autocomplete="new-password"></label></div>
+            <button class="button button-ghost" type="submit" data-submit-lock>Perbarui password</button>
+          </form>
+        </section>
+
+        <section class="market-panel session-card">
+          <div><span class="session-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H4zM8 21h8M12 17v4"/></svg></span><div><h3>Sesi dan perangkat</h3><p>Login terakhir: <%= currentUser.lastLoginAt ? formatDate(currentUser.lastLoginAt) : 'Belum tersedia' %>. Logout seluruh perangkat akan menonaktifkan semua sesi aktif.</p></div></div>
+          <form method="post" action="/account/logout-all" data-confirm="Logout dari seluruh perangkat?"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="button button-danger-ghost" type="submit">Logout seluruh perangkat</button></form>
+        </section>
+      </div>
     </div>
   </div>
 </section>

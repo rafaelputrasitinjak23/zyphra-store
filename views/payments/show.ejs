@@ -1,1 +1,26 @@
-<section class="page-head"><div class="container"><span class="eyebrow">PEMBAYARAN</span><h1><%= order.orderNumber %></h1><p>Selesaikan pembayaran sebelum <%= formatDate(order.expiresAt) %>.</p></div></section><section class="section pt-small"><div class="container payment-layout"><div class="panel payment-box"><div class="status status-<%= order.paymentStatus %>"><span></span><%= order.paymentStatus.toUpperCase() %></div><h2><%= order.paymentMethod === 'qris' ? 'Scan QRIS' : 'Nomor Virtual Account' %></h2><% if (order.paymentStatus === 'pending') { %><% if (order.paymentMethod === 'qris' && order.paymentQrDataUrl) { %><img class="qr-image" src="<%= order.paymentQrDataUrl %>" alt="QRIS pembayaran"><p class="muted center">Scan menggunakan aplikasi bank atau e-wallet yang mendukung QRIS.</p><% } else { %><div class="payment-number"><code><%= order.paymentNumber %></code><button class="button button-sm button-ghost" type="button" data-copy="<%= order.paymentNumber %>">Salin</button></div><% } %><form method="post" action="/payments/<%= order.orderNumber %>/check"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="button button-block" type="submit">Saya sudah membayar — cek status</button></form><% } else { %><a class="button button-block" href="/orders/<%= order.orderNumber %>">Lihat detail pesanan</a><% } %></div><aside class="summary-card"><h2>Rincian biaya</h2><div class="summary-row"><span>Subtotal produk</span><strong><%= rupiah(order.subtotal) %></strong></div><div class="summary-row"><span>Fee gateway</span><strong><%= rupiah(order.gatewayFee) %></strong></div><div class="summary-row"><span>Fee dibayar pengguna</span><strong><%= rupiah(order.userFee) %></strong></div><div class="summary-row"><span>Fee ditanggung merchant</span><strong><%= rupiah(order.merchantFee) %></strong></div><hr><div class="summary-row total"><span>Total pembayaran</span><strong><%= rupiah(order.total) %></strong></div></aside></div></section>
+<section class="page-head"><div class="container"><span class="eyebrow">PEMBAYARAN</span><h1><%= order.orderNumber %></h1><p>Selesaikan pembayaran sebelum <%= formatDate(order.expiresAt) %>.</p></div></section>
+<section class="section pt-small">
+  <div class="container payment-layout">
+    <div class="panel payment-box">
+      <div class="status status-<%= order.paymentStatus %>"><span></span><%= order.paymentStatus.toUpperCase() %></div>
+      <% if (order.paymentStatus === 'pending') { %>
+        <div class="payment-countdown" data-payment-expiry="<%= order.expiresAt?.toISOString?.() || '' %>">Sisa waktu: <strong data-countdown>menghitung...</strong></div>
+        <h2><%= order.paymentMethod === 'qris' ? 'Scan QRIS' : 'Nomor Virtual Account' %></h2>
+        <% if (order.paymentMethod === 'qris' && order.paymentQrDataUrl) { %>
+          <img class="qr-image" src="<%= order.paymentQrDataUrl %>" alt="QRIS pembayaran"><p class="muted center">Scan menggunakan aplikasi bank atau e-wallet yang mendukung QRIS.</p>
+        <% } else { %>
+          <div class="payment-number"><code><%= order.paymentNumber %></code><button class="button button-sm button-ghost" type="button" data-copy="<%= order.paymentNumber %>">Salin</button></div>
+        <% } %>
+        <form method="post" action="/payments/<%= order.orderNumber %>/check"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="button button-block" type="submit">Saya sudah membayar — cek status</button></form>
+        <form method="post" action="/orders/<%= order.orderNumber %>/cancel" data-confirm="Batalkan transaksi ini? Jangan batalkan jika pembayaran baru saja dilakukan.">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="reason" value="Dibatalkan dari halaman pembayaran">
+          <button class="button button-block button-danger-ghost" type="submit">Batalkan transaksi</button>
+        </form>
+      <% } else { %>
+        <p>Transaksi ini berstatus <strong><%= order.paymentStatus %></strong>.</p><a class="button button-block" href="/orders/<%= order.orderNumber %>">Lihat detail pesanan</a>
+      <% } %>
+    </div>
+    <aside class="summary-card"><h2>Rincian biaya</h2><div class="summary-row"><span>Subtotal produk</span><strong><%= rupiah(order.subtotal) %></strong></div><div class="summary-row"><span>Fee gateway</span><strong><%= rupiah(order.gatewayFee) %></strong></div><div class="summary-row"><span>Fee dibayar pengguna</span><strong><%= rupiah(order.userFee) %></strong></div><div class="summary-row"><span>Fee ditanggung merchant</span><strong><%= rupiah(order.merchantFee) %></strong></div><hr><div class="summary-row total"><span>Total pembayaran</span><strong><%= rupiah(order.total) %></strong></div></aside>
+  </div>
+</section>

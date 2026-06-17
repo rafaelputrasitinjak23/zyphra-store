@@ -1,0 +1,20 @@
+<div class="ai-chat" data-ai-chat>
+  <button class="ai-chat-toggle" type="button" data-ai-toggle aria-label="Buka Zyphra Assistant" aria-expanded="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10h8M8 14h5M7 19l-4 2 1.4-4.2A8 8 0 1 1 7 19Z"/></svg>
+    <span>Tanya AI</span>
+  </button>
+  <section class="ai-chat-panel" data-ai-panel aria-hidden="true">
+    <header>
+      <div><strong>Zyphra Assistant</strong><small>Menjawab berdasarkan produk dan isi website</small></div>
+      <button type="button" data-ai-close aria-label="Tutup chatbot">×</button>
+    </header>
+    <div class="ai-chat-messages" data-ai-messages aria-live="polite">
+      <div class="ai-message ai-message-bot">Halo! Tanyakan harga, fitur produk, cara pembayaran, download, atau pembatalan transaksi.</div>
+    </div>
+    <form data-ai-form>
+      <textarea name="message" maxlength="800" rows="2" placeholder="Contoh: Produk bot WhatsApp yang tersedia apa?" required></textarea>
+      <button class="button button-sm" type="submit">Kirim</button>
+    </form>
+    <small class="ai-disclaimer">Jawaban AI dapat keliru. Status pembayaran tetap mengikuti data server dan Pakasir.</small>
+  </section>
+</div>

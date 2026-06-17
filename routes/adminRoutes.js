@@ -1,1 +1,33 @@
-const router = require('express').Router(); const asyncHandler = require('../utils/asyncHandler'); const c = require('../controllers/adminController'); const { requireAdmin } = require('../middlewares/auth'); router.use(requireAdmin); router.get('/', asyncHandler(c.dashboard)); router.get('/products', asyncHandler(c.products)); router.get('/products/new', asyncHandler(c.newProduct)); router.post('/products', asyncHandler(c.createProduct)); router.get('/products/:id/edit', asyncHandler(c.editProduct)); router.post('/products/:id', asyncHandler(c.updateProduct)); router.post('/products/:id/toggle', asyncHandler(c.toggleProduct)); router.get('/categories', asyncHandler(c.categories)); router.post('/categories', asyncHandler(c.createCategory)); router.post('/categories/:id', asyncHandler(c.updateCategory)); router.get('/users', asyncHandler(c.users)); router.post('/users/:id', asyncHandler(c.updateUser)); router.get('/orders', asyncHandler(c.orders)); router.get('/orders/:orderNumber', asyncHandler(c.orderDetail)); router.post('/orders/:orderNumber/recheck', asyncHandler(c.recheckOrder)); router.post('/orders/:orderNumber/resend-invoice', asyncHandler(c.resendInvoice)); router.get('/settings', asyncHandler(c.settings)); router.post('/settings', asyncHandler(c.updateSettings)); router.get('/logs/webhooks', asyncHandler(c.webhookLogs)); router.get('/logs/emails', asyncHandler(c.emailLogs)); router.post('/logs/emails/:id/retry', asyncHandler(c.retryEmail)); module.exports = router;
+const router = require('express').Router();
+const asyncHandler = require('../utils/asyncHandler');
+const controller = require('../controllers/adminController');
+const aiController = require('../controllers/aiController');
+const { requireAdmin } = require('../middlewares/auth');
+const { aiLimiter, cancelLimiter } = require('../middlewares/rateLimits');
+
+router.use(requireAdmin);
+router.get('/', asyncHandler(controller.dashboard));
+router.get('/products', asyncHandler(controller.products));
+router.get('/products/new', asyncHandler(controller.newProduct));
+router.post('/products', asyncHandler(controller.createProduct));
+router.get('/products/:id/edit', asyncHandler(controller.editProduct));
+router.post('/products/:id', asyncHandler(controller.updateProduct));
+router.post('/products/:id/toggle', asyncHandler(controller.toggleProduct));
+router.post('/ai/product-copy', aiLimiter, asyncHandler(aiController.generateProductCopy));
+router.get('/categories', asyncHandler(controller.categories));
+router.post('/categories', asyncHandler(controller.createCategory));
+router.post('/categories/:id', asyncHandler(controller.updateCategory));
+router.get('/users', asyncHandler(controller.users));
+router.post('/users/:id', asyncHandler(controller.updateUser));
+router.get('/orders', asyncHandler(controller.orders));
+router.get('/orders/:orderNumber', asyncHandler(controller.orderDetail));
+router.post('/orders/:orderNumber/recheck', asyncHandler(controller.recheckOrder));
+router.post('/orders/:orderNumber/cancel', cancelLimiter, asyncHandler(controller.cancelOrder));
+router.post('/orders/:orderNumber/resend-invoice', asyncHandler(controller.resendInvoice));
+router.get('/settings', asyncHandler(controller.settings));
+router.post('/settings', asyncHandler(controller.updateSettings));
+router.get('/logs/webhooks', asyncHandler(controller.webhookLogs));
+router.get('/logs/emails', asyncHandler(controller.emailLogs));
+router.post('/logs/emails/:id/retry', asyncHandler(controller.retryEmail));
+
+module.exports = router;

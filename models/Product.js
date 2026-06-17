@@ -20,7 +20,9 @@ const schema = new mongoose.Schema({
   digitalFileUrl: { type: String, required: true, select: false },
   fileName: { type: String, default: '' },
   instructions: { type: String, default: '' },
-  downloadLimit: { type: Number, min: 1, default: 5 }
+  downloadLimit: { type: Number, min: 1, default: 5 },
+  viewCount: { type: Number, min: 0, default: 0, index: true },
+  soldCount: { type: Number, min: 0, default: 0, index: true }
 }, { timestamps: true });
 schema.virtual('effectivePrice').get(function () { return this.promoPrice !== null && this.promoPrice < this.price ? this.promoPrice : this.price; });
 schema.set('toJSON', { virtuals: true, transform(doc, ret) { delete ret.digitalFileUrl; return ret; } });

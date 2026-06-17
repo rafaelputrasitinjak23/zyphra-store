@@ -27,8 +27,8 @@ app.use(expressLayouts);
 app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], scriptSrc: ["'self'"], frameSrc: ["'self'"], connectSrc: ["'self'"], imgSrc: ["'self'", 'data:', 'https:'], styleSrc: ["'self'", "'unsafe-inline'"], fontSrc: ["'self'", 'data:'], objectSrc: ["'none'"], baseUri: ["'self'"], formAction: ["'self'"] } }, crossOriginEmbedderPolicy: false }));
 app.use(compression());
 app.use('/public', express.static(path.join(__dirname, 'public'), { maxAge: env.isProduction ? '7d' : 0 }));
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: false, limit: '1mb' }));
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: false, limit: '2mb' }));
 app.use(methodOverride('_method'));
 app.use(asyncHandler(async (req, res, next) => { await connectDatabase(); next(); }));
 app.use(session({
@@ -54,6 +54,7 @@ app.use('/account', require('./routes/accountRoutes'));
 app.use('/downloads', require('./routes/downloadRoutes'));
 app.use('/admin', require('./routes/adminRoutes'));
 app.use('/webhooks', require('./routes/webhookRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes'));
 app.use(notFound);
 app.use(errorHandler);
 module.exports = app;

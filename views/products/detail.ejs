@@ -1,1 +1,67 @@
-<section class="section"><div class="container product-detail"><div class="gallery-main"><img src="<%= product.thumbnail %>" alt="<%= product.name %>"><% if (product.gallery?.length) { %><div class="thumb-grid"><% product.gallery.forEach(image => { %><img src="<%= image %>" alt="Galeri <%= product.name %>" loading="lazy"><% }) %></div><% } %></div><div class="product-info"><div class="meta-row"><span class="badge"><%= product.category?.name %></span><span class="badge">v<%= product.version %></span></div><h1><%= product.name %></h1><p class="lead"><%= product.shortDescription %></p><div class="detail-price"><% if (product.promoPrice !== null && product.promoPrice < product.price) { %><span class="old-price"><%= rupiah(product.price) %></span><strong><%= rupiah(product.promoPrice) %></strong><% } else { %><strong><%= rupiah(product.price) %></strong><% } %></div><div class="stock"><span class="status-dot"></span><%= product.unlimitedStock ? 'Stok tidak terbatas' : `${product.stock} tersedia` %></div><form method="post" action="/cart/add" class="buy-form"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="productId" value="<%= product._id %>"><% if (product.allowMultipleQuantity) { %><label>Jumlah<input type="number" name="quantity" value="1" min="1" max="99"></label><% } %><button class="button button-block" type="submit">Tambah ke keranjang</button></form><div class="safe-note"><svg viewBox="0 0 24 24"><path d="m12 3 8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7zM9 12l2 2 4-4"/></svg><div><strong>Pengiriman digital aman</strong><span>File tersedia setelah pembayaran terverifikasi.</span></div></div></div></div></section><section class="section section-soft"><div class="container detail-tabs"><article><h2>Deskripsi</h2><div class="prose"><%= product.description %></div></article><aside><h3>Informasi produk</h3><dl><div><dt>Versi</dt><dd><%= product.version %></dd></div><div><dt>Batas download</dt><dd><%= product.downloadLimit %> kali/pesanan</dd></div><div><dt>Diperbarui</dt><dd><%= formatDate(product.updatedAt) %></dd></div></dl><% if (product.tags?.length) { %><div class="tag-list"><% product.tags.forEach(tag => { %><span><%= tag %></span><% }) %></div><% } %></aside></div></section><% if (product.changelog || product.instructions) { %><section class="section"><div class="container two-col"><% if (product.changelog) { %><article class="panel"><h2>Changelog</h2><div class="prose"><%= product.changelog %></div></article><% } %><% if (product.instructions) { %><article class="panel"><h2>Instruksi</h2><div class="prose"><%= product.instructions %></div></article><% } %></div></section><% } %>
+<section class="section product-detail-section">
+  <div class="container product-detail">
+    <div class="gallery-main">
+      <img src="<%= product.thumbnail %>" alt="<%= product.name %>">
+      <% if (product.gallery?.length) { %>
+        <div class="thumb-grid"><% product.gallery.forEach(image => { %><img src="<%= image %>" alt="Galeri <%= product.name %>" loading="lazy"><% }) %></div>
+      <% } %>
+    </div>
+    <div class="product-info product-buy-card">
+      <div class="meta-row"><span class="badge"><%= product.category?.name %></span><span class="badge">v<%= product.version %></span></div>
+      <h1><%= product.name %></h1>
+      <p class="lead"><%= product.shortDescription %></p>
+      <div class="price-label">Harga produk</div>
+      <div class="detail-price">
+        <% if (product.promoPrice !== null && product.promoPrice < product.price) { %>
+          <span class="old-price"><%= rupiah(product.price) %></span><strong><%= rupiah(product.promoPrice) %></strong><span class="discount-badge">Promo</span>
+        <% } else { %><strong><%= rupiah(product.price) %></strong><% } %>
+      </div>
+      <p class="price-note">Belum termasuk bagian fee metode pembayaran. Rinciannya ditampilkan sebelum membuat transaksi.</p>
+      <div class="product-quick-stats">
+        <span><strong><%= product.soldCount || 0 %></strong> terjual</span>
+        <span><strong><%= product.viewCount || 0 %></strong> dilihat</span>
+        <span><strong><%= product.downloadLimit %>×</strong> download</span>
+      </div>
+      <div class="stock"><span class="status-dot"></span><%= product.unlimitedStock ? 'Stok tidak terbatas' : `${product.stock} tersedia` %></div>
+      <% const productAvailable = product.unlimitedStock || product.stock > 0; %>
+      <% if (!productAvailable) { %>
+        <button class="button button-block" type="button" disabled>Stok sedang habis</button>
+      <% } else if (!currentUser) { %>
+        <a class="button button-block" href="/auth/login">Login untuk membeli</a>
+      <% } else { %>
+        <form method="post" action="/cart/add" class="buy-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="productId" value="<%= product._id %>">
+          <% if (product.allowMultipleQuantity) { %><label>Jumlah<input type="number" name="quantity" value="1" min="1" max="99"></label><% } %>
+          <div class="buy-actions">
+            <button class="button button-ghost" type="submit">Tambah ke keranjang</button>
+            <button class="button" type="submit" name="next" value="/checkout">Beli sekarang</button>
+          </div>
+        </form>
+      <% } %>
+      <div class="safe-note"><svg viewBox="0 0 24 24"><path d="m12 3 8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7zM9 12l2 2 4-4"/></svg><div><strong>Pengiriman digital aman</strong><span>File tersedia setelah pembayaran terverifikasi.</span></div></div>
+    </div>
+  </div>
+</section>
+<section class="section section-soft">
+  <div class="container detail-tabs">
+    <article><h2>Deskripsi</h2><div class="prose preserve-lines"><%= product.description %></div></article>
+    <aside>
+      <h3>Informasi produk</h3>
+      <dl><div><dt>Versi</dt><dd><%= product.version %></dd></div><div><dt>Batas download</dt><dd><%= product.downloadLimit %> kali/pesanan</dd></div><div><dt>Diperbarui</dt><dd><%= formatDate(product.updatedAt) %></dd></div><div><dt>Pengiriman</dt><dd>Otomatis setelah pembayaran</dd></div></dl>
+      <% if (product.tags?.length) { %><div class="tag-list"><% product.tags.forEach(tag => { %><span><%= tag %></span><% }) %></div><% } %>
+    </aside>
+  </div>
+</section>
+<% if (product.changelog || product.instructions) { %>
+<section class="section"><div class="container two-col">
+  <% if (product.changelog) { %><article class="panel"><h2>Changelog</h2><div class="prose preserve-lines"><%= product.changelog %></div></article><% } %>
+  <% if (product.instructions) { %><article class="panel"><h2>Instruksi penggunaan</h2><div class="prose preserve-lines"><%= product.instructions %></div></article><% } %>
+</div></section>
+<% } %>
+<% if (related?.length) { %>
+<section class="section"><div class="container"><div class="section-head"><div><span class="eyebrow">REKOMENDASI</span><h2>Produk terkait</h2></div></div><div class="product-grid"><% related.forEach(item => { %><%- include('../partials/product-card', { product: item }) %><% }) %></div></div></section>
+<% } %>
+<% if (recentlyViewed?.length) { %>
+<section class="section section-soft"><div class="container"><div class="section-head"><div><span class="eyebrow">TERAKHIR DILIHAT</span><h2>Lanjutkan penjelajahan</h2></div></div><div class="product-grid"><% recentlyViewed.forEach(item => { %><%- include('../partials/product-card', { product: item }) %><% }) %></div></div></section>
+<% } %>

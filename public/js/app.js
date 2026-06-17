@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-toast-close]').forEach((button) => button.addEventListener('click', () => button.closest('[data-toast]')?.remove()));
   setTimeout(() => document.querySelectorAll('[data-toast]').forEach((toast) => toast.classList.add('toast-hide')), 5000);
 
+  document.querySelectorAll('[data-confirm]').forEach((form) => form.addEventListener('submit', (event) => {
+    if (!window.confirm(form.dataset.confirm || 'Lanjutkan tindakan ini?')) event.preventDefault();
+  }));
 
   document.querySelectorAll('[data-captcha-refresh]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -25,8 +28,119 @@ document.addEventListener('DOMContentLoaded', () => {
     catch { button.textContent = 'Gagal'; }
   }));
 
+  document.querySelectorAll('[data-payment-expiry]').forEach((box) => {
+    const output = box.querySelector('[data-countdown]');
+    const expiresAt = new Date(box.dataset.paymentExpiry).getTime();
+    const render = () => {
+      const remaining = expiresAt - Date.now();
+      if (!Number.isFinite(remaining) || remaining <= 0) { output.textContent = 'kedaluwarsa'; return; }
+      const hours = Math.floor(remaining / 3600000);
+      const minutes = Math.floor((remaining % 3600000) / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      output.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    };
+    render(); setInterval(render, 1000);
+  });
+
+  const avatarInput = document.querySelector('[data-avatar-input]');
+  const avatarPreview = document.querySelector('[data-avatar-preview]');
+  const avatarFallback = document.querySelector('[data-avatar-fallback]');
+  const avatarData = document.querySelector('[data-avatar-data]');
+  const avatarRemoveValue = document.querySelector('[data-avatar-remove-value]');
+  const avatarMessage = document.querySelector('[data-avatar-message]');
+  const showAvatarMessage = (message, error = false) => {
+    if (!avatarMessage) return;
+    avatarMessage.textContent = message;
+    avatarMessage.style.color = error ? 'var(--danger)' : 'var(--success)';
+  };
+  avatarInput?.addEventListener('change', () => {
+    const file = avatarInput.files?.[0];
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      avatarInput.value = '';
+      showAvatarMessage('Gunakan file PNG, JPG, atau WebP.', true);
+      return;
+    }
+    if (file.size > 750 * 1024) {
+      avatarInput.value = '';
+      showAvatarMessage('Ukuran foto maksimal 750 KB.', true);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (avatarPreview) { avatarPreview.src = reader.result; avatarPreview.hidden = false; }
+      if (avatarFallback) avatarFallback.hidden = true;
+      if (avatarData) avatarData.value = reader.result;
+      if (avatarRemoveValue) avatarRemoveValue.value = '0';
+      showAvatarMessage('Foto siap disimpan. Klik Simpan perubahan.');
+    };
+    reader.onerror = () => showAvatarMessage('Foto tidak dapat dibaca.', true);
+    reader.readAsDataURL(file);
+  });
+  document.querySelector('[data-avatar-remove]')?.addEventListener('click', () => {
+    if (avatarPreview) { avatarPreview.src = ''; avatarPreview.hidden = true; }
+    if (avatarFallback) avatarFallback.hidden = false;
+    if (avatarData) avatarData.value = '';
+    if (avatarRemoveValue) avatarRemoveValue.value = '1';
+    if (avatarInput) avatarInput.value = '';
+    showAvatarMessage('Foto akan dihapus setelah perubahan disimpan.');
+  });
+  const bio = document.querySelector('textarea[name="bio"]');
+  const bioCount = document.querySelector('[data-bio-count]');
+  bio?.addEventListener('input', () => { if (bioCount) bioCount.textContent = String(bio.value.length); });
+
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  const currentPath = document.querySelector('meta[name="current-path"]')?.content || window.location.pathname;
+
+  const productForm = document.querySelector('[data-product-form]');
+  const productAiButton = document.querySelector('[data-ai-product-copy]');
+  productAiButton?.addEventListener('click', async () => {
+    const original = productAiButton.textContent;
+    const name = productForm?.elements.name?.value?.trim();
+    if (!name) { window.alert('Isi nama produk terlebih dahulu.'); productForm?.elements.name?.focus(); return; }
+    const selected = productForm.elements.category?.selectedOptions?.[0];
+    productAiButton.disabled = true; productAiButton.textContent = 'Membuat konten...';
+    try {
+      const response = await fetch('/admin/ai/product-copy', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf },
+        body: JSON.stringify({ name, categoryName: selected?.dataset.name || selected?.textContent || '', tags: productForm.elements.tags?.value || '', version: productForm.elements.version?.value || '1.0.0' })
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.ok) throw new Error(payload.message || 'Gagal membuat konten produk.');
+      for (const key of ['shortDescription', 'description', 'instructions', 'changelog']) if (productForm.elements[key] && payload.data[key]) productForm.elements[key].value = payload.data[key];
+      if (productForm.elements.tags && Array.isArray(payload.data.tags)) productForm.elements.tags.value = payload.data.tags.join(', ');
+      productAiButton.textContent = payload.source === 'ai' ? 'Konten AI berhasil dibuat' : 'Template otomatis berhasil dibuat';
+    } catch (error) { window.alert(error.message); productAiButton.textContent = 'Gagal, coba lagi'; }
+    finally { productAiButton.disabled = false; setTimeout(() => { productAiButton.textContent = original; }, 2500); }
+  });
+
+  const chat = document.querySelector('[data-ai-chat]');
+  const chatPanel = chat?.querySelector('[data-ai-panel]');
+  const chatToggle = chat?.querySelector('[data-ai-toggle]');
+  const chatMessages = chat?.querySelector('[data-ai-messages]');
+  const chatForm = chat?.querySelector('[data-ai-form]');
+  const setChatOpen = (open) => { chat?.classList.toggle('open', open); chatPanel?.setAttribute('aria-hidden', String(!open)); chatToggle?.setAttribute('aria-expanded', String(open)); if (open) chatForm?.elements.message?.focus(); };
+  chatToggle?.addEventListener('click', () => setChatOpen(!chat.classList.contains('open')));
+  chat?.querySelector('[data-ai-close]')?.addEventListener('click', () => setChatOpen(false));
+  const appendMessage = (text, type) => { const node = document.createElement('div'); node.className = `ai-message ai-message-${type}`; node.textContent = text; chatMessages.appendChild(node); chatMessages.scrollTop = chatMessages.scrollHeight; return node; };
+  chatForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const input = chatForm.elements.message;
+    const message = input.value.trim();
+    if (!message) return;
+    appendMessage(message, 'user'); input.value = ''; input.disabled = true;
+    const loading = appendMessage('Sedang mencari informasi...', 'bot');
+    try {
+      const response = await fetch('/api/ai/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify({ message, currentPath }) });
+      const payload = await response.json();
+      if (!response.ok || !payload.ok) throw new Error(payload.message || 'Chatbot gagal merespons.');
+      loading.textContent = payload.reply;
+    } catch (error) { loading.textContent = `${error.message} Silakan coba lagi.`; }
+    finally { input.disabled = false; input.focus(); }
+  });
+
   document.querySelectorAll('form').forEach((form) => form.addEventListener('submit', (event) => {
-    if (event.defaultPrevented) return;
+    if (event.defaultPrevented || form.matches('[data-ai-form]')) return;
     const button = form.querySelector('[data-submit-lock]');
     if (button) { button.disabled = true; button.textContent = 'Memproses...'; }
   }));
