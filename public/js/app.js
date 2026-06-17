@@ -1,7 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.querySelector('[data-nav-toggle]');
+  const closeNavButton = document.querySelector('[data-nav-close]');
   const nav = document.querySelector('[data-nav]');
-  toggle?.addEventListener('click', () => nav?.classList.toggle('open'));
+  const navOverlay = document.querySelector('[data-nav-overlay]');
+  const setNavOpen = (open) => {
+    if (!nav) return;
+    nav.classList.toggle('open', open);
+    nav.setAttribute('aria-hidden', String(!open));
+    toggle?.setAttribute('aria-expanded', String(open));
+    if (navOverlay) navOverlay.hidden = !open;
+    document.body.classList.toggle('nav-open', open);
+  };
+  toggle?.addEventListener('click', () => setNavOpen(!nav?.classList.contains('open')));
+  closeNavButton?.addEventListener('click', () => setNavOpen(false));
+  navOverlay?.addEventListener('click', () => setNavOpen(false));
+  nav?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+    if (window.innerWidth <= 780) setNavOpen(false);
+  }));
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setNavOpen(false);
+  });
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 780) setNavOpen(false);
+  });
 
   document.querySelectorAll('[data-toast-close]').forEach((button) => button.addEventListener('click', () => button.closest('[data-toast]')?.remove()));
   setTimeout(() => document.querySelectorAll('[data-toast]').forEach((toast) => toast.classList.add('toast-hide')), 5000);
