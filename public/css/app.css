@@ -101,3 +101,11 @@ select[multiple]{min-height:180px;padding:8px}
 .flash-sale-section{background:linear-gradient(180deg,#fff7f7,#fff)}
 .discount-row{color:#6d28d9}
 .discount-row strong{color:#6d28d9}
+
+/* Free product and zero-total checkout */
+.free-checkout-box{display:flex;gap:18px;align-items:flex-start;padding:20px;border:1px solid #c7d2fe;background:#eef2ff;border-radius:16px}
+.free-checkout-box h2{margin:8px 0 6px}.free-checkout-box p{margin:0;color:#4b5563}
+.free-checkout-icon{width:52px;height:52px;display:grid;place-items:center;flex:0 0 auto;border-radius:14px;background:#4f46e5;color:#fff}
+.free-checkout-icon svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.free-price-label{display:inline-flex;align-items:center;border-radius:999px;background:#dcfce7;color:#166534;font-weight:800;padding:5px 10px;font-size:.78rem;letter-spacing:.04em}
+@media(max-width:640px){.free-checkout-box{flex-direction:column}.free-checkout-icon{width:46px;height:46px}}
