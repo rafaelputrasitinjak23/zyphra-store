@@ -32,7 +32,14 @@ const env = {
   },
   feeSplitThreshold: Number(process.env.FEE_SPLIT_THRESHOLD || 50000),
   downloadTokenSecret: process.env.DOWNLOAD_TOKEN_SECRET || process.env.SESSION_SECRET || 'change-download-secret',
-  downloadTokenTtl: process.env.DOWNLOAD_TOKEN_TTL || '5m'
+  downloadTokenTtl: process.env.DOWNLOAD_TOKEN_TTL || '5m',
+  ai: {
+    enabled: bool(process.env.AI_ENABLED, true),
+    baseUrl: (process.env.AI_BASE_URL || 'https://api.siputzx.my.id').replace(/\/$/, ''),
+    path: process.env.AI_PATH || '/api/ai/glm47flash',
+    temperature: Number(process.env.AI_TEMPERATURE || 0.7),
+    timeoutMs: Number(process.env.AI_TIMEOUT_MS || 30000)
+  }
 };
 
 function assertRuntimeConfig() {

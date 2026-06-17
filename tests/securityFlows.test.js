@@ -69,3 +69,26 @@ test('CAPTCHA teks valid hanya dapat digunakan sekali', async () => {
   assert.equal(verifyTextCaptcha(req, id, code.toLowerCase()), true);
   assert.throws(() => verifyTextCaptcha(req, id, code), /tidak ditemukan|sudah digunakan/);
 });
+
+const { extractAiText, parseJsonFromText, fallbackProductCopy } = require('../services/aiService');
+const { canCancelOrder, normalizeProviderStatus } = require('../services/orderCancellationService');
+
+test('parser AI mendukung respons API bertingkat dan JSON code fence', () => {
+  assert.equal(extractAiText({ status: true, data: { response: 'Halo dari AI' } }), 'Halo dari AI');
+  assert.deepEqual(parseJsonFromText('```json\n{"shortDescription":"Produk bagus","tags":["nodejs"]}\n```'), { shortDescription: 'Produk bagus', tags: ['nodejs'] });
+});
+
+test('generator produk memiliki fallback saat layanan AI gagal', () => {
+  const content = fallbackProductCopy({ name: 'Bot WhatsApp', category: 'Bot', tags: ['nodejs', 'baileys'], version: '2.0.0' });
+  assert.match(content.shortDescription, /Bot WhatsApp/);
+  assert.match(content.description, /Fitur utama/);
+  assert.ok(content.tags.includes('nodejs'));
+});
+
+test('hanya transaksi pending yang dapat dibatalkan', () => {
+  assert.equal(canCancelOrder({ paymentStatus: 'pending', orderStatus: 'awaiting_payment', accessGranted: false }), true);
+  assert.equal(canCancelOrder({ paymentStatus: 'paid', orderStatus: 'fulfilled', accessGranted: true }), false);
+  assert.equal(canCancelOrder({ paymentStatus: 'cancelled', orderStatus: 'cancelled', accessGranted: false }), false);
+  assert.equal(normalizeProviderStatus('completed'), 'paid');
+  assert.equal(normalizeProviderStatus('processing'), 'pending');
+});

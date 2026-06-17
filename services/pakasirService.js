@@ -22,9 +22,9 @@ async function cancelTransaction({ orderId, amount }) {
   ensureConfig();
   try {
     const { data } = await client().post('/api/transactioncancel', { project: env.pakasir.slug, order_id: orderId, amount, api_key: env.pakasir.apiKey });
-    return data;
+    return data || { cancelled: true };
   } catch (error) {
-    return { cancelled: false, error: error.response?.data || error.message };
+    throw new AppError(error.response?.data?.message || error.message || 'Gagal membatalkan transaksi Pakasir.', 502, 'PAKASIR_CANCEL_FAILED');
   }
 }
 async function getTransactionDetail({ orderId, amount }) {
@@ -49,7 +49,7 @@ async function createReconciledTransaction({ method, orderId, subtotal, threshol
     last = await createTransaction({ method, orderId, amount });
     const split = normalizeAuthoritativeFee(subtotal, threshold, last.payment);
     if (split.isBalanced) return { ...last, split };
-    await cancelTransaction({ orderId, amount: Number(last.payment.amount) });
+    await cancelTransaction({ orderId, amount: Number(last.payment.amount) }).catch(() => null);
     amount = split.expectedAmount;
   }
   throw new AppError('Fee Pakasir tidak dapat direkonsiliasi. Periksa konfigurasi fee metode pembayaran.', 502, 'PAKASIR_FEE_MISMATCH');

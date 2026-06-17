@@ -19,8 +19,10 @@ async function markPaid(orderId, transaction) {
         const product = await Product.findById(item.product).session(session);
         if (!product || !product.active) throw new AppError(`Produk ${item.name} tidak tersedia.`, 409, 'PRODUCT_UNAVAILABLE');
         if (!product.unlimitedStock) {
-          const updated = await Product.findOneAndUpdate({ _id: product._id, stock: { $gte: item.quantity } }, { $inc: { stock: -item.quantity } }, { new: true, session });
+          const updated = await Product.findOneAndUpdate({ _id: product._id, stock: { $gte: item.quantity } }, { $inc: { stock: -item.quantity, soldCount: item.quantity } }, { new: true, session });
           if (!updated) throw new AppError(`Stok ${item.name} habis saat pembayaran diproses.`, 409, 'STOCK_COMMIT_FAILED');
+        } else {
+          await Product.updateOne({ _id: product._id }, { $inc: { soldCount: item.quantity } }, { session });
         }
       }
       order.paymentStatus = 'paid';
