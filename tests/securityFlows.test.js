@@ -37,9 +37,9 @@ test('harga dari frontend diabaikan dan harga database digunakan', () => {
   assert.equal(row.lineTotal, 40000);
 });
 
-test('autentikasi hanya menyediakan login email dengan CAPTCHA, password, dan OTP', () => {
+test('login email menggunakan CAPTCHA dan password tanpa OTP', () => {
   assert.deepEqual(Object.keys(AUTH_REQUIREMENTS), ['email']);
-  assert.deepEqual(requirementsFor('email'), { captcha: true, password: true, otp: true });
+  assert.deepEqual(requirementsFor('email'), { captcha: true, password: true, otp: false });
   assert.equal(requirementsFor('social'), null);
 });
 

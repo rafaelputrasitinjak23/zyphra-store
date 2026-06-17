@@ -1,1 +1,11 @@
-const router = require('express').Router(); const asyncHandler = require('../utils/asyncHandler'); const c = require('../controllers/checkoutController'); const { requireAuth } = require('../middlewares/auth'); const { checkoutLimiter } = require('../middlewares/rateLimits'); router.use(requireAuth); router.get('/', asyncHandler(c.show)); router.post('/', checkoutLimiter, asyncHandler(c.create)); module.exports = router;
+const router = require('express').Router();
+const asyncHandler = require('../utils/asyncHandler');
+const c = require('../controllers/checkoutController');
+const { requireAuth } = require('../middlewares/auth');
+const { checkoutLimiter } = require('../middlewares/rateLimits');
+router.use(requireAuth);
+router.get('/', asyncHandler(c.show));
+router.post('/discount', checkoutLimiter, asyncHandler(c.applyDiscount));
+router.post('/discount/remove', asyncHandler(c.removeDiscount));
+router.post('/', checkoutLimiter, asyncHandler(c.create));
+module.exports = router;

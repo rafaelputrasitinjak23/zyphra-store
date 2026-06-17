@@ -22,8 +22,14 @@ const schema = new mongoose.Schema({
   instructions: { type: String, default: '' },
   downloadLimit: { type: Number, min: 1, default: 5 },
   viewCount: { type: Number, min: 0, default: 0, index: true },
-  soldCount: { type: Number, min: 0, default: 0, index: true }
+  soldCount: { type: Number, min: 0, default: 0, index: true },
+  flashSale: {
+    enabled: { type: Boolean, default: false },
+    price: { type: Number, min: 0, default: null },
+    startsAt: { type: Date, default: null },
+    endsAt: { type: Date, default: null }
+  }
 }, { timestamps: true });
-schema.virtual('effectivePrice').get(function () { return this.promoPrice !== null && this.promoPrice < this.price ? this.promoPrice : this.price; });
+schema.virtual('effectivePrice').get(function () { const base = this.promoPrice !== null && this.promoPrice < this.price ? this.promoPrice : this.price; const now = Date.now(); const flash = this.flashSale || {}; return flash.enabled && flash.price !== null && flash.price < base && flash.startsAt && flash.endsAt && now >= new Date(flash.startsAt).getTime() && now < new Date(flash.endsAt).getTime() ? flash.price : base; });
 schema.set('toJSON', { virtuals: true, transform(doc, ret) { delete ret.digitalFileUrl; return ret; } });
 module.exports = mongoose.model('Product', schema);

@@ -28,6 +28,29 @@ document.addEventListener('DOMContentLoaded', () => {
     catch { button.textContent = 'Gagal'; }
   }));
 
+
+  document.querySelectorAll('[data-flash-expiry]').forEach((box) => {
+    const output = box.querySelector('[data-flash-countdown]');
+    const expiresAt = new Date(box.dataset.flashExpiry).getTime();
+    const render = () => {
+      const remaining = expiresAt - Date.now();
+      if (!output) return;
+      if (!Number.isFinite(remaining) || remaining <= 0) { output.textContent = 'Selesai'; return; }
+      const days = Math.floor(remaining / 86400000);
+      const hours = Math.floor((remaining % 86400000) / 3600000);
+      const minutes = Math.floor((remaining % 3600000) / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      output.textContent = `${days > 0 ? `${days}h ` : ''}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    };
+    render(); setInterval(render, 1000);
+  });
+
+  const discountScope = document.querySelector('[data-discount-scope]');
+  const discountProducts = document.querySelector('[data-discount-products]');
+  const syncDiscountScope = () => { if (discountProducts) discountProducts.hidden = discountScope?.value !== 'products'; };
+  discountScope?.addEventListener('change', syncDiscountScope);
+  syncDiscountScope();
+
   document.querySelectorAll('[data-payment-expiry]').forEach((box) => {
     const output = box.querySelector('[data-countdown]');
     const expiresAt = new Date(box.dataset.paymentExpiry).getTime();

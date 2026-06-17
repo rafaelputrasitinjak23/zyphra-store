@@ -81,3 +81,23 @@
   .product-card-main{grid-template-columns:1fr}
   .product-card-price strong{font-size:20px}
 }
+
+/* Flash sale, voucher, and promo */
+.flash-sale-ribbon{position:absolute;left:12px;top:12px;z-index:2;background:#ef4444;color:#fff;border-radius:999px;padding:7px 10px;font-size:.72rem;font-weight:900;letter-spacing:.06em;box-shadow:0 8px 24px rgba(239,68,68,.28)}
+.badge-danger{background:#fee2e2!important;color:#b91c1c!important;border-color:#fecaca!important}
+.badge-success{background:#dcfce7!important;color:#166534!important;border-color:#bbf7d0!important}
+.flash-countdown{display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(135deg,#fff1f2,#fff7ed);border:1px solid #fecdd3;border-radius:14px;padding:12px 14px;margin:12px 0;color:#9f1239}
+.flash-countdown strong{font-variant-numeric:tabular-nums;font-size:1.08rem;color:#be123c}
+.flash-countdown.compact{padding:8px 10px;margin:4px 0 10px;font-size:.78rem}
+.flash-countdown.compact strong{font-size:.82rem}
+.flash-inline{display:inline-block;margin-left:6px;color:#dc2626;font-weight:800;font-size:.68rem;text-transform:uppercase}
+.flash-sale-admin-box{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--soft)}
+.flash-sale-admin-box>div:first-child{grid-column:1/-1}.flash-sale-admin-box p{margin:.3rem 0 0;color:var(--muted)}
+.discount-form{margin:16px 0}.input-action{display:flex;gap:8px;margin-top:8px}.input-action input{min-width:0;flex:1;text-transform:uppercase}
+.applied-discount{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px;border:1px dashed #8b5cf6;background:#f5f3ff;border-radius:14px;margin:14px 0}.applied-discount>div{display:grid;gap:4px}.applied-discount b{color:#6d28d9;white-space:nowrap}.applied-discount small{color:var(--muted)}
+.inline-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+select[multiple]{min-height:180px;padding:8px}
+@media(max-width:700px){.flash-sale-admin-box{grid-template-columns:1fr}.input-action{align-items:stretch}.input-action .button{white-space:nowrap}.applied-discount{align-items:flex-start}}
+.flash-sale-section{background:linear-gradient(180deg,#fff7f7,#fff)}
+.discount-row{color:#6d28d9}
+.discount-row strong{color:#6d28d9}

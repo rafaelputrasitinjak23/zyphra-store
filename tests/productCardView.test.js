@@ -12,5 +12,5 @@ test('kartu produk selalu menampilkan nama dan harga script', () => {
   assert.match(template, /Nama script/);
   assert.match(template, /Harga script/);
   assert.match(template, /product\.name/);
-  assert.match(template, /rupiah\(product\.(?:promoPrice|price)/);
+  assert.match(template, /pricing\.effectivePrice/);
 });

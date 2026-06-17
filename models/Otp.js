@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const schema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
   email: { type: String, required: true, lowercase: true, index: true },
-  purpose: { type: String, enum: ['register', 'login', 'password_reset'], required: true, index: true },
+  purpose: { type: String, enum: ['register', 'password_reset'], required: true, index: true },
   codeHash: { type: String, required: true },
   attempts: { type: Number, default: 0 },
   maxAttempts: { type: Number, default: 5 },

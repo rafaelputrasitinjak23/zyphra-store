@@ -5,6 +5,7 @@ const Product = require('../models/Product');
 const Cart = require('../models/Cart');
 const { AppError } = require('../utils/errors');
 const emailService = require('./emailService');
+const { commitDiscountUsage } = require('./discountService');
 
 async function markPaid(orderId, transaction) {
   const session = await mongoose.startSession();
@@ -34,6 +35,7 @@ async function markPaid(orderId, transaction) {
       await order.save({ session });
       await Payment.updateOne({ order: order._id }, { $set: { status: 'completed', lastCheckResponse: transaction, lastCheckedAt: new Date() } }, { session });
       await Cart.updateOne({ user: order.user }, { $pull: { items: { product: { $in: order.items.map((item) => item.product) } } } }, { session });
+      await commitDiscountUsage(order._id, session);
       paidOrder = order;
     });
   } finally { await session.endSession(); }

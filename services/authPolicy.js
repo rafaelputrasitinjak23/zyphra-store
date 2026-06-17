@@ -1,5 +1,5 @@
 const AUTH_REQUIREMENTS = Object.freeze({
-  email: Object.freeze({ captcha: true, password: true, otp: true })
+  email: Object.freeze({ captcha: true, password: true, otp: false })
 });
 
 function requirementsFor(method) {

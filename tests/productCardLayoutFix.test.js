@@ -11,5 +11,5 @@ test("thumbnail kartu produk memiliki tinggi tetap sehingga nama dan harga terli
 
 test("stylesheet menggunakan cache busting agar perubahan tampil setelah deploy", () => {
   const layout = fs.readFileSync(path.join(__dirname, "../views/layouts/main.ejs"), "utf8");
-  assert.match(layout, /app\.css\?v=1\.4\.2-cardfix/);
+  assert.match(layout, /app\.css\?v=1\.5\.0-promotions/);
 });
