@@ -47,8 +47,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const discountScope = document.querySelector('[data-discount-scope]');
   const discountProducts = document.querySelector('[data-discount-products]');
-  const syncDiscountScope = () => { if (discountProducts) discountProducts.hidden = discountScope?.value !== 'products'; };
+  const benefitType = document.querySelector('[data-benefit-type]');
+  const orderDiscountFields = document.querySelector('[data-order-discount-fields]');
+  const walletCreditFields = document.querySelector('[data-wallet-credit-fields]');
+  const syncDiscountScope = () => {
+    const isWalletCredit = benefitType?.value === 'wallet_credit';
+    if (orderDiscountFields) orderDiscountFields.hidden = isWalletCredit;
+    if (walletCreditFields) walletCreditFields.hidden = !isWalletCredit;
+    if (discountProducts) discountProducts.hidden = isWalletCredit || discountScope?.value !== 'products';
+  };
   discountScope?.addEventListener('change', syncDiscountScope);
+  benefitType?.addEventListener('change', syncDiscountScope);
   syncDiscountScope();
 
   document.querySelectorAll('[data-payment-expiry]').forEach((box) => {

@@ -41,6 +41,7 @@ async function validateDiscountForCart({ code, userId, items, itemsSubtotal }) {
   if (!normalized) return null;
   const discount = await DiscountCode.findOne({ code: normalized }).populate('products', 'name slug active');
   if (!discount) throw new AppError('Voucher atau kode promo tidak ditemukan.', 404, 'DISCOUNT_NOT_FOUND');
+  if (discount.benefitType === 'wallet_credit') throw new AppError('Kode ini digunakan melalui menu Dompet.', 400, 'WALLET_VOUCHER_USE_WALLET');
   if (!isDiscountCurrentlyActive(discount)) throw new AppError('Voucher atau kode promo belum aktif atau sudah berakhir.', 400, 'DISCOUNT_INACTIVE');
   const now = new Date();
   const staleCutoff = new Date(now.getTime() - 10 * 60 * 1000);

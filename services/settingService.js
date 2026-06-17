@@ -15,11 +15,22 @@ const defaultFees = [
 ];
 
 async function getStoreSettings() {
-  return StoreSetting.findOneAndUpdate(
+  const settings = await StoreSetting.findOneAndUpdate(
     { key: 'store' },
-    { $setOnInsert: { key: 'store', storeName: 'Zyphra Store', feeSplitThreshold: env.feeSplitThreshold, paymentFees: defaultFees } },
+    { $setOnInsert: { key: 'store', storeName: 'Zyphra Store', feeSplitThreshold: env.feeSplitThreshold, paymentFees: defaultFees, wallet: { enabled: true, minDeposit: 10000, maxDeposit: 5000000 } } },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
+  let changed = false;
+  if (!settings.wallet) {
+    settings.wallet = { enabled: true, minDeposit: 10000, maxDeposit: 5000000 };
+    changed = true;
+  }
+  if (!settings.paymentFees?.length) {
+    settings.paymentFees = defaultFees;
+    changed = true;
+  }
+  if (changed) await settings.save();
+  return settings;
 }
 
 module.exports = { getStoreSettings, defaultFees };

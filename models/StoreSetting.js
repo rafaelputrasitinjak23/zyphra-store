@@ -13,6 +13,11 @@ const schema = new mongoose.Schema({
   key: { type: String, unique: true, default: 'store', index: true },
   storeName: { type: String, default: 'Zyphra Store' },
   feeSplitThreshold: { type: Number, default: 50000 },
-  paymentFees: [feeSchema]
+  paymentFees: [feeSchema],
+  wallet: {
+    enabled: { type: Boolean, default: true },
+    minDeposit: { type: Number, min: 1000, default: 10000 },
+    maxDeposit: { type: Number, min: 1000, default: 5000000 }
+  }
 }, { timestamps: true });
 module.exports = mongoose.model('StoreSetting', schema);
