@@ -1,32 +1,6 @@
 <div class="text-captcha" data-captcha-box>
-  <div class="captcha-preview">
-    <img
-      src="/auth/captcha.svg?id=<%= captchaId %>"
-      alt="Kode CAPTCHA lima karakter"
-      width="210"
-      height="72"
-      data-captcha-image
-    >
-    <button type="button" class="button button-ghost button-sm captcha-refresh" data-captcha-refresh aria-label="Buat kode CAPTCHA baru">
-      Muat ulang kode
-    </button>
-  </div>
+  <div class="captcha-preview"><img src="/auth/captcha.svg?id=<%= captchaId %>" alt="Kode verifikasi lima karakter" width="210" height="72" data-captcha-image><button type="button" class="button button-ghost button-sm captcha-refresh" data-captcha-refresh aria-label="Tampilkan kode baru">Ganti kode</button></div>
   <input type="hidden" name="captchaId" value="<%= captchaId %>">
-  <label>
-    Ketik kode yang terlihat
-    <input
-      type="text"
-      name="captchaText"
-      required
-      minlength="5"
-      maxlength="5"
-      pattern="[A-Za-z2-9]{5}"
-      autocomplete="off"
-      autocapitalize="characters"
-      spellcheck="false"
-      placeholder="Contoh: A7K9P"
-      aria-describedby="captcha-help"
-    >
-  </label>
-  <small id="captcha-help">Kode terdiri dari 5 huruf atau angka dan berlaku selama 5 menit.</small>
+  <label>Ketik kode yang terlihat<input type="text" name="captchaText" required minlength="5" maxlength="5" pattern="[A-Za-z2-9]{5}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Contoh: A7K9P" aria-describedby="captcha-help"></label>
+  <small id="captcha-help">Ganti kode jika tulisan sulit dibaca.</small>
 </div>

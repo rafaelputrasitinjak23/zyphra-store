@@ -1,0 +1,11 @@
+<section class="page-head"><div class="container"><span class="eyebrow">ISI SALDO</span><h1>Tambah saldo dompet</h1><p>Pilih nominal dan metode pembayaran yang paling nyaman.</p></div></section>
+<section class="section pt-small"><div class="container narrow-medium">
+  <form class="deposit-form panel" method="post" action="/wallet/deposit">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="depositNonce" value="<%= nonce %>">
+    <div class="deposit-balance-note"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM16 11h5v5h-5z"/></svg><div><small>Nominal deposit</small><strong>Mulai <%= rupiah(minDeposit) %></strong></div></div>
+    <label>Jumlah saldo<input type="number" name="amount" min="<%= minDeposit %>" max="<%= maxDeposit %>" step="1000" value="<%= minDeposit %>" required><small>Minimum <%= rupiah(minDeposit) %> dan maksimum <%= rupiah(maxDeposit) %> per transaksi.</small></label>
+    <fieldset><legend>Metode pembayaran</legend><div class="payment-methods"><% methods.forEach((method, index) => { %><label class="payment-option"><input type="radio" name="paymentMethod" value="<%= method.method %>" <%= index === 0 ? 'checked' : '' %> required><span><strong><%= method.label %></strong><small>Rincian pembayaran ditampilkan pada langkah berikutnya</small></span><svg viewBox="0 0 24 24"><path d="M4 7h16v10H4zM7 14h4"/></svg></label><% }) %></div></fieldset>
+    <% if (methods.length) { %><button class="button button-block" type="submit" data-submit-lock>Lanjutkan</button><% } else { %><div class="empty compact"><h3>Belum ada metode yang tersedia</h3><p>Silakan kembali lagi nanti.</p></div><% } %>
+    <p class="form-footnote">Saldo otomatis masuk setelah pembayaran berhasil dikonfirmasi.</p>
+  </form>
+</div></section>

@@ -5,7 +5,7 @@
     <nav class="nav" data-nav>
       <a class="<%= currentPath.startsWith('/products') ? 'active' : '' %>" href="/products">Produk</a>
       <% if (currentUser) { %>
-        <a href="/cart">Keranjang</a><a href="/orders">Pesanan</a><a href="/account/purchases">Produk Saya</a>
+        <a href="/cart">Keranjang</a><a href="/wallet">Dompet</a><a href="/orders">Pesanan</a><a href="/account/purchases">Produk Saya</a>
         <% if (currentUser.role === 'admin') { %><a href="/admin">Admin</a><% } %>
         <a class="header-account <%= currentPath.startsWith('/account') ? 'active' : '' %>" href="/account">
           <% if (currentUser.avatar) { %><img src="<%= currentUser.avatar %>" alt="Foto <%= currentUser.name %>"><% } else { %><span><%= currentUser.name.charAt(0).toUpperCase() %></span><% } %>

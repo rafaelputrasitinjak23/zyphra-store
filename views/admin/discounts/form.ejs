@@ -1,26 +1,35 @@
 <section class="admin-shell">
   <%- include('../../partials/admin-nav') %>
   <div class="admin-content">
-    <div class="admin-head"><div><span class="eyebrow">PROMOSI</span><h1><%= discount ? 'Edit kode' : 'Tambah voucher/kode promo' %></h1></div><a class="button button-ghost" href="/admin/discounts">Kembali</a></div>
-    <form class="panel form-grid" method="post" action="<%= discount ? `/admin/discounts/${discount._id}` : '/admin/discounts' %>">
+    <div class="admin-head"><div><span class="eyebrow">PROMOSI</span><h1><%= discount ? 'Edit program' : 'Tambah voucher atau promo' %></h1><p>Buat diskon belanja atau voucher saldo yang dapat diklaim pengguna.</p></div><a class="button button-ghost" href="/admin/discounts">Kembali</a></div>
+    <form class="panel form-grid" method="post" action="<%= discount ? `/admin/discounts/${discount._id}` : '/admin/discounts' %>" data-discount-form>
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <label>Nama program<input name="name" value="<%= discount?.name || '' %>" required placeholder="Promo pengguna baru"></label>
-      <label>Kode<input name="code" value="<%= discount?.code || '' %>" required maxlength="40" placeholder="ZYPRHA10" style="text-transform:uppercase"></label>
-      <label>Jenis<select name="kind"><option value="promo" <%= discount?.kind !== 'voucher' ? 'selected' : '' %>>Kode promo</option><option value="voucher" <%= discount?.kind === 'voucher' ? 'selected' : '' %>>Voucher</option></select></label>
-      <label>Tipe diskon<select name="discountType"><option value="percentage" <%= discount?.discountType !== 'fixed' ? 'selected' : '' %>>Persentase (%)</option><option value="fixed" <%= discount?.discountType === 'fixed' ? 'selected' : '' %>>Nominal Rupiah</option></select></label>
-      <label>Nilai diskon<input type="number" name="value" min="1" value="<%= discount?.value || 10 %>" required></label>
-      <label>Maksimum diskon<input type="number" name="maxDiscount" min="0" value="<%= discount?.maxDiscount || 0 %>"><small>Isi 0 jika tanpa batas. Berlaku untuk diskon persen.</small></label>
-      <label>Minimal belanja<input type="number" name="minSubtotal" min="0" value="<%= discount?.minSubtotal || 0 %>"></label>
-      <label>Cakupan<select name="scope" data-discount-scope><option value="all" <%= discount?.scope !== 'products' ? 'selected' : '' %>>Semua produk</option><option value="products" <%= discount?.scope === 'products' ? 'selected' : '' %>>Satu atau beberapa produk</option></select></label>
-      <div class="span-2" data-discount-products <%= discount?.scope === 'products' ? '' : 'hidden' %>>
-        <label>Pilih produk<select name="products" multiple size="8"><% const chosen = new Set((discount?.products || []).map(item => String(item?._id || item))); products.forEach(product => { %><option value="<%= product._id %>" <%= chosen.has(String(product._id)) ? 'selected' : '' %>><%= product.name %> — <%= rupiah(product.price) %></option><% }) %></select><small>Tahan Ctrl/Command untuk memilih beberapa produk.</small></label>
+      <label>Kode<input name="code" value="<%= discount?.code || '' %>" required maxlength="40" placeholder="ZYPHRA10" style="text-transform:uppercase"></label>
+      <label class="span-2">Manfaat<select name="benefitType" data-benefit-type><option value="order_discount" <%= discount?.benefitType !== 'wallet_credit' ? 'selected' : '' %>>Potongan harga saat checkout</option><option value="wallet_credit" <%= discount?.benefitType === 'wallet_credit' ? 'selected' : '' %>>Saldo gratis untuk dompet pengguna</option></select></label>
+
+      <div class="span-2 form-subgrid" data-order-discount-fields>
+        <label>Jenis<select name="kind"><option value="promo" <%= discount?.kind !== 'voucher' ? 'selected' : '' %>>Kode promo</option><option value="voucher" <%= discount?.kind === 'voucher' ? 'selected' : '' %>>Voucher belanja</option></select></label>
+        <label>Tipe diskon<select name="discountType"><option value="percentage" <%= discount?.discountType !== 'fixed' ? 'selected' : '' %>>Persentase (%)</option><option value="fixed" <%= discount?.discountType === 'fixed' ? 'selected' : '' %>>Nominal Rupiah</option></select></label>
+        <label>Nilai diskon<input type="number" name="value" min="1" value="<%= discount?.benefitType === 'wallet_credit' ? 10 : (discount?.value || 10) %>"></label>
+        <label>Maksimum diskon<input type="number" name="maxDiscount" min="0" value="<%= discount?.maxDiscount || 0 %>"><small>Isi 0 jika tanpa batas.</small></label>
+        <label>Minimal belanja<input type="number" name="minSubtotal" min="0" value="<%= discount?.minSubtotal || 0 %>"></label>
+        <label>Cakupan<select name="scope" data-discount-scope><option value="all" <%= discount?.scope !== 'products' ? 'selected' : '' %>>Semua produk</option><option value="products" <%= discount?.scope === 'products' ? 'selected' : '' %>>Satu atau beberapa produk</option></select></label>
+        <div class="span-2" data-discount-products <%= discount?.scope === 'products' ? '' : 'hidden' %>>
+          <label>Pilih produk<select name="products" multiple size="8"><% const chosen = new Set((discount?.products || []).map(item => String(item?._id || item))); products.forEach(product => { %><option value="<%= product._id %>" <%= chosen.has(String(product._id)) ? 'selected' : '' %>><%= product.name %> — <%= rupiah(product.price) %></option><% }) %></select><small>Tahan Ctrl/Command untuk memilih beberapa produk.</small></label>
+        </div>
       </div>
+
+      <div class="span-2 form-subgrid" data-wallet-credit-fields hidden>
+        <label class="span-2">Nominal saldo gratis<input type="number" name="walletCreditAmount" min="1" value="<%= discount?.walletCreditAmount || 10000 %>" placeholder="10000"><small>Saldo masuk ke dompet pengguna setelah kode berhasil diklaim.</small></label>
+      </div>
+
       <label>Mulai<input type="datetime-local" name="startsAt" value="<%= datetimeLocal(discount?.startsAt || new Date()) %>" required></label>
       <label>Berakhir<input type="datetime-local" name="endsAt" value="<%= datetimeLocal(discount?.endsAt || new Date(Date.now() + 7 * 86400000)) %>" required></label>
       <label>Kuota total<input type="number" name="usageLimit" min="0" value="<%= discount?.usageLimit || 0 %>"><small>0 berarti tanpa batas.</small></label>
       <label>Batas per pengguna<input type="number" name="perUserLimit" min="1" value="<%= discount?.perUserLimit || 1 %>"></label>
       <label class="span-2">Deskripsi<textarea name="description" rows="4" maxlength="500"><%= discount?.description || '' %></textarea></label>
-      <label class="check span-2"><input type="checkbox" name="active" <%= discount ? (discount.active ? 'checked' : '') : 'checked' %>> Aktifkan kode</label>
+      <label class="check span-2"><input type="checkbox" name="active" <%= discount ? (discount.active ? 'checked' : '') : 'checked' %>> Aktifkan program</label>
       <div class="span-2"><button class="button" type="submit">Simpan</button></div>
     </form>
   </div>

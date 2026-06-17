@@ -7,6 +7,9 @@ const WebhookLog = require('../models/WebhookLog');
 const EmailLog = require('../models/EmailLog');
 const StoreSetting = require('../models/StoreSetting');
 const DiscountCode = require('../models/DiscountCode');
+const Wallet = require('../models/Wallet');
+const WalletTransaction = require('../models/WalletTransaction');
+const WalletDeposit = require('../models/WalletDeposit');
 const { getStoreSettings } = require('../services/settingService');
 const { slugify } = require('../utils/helpers');
 const { AppError } = require('../utils/errors');
@@ -15,6 +18,7 @@ const pakasir = require('../services/pakasirService');
 const orderService = require('../services/orderService');
 const emailService = require('../services/emailService');
 const cancellationService = require('../services/orderCancellationService');
+const walletService = require('../services/walletService');
 
 function number(value, fallback = 0) { const parsed = Number(value); return Number.isFinite(parsed) ? Math.round(parsed) : fallback; }
 function bool(value) { return value === 'on' || value === 'true' || value === true; }
@@ -47,20 +51,24 @@ function validateFlashSale(payload) {
 }
 
 function discountPayload(body) {
+  const benefitType = body.benefitType === 'wallet_credit' ? 'wallet_credit' : 'order_discount';
   const scope = body.scope === 'products' ? 'products' : 'all';
   const discountType = body.discountType === 'fixed' ? 'fixed' : 'percentage';
   const products = scope === 'products' ? array(body.products).filter(Boolean) : [];
+  const walletCreditAmount = Math.max(0, number(body.walletCreditAmount, 0));
   const payload = {
     name: String(body.name || '').trim(),
     code: String(body.code || '').trim().toUpperCase().replace(/\s+/g, ''),
-    kind: body.kind === 'voucher' ? 'voucher' : 'promo',
+    kind: benefitType === 'wallet_credit' ? 'voucher' : (body.kind === 'voucher' ? 'voucher' : 'promo'),
+    benefitType,
+    walletCreditAmount,
     description: String(body.description || '').trim(),
-    discountType,
-    value: Math.max(1, number(body.value, 1)),
-    maxDiscount: Math.max(0, number(body.maxDiscount, 0)),
-    minSubtotal: Math.max(0, number(body.minSubtotal, 0)),
-    scope,
-    products,
+    discountType: benefitType === 'wallet_credit' ? 'fixed' : discountType,
+    value: benefitType === 'wallet_credit' ? Math.max(1, walletCreditAmount) : Math.max(1, number(body.value, 1)),
+    maxDiscount: benefitType === 'wallet_credit' ? 0 : Math.max(0, number(body.maxDiscount, 0)),
+    minSubtotal: benefitType === 'wallet_credit' ? 0 : Math.max(0, number(body.minSubtotal, 0)),
+    scope: benefitType === 'wallet_credit' ? 'all' : scope,
+    products: benefitType === 'wallet_credit' ? [] : products,
     usageLimit: Math.max(0, number(body.usageLimit, 0)),
     perUserLimit: Math.max(1, number(body.perUserLimit, 1)),
     startsAt: dateOrNull(body.startsAt),
@@ -68,9 +76,10 @@ function discountPayload(body) {
     active: bool(body.active)
   };
   if (!payload.name || !payload.code) throw new AppError('Nama dan kode wajib diisi.', 400, 'DISCOUNT_REQUIRED_FIELDS');
-  if (discountType === 'percentage' && payload.value > 100) throw new AppError('Persentase diskon maksimal 100%.', 400, 'INVALID_DISCOUNT_PERCENT');
+  if (benefitType === 'wallet_credit' && walletCreditAmount <= 0) throw new AppError('Nominal saldo voucher harus lebih dari Rp0.', 400, 'INVALID_WALLET_CREDIT');
+  if (benefitType === 'order_discount' && discountType === 'percentage' && payload.value > 100) throw new AppError('Persentase diskon maksimal 100%.', 400, 'INVALID_DISCOUNT_PERCENT');
   if (!payload.startsAt || !payload.endsAt || payload.endsAt <= payload.startsAt) throw new AppError('Periode voucher/kode promo tidak valid.', 400, 'INVALID_DISCOUNT_PERIOD');
-  if (scope === 'products' && products.length === 0) throw new AppError('Pilih minimal satu produk untuk cakupan produk tertentu.', 400, 'DISCOUNT_PRODUCTS_REQUIRED');
+  if (benefitType === 'order_discount' && scope === 'products' && products.length === 0) throw new AppError('Pilih minimal satu produk untuk cakupan produk tertentu.', 400, 'DISCOUNT_PRODUCTS_REQUIRED');
   return payload;
 }
 
@@ -133,9 +142,14 @@ async function orderDetail(req, res) { const order = await Order.findOne({ order
 async function recheckOrder(req, res) {
   const order = await Order.findOne({ orderNumber: req.params.orderNumber });
   if (!order) throw new AppError('Pesanan tidak ditemukan.', 404);
-  if (order.paymentMethod === 'free' || order.total === 0) {
+  if (order.paymentChannel === 'free' || order.total === 0) {
     if (order.paymentStatus !== 'paid') await orderService.fulfillFreeOrder(order._id);
-    req.flash('success', 'Pesanan gratis dikonfirmasi secara internal dan tidak menggunakan Pakasir.');
+    req.flash('success', 'Pesanan berhasil dikonfirmasi.');
+    return res.redirect(`/admin/orders/${order.orderNumber}`);
+  }
+  if (order.paymentChannel === 'wallet') {
+    if (order.paymentStatus !== 'paid') await orderService.fulfillWalletOrder(order._id);
+    req.flash('success', 'Pembayaran saldo berhasil dikonfirmasi.');
     return res.redirect(`/admin/orders/${order.orderNumber}`);
   }
   const transaction = await pakasir.getTransactionDetail({ orderId: order.orderNumber, amount: order.pakasirAmount });
@@ -161,8 +175,52 @@ async function updateSettings(req, res) {
     if (fee.type === 'fixed') fee.fixed = Math.max(0, number(req.body[`fixed_${fee.method}`], fee.fixed));
     else { fee.percentage = Math.max(0, Number(req.body[`percentage_${fee.method}`] || fee.percentage)); fee.fixed = Math.max(0, number(req.body[`fixed_${fee.method}`], fee.fixed)); if (fee.type === 'tiered_qris') { fee.highPercentage = Math.max(0, Number(req.body[`highPercentage_${fee.method}`] || fee.highPercentage)); fee.highThreshold = Math.max(0, number(req.body[`highThreshold_${fee.method}`], fee.highThreshold)); } }
   });
+  settings.wallet.enabled = bool(req.body.walletEnabled);
+  settings.wallet.minDeposit = Math.max(1000, number(req.body.walletMinDeposit, settings.wallet.minDeposit));
+  settings.wallet.maxDeposit = Math.max(settings.wallet.minDeposit, number(req.body.walletMaxDeposit, settings.wallet.maxDeposit));
   await settings.save(); req.flash('success', 'Pengaturan disimpan.'); res.redirect('/admin/settings');
 }
+async function wallets(req, res) {
+  const [walletList, totals, depositStats, recentTransactions, recentDeposits] = await Promise.all([
+    Wallet.find().populate('user', 'name email status avatar').sort({ balance: -1 }).limit(300),
+    Wallet.aggregate([{ $group: { _id: null, available: { $sum: '$balance' }, held: { $sum: '$heldBalance' }, deposited: { $sum: '$totalDeposited' }, spent: { $sum: '$totalSpent' }, rewards: { $sum: '$totalRewards' }, users: { $sum: 1 } } }]),
+    WalletDeposit.aggregate([{ $match: { status: 'paid' } }, { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } }]),
+    WalletTransaction.find().populate('user', 'name email').sort({ createdAt: -1 }).limit(30),
+    WalletDeposit.find().populate('user', 'name email').sort({ createdAt: -1 }).limit(30)
+  ]);
+  res.render('admin/wallets', {
+    title: 'Dompet pengguna',
+    wallets: walletList,
+    stats: { ...(totals[0] || { available: 0, held: 0, deposited: 0, spent: 0, rewards: 0, users: 0 }), depositCount: depositStats[0]?.count || 0, depositTotal: depositStats[0]?.total || 0 },
+    transactions: recentTransactions,
+    deposits: recentDeposits
+  });
+}
+
+async function adjustWallet(req, res) {
+  const user = await User.findById(req.params.userId);
+  if (!user) throw new AppError('Pengguna tidak ditemukan.', 404);
+  await walletService.adminAdjustBalance({
+    userId: user._id,
+    amount: req.body.amount,
+    direction: req.body.direction === 'debit' ? 'debit' : 'credit',
+    adminId: req.user._id,
+    reason: req.body.reason || 'Penyesuaian saldo oleh admin'
+  });
+  req.flash('success', `Saldo ${user.name} berhasil diperbarui.`);
+  res.redirect('/admin/wallets');
+}
+
+
+async function updateWalletStatus(req, res) {
+  const wallet = await Wallet.findOne({ user: req.params.userId }).populate('user', 'name');
+  if (!wallet) throw new AppError('Dompet pengguna tidak ditemukan.', 404, 'WALLET_NOT_FOUND');
+  wallet.status = req.body.status === 'locked' ? 'locked' : 'active';
+  await wallet.save();
+  req.flash('success', `Dompet ${wallet.user?.name || 'pengguna'} ${wallet.status === 'locked' ? 'dinonaktifkan sementara' : 'diaktifkan kembali'}.`);
+  res.redirect('/admin/wallets');
+}
+
 async function webhookLogs(req, res) { res.render('admin/logs/webhooks', { title: 'Log webhook', logs: await WebhookLog.find().sort({ createdAt: -1 }).limit(200) }); }
 async function emailLogs(req, res) { res.render('admin/logs/emails', { title: 'Log email', logs: await EmailLog.find().select('+retryType').sort({ createdAt: -1 }).limit(200) }); }
 
@@ -183,4 +241,4 @@ async function retryEmail(req, res) {
   res.redirect('/admin/logs/emails');
 }
 
-module.exports = { dashboard, products, newProduct, createProduct, editProduct, updateProduct, toggleProduct, discounts, newDiscount, createDiscount, editDiscount, updateDiscount, toggleDiscount, categories, createCategory, updateCategory, users, updateUser, orders, orderDetail, recheckOrder, cancelOrder, resendInvoice, settings, updateSettings, webhookLogs, emailLogs, retryEmail };
+module.exports = { dashboard, products, newProduct, createProduct, editProduct, updateProduct, toggleProduct, discounts, newDiscount, createDiscount, editDiscount, updateDiscount, toggleDiscount, categories, createCategory, updateCategory, users, updateUser, orders, orderDetail, recheckOrder, cancelOrder, resendInvoice, settings, updateSettings, wallets, adjustWallet, updateWalletStatus, webhookLogs, emailLogs, retryEmail };

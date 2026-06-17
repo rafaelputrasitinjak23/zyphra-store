@@ -3,9 +3,10 @@ const Order = require('../models/Order');
 const User = require('../models/User');
 const { AppError } = require('../utils/errors');
 const { normalizePhone, normalizeBio, validateAvatarData } = require('../services/profileService');
+const walletService = require('../services/walletService');
 
 async function dashboard(req, res) {
-  const [aggregateResult, latestOrders] = await Promise.all([
+  const [aggregateResult, latestOrders, wallet] = await Promise.all([
     Order.aggregate([
       { $match: { user: req.user._id } },
       {
@@ -27,7 +28,8 @@ async function dashboard(req, res) {
         }
       }
     ]),
-    Order.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(5).lean()
+    Order.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(5).lean(),
+    walletService.getWallet(req.user._id)
   ]);
 
   const overview = aggregateResult[0]?.overview?.[0] || {};
@@ -40,7 +42,7 @@ async function dashboard(req, res) {
     purchasedProducts: products.purchasedProducts || 0
   };
 
-  res.render('account/dashboard', { title: 'Akun saya', stats, latestOrders });
+  res.render('account/dashboard', { title: 'Akun saya', stats, latestOrders, wallet });
 }
 
 async function profile(req, res) {

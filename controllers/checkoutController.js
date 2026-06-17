@@ -6,6 +6,7 @@ const { getPricedCart } = require('../services/cartService');
 const { getStoreSettings } = require('../services/settingService');
 const { calculateFeeSplit } = require('../services/feeService');
 const { validateDiscountForCart, normalizeCode } = require('../services/discountService');
+const walletService = require('../services/walletService');
 const pakasir = require('../services/pakasirService');
 const orderService = require('../services/orderService');
 const emailService = require('../services/emailService');
@@ -26,20 +27,82 @@ async function resolveDiscount(req, items, itemsSubtotal, { strict = false } = {
   }
 }
 
-function freeBreakdown() {
+function internalBreakdown(subtotal, walletAmount = 0) {
   return {
-    subtotal: 0,
+    subtotal,
     gatewayFee: 0,
     userFee: 0,
     merchantFee: 0,
-    merchantNet: 0,
-    total: 0,
-    pakasirAmount: 0
+    merchantNet: subtotal,
+    total: subtotal,
+    pakasirAmount: 0,
+    walletAmount,
+    externalSubtotal: 0
   };
 }
 
+function freeBreakdown() {
+  return { subtotal: 0, gatewayFee: 0, userFee: 0, merchantFee: 0, merchantNet: 0, total: 0, pakasirAmount: 0 };
+}
+
+function buildPaymentOptions(settings, subtotal, walletBalance) {
+  const options = [];
+  const usableWallet = settings.wallet?.enabled === false ? 0 : Math.min(Math.max(0, walletBalance), subtotal);
+  if (usableWallet >= subtotal && subtotal > 0) {
+    options.push({
+      value: 'wallet',
+      type: 'wallet',
+      label: 'Saldo Zyphra',
+      description: 'Bayar langsung dari dompet',
+      walletAmount: subtotal,
+      externalSubtotal: 0,
+      total: subtotal
+    });
+  }
+
+  for (const rawRule of settings.paymentFees.filter((entry) => entry.active)) {
+    const rule = rawRule.toObject?.() || rawRule;
+    try {
+      const quote = calculateFeeSplit(subtotal, rule, settings.feeSplitThreshold);
+      options.push({
+        value: `gateway:${rule.method}`,
+        type: 'gateway',
+        method: rule.method,
+        label: rule.label,
+        description: 'Bayar melalui kanal pembayaran',
+        walletAmount: 0,
+        externalSubtotal: subtotal,
+        quote,
+        total: quote.total
+      });
+    } catch (_) {}
+
+    if (usableWallet > 0 && usableWallet < subtotal) {
+      const externalSubtotal = subtotal - usableWallet;
+      try {
+        const quote = calculateFeeSplit(externalSubtotal, rule, settings.feeSplitThreshold);
+        options.push({
+          value: `hybrid:${rule.method}`,
+          type: 'hybrid',
+          method: rule.method,
+          label: `Saldo + ${rule.label}`,
+          description: `Gunakan saldo Rp${usableWallet.toLocaleString('id-ID')}`,
+          walletAmount: usableWallet,
+          externalSubtotal,
+          quote,
+          total: usableWallet + quote.total
+        });
+      } catch (_) {}
+    }
+  }
+  return options;
+}
+
 async function show(req, res) {
-  const { items, subtotal: itemsSubtotal } = await getPricedCart(req.user._id);
+  const [{ items, subtotal: itemsSubtotal }, wallet] = await Promise.all([
+    getPricedCart(req.user._id),
+    walletService.getWallet(req.user._id)
+  ]);
   if (!items.length) {
     req.flash('error', 'Keranjang masih kosong.');
     return res.redirect('/cart');
@@ -57,26 +120,22 @@ async function show(req, res) {
   const subtotal = Math.max(0, itemsSubtotal - discountAmount);
   const isFree = subtotal === 0;
   const settings = await getStoreSettings();
-  const methods = isFree
-    ? []
-    : settings.paymentFees
-      .filter((rule) => rule.active)
-      .map((rule) => ({ ...rule.toObject?.() || rule, quote: calculateFeeSplit(subtotal, rule, settings.feeSplitThreshold) }));
+  const walletBalance = settings.wallet?.enabled === false || wallet.status !== 'active' ? 0 : wallet.balance;
+  const paymentOptions = isFree ? [] : buildPaymentOptions(settings, subtotal, walletBalance);
 
-  if (!isFree && !methods.length) {
-    throw new AppError('Tidak ada metode pembayaran yang aktif.', 503, 'NO_PAYMENT_METHOD');
-  }
+  if (!isFree && !paymentOptions.length) throw new AppError('Belum ada pilihan pembayaran yang tersedia.', 503, 'NO_PAYMENT_METHOD');
 
   const nonce = crypto.randomBytes(24).toString('hex');
   req.session.checkoutNonce = nonce;
   res.render('checkout/index', {
-    title: isFree ? 'Konfirmasi produk gratis' : 'Checkout',
+    title: isFree ? 'Konfirmasi pesanan' : 'Checkout',
     items,
     itemsSubtotal,
     subtotal,
-    methods,
     isFree,
-    threshold: settings.feeSplitThreshold,
+    wallet: { ...wallet.toObject(), balance: walletBalance },
+    walletEnabled: settings.wallet?.enabled !== false && wallet.status === 'active',
+    paymentOptions,
     nonce,
     appliedDiscount: discountResult ? {
       code: discountResult.discount.code,
@@ -99,13 +158,9 @@ async function applyDiscount(req, res) {
   try {
     const result = await validateDiscountForCart({ code, userId: req.user._id, items, itemsSubtotal });
     req.session.checkoutDiscountCode = result.discount.code;
-    const makesFree = result.amount >= itemsSubtotal;
-    req.flash(
-      'success',
-      makesFree
-        ? `${result.discount.kind === 'voucher' ? 'Voucher' : 'Kode promo'} ${result.discount.code} berhasil diterapkan. Total produk menjadi gratis.`
-        : `${result.discount.kind === 'voucher' ? 'Voucher' : 'Kode promo'} ${result.discount.code} berhasil diterapkan. Hemat ${result.amount.toLocaleString('id-ID')} rupiah.`
-    );
+    req.flash('success', result.amount >= itemsSubtotal
+      ? `${result.discount.code} berhasil diterapkan. Pesanan ini menjadi gratis.`
+      : `${result.discount.code} berhasil diterapkan. Anda hemat Rp${result.amount.toLocaleString('id-ID')}.`);
   } catch (error) {
     delete req.session.checkoutDiscountCode;
     req.flash('error', error.message);
@@ -115,24 +170,25 @@ async function applyDiscount(req, res) {
 
 function removeDiscount(req, res) {
   delete req.session.checkoutDiscountCode;
-  req.flash('success', 'Voucher atau kode promo dihapus dari checkout.');
+  req.flash('success', 'Kode promo dihapus dari checkout.');
   res.redirect('/checkout');
 }
 
 async function create(req, res) {
   const nonce = String(req.body.checkoutNonce || '');
-  if (!nonce || nonce !== req.session.checkoutNonce) {
-    throw new AppError('Checkout sudah diproses atau sesi tidak valid.', 409, 'CHECKOUT_REPLAY');
-  }
+  if (!nonce || nonce !== req.session.checkoutNonce) throw new AppError('Checkout sudah diproses atau sesi tidak valid.', 409, 'CHECKOUT_REPLAY');
   delete req.session.checkoutNonce;
 
   const idempotencyKey = `${req.user._id}:${nonce}`;
   const existing = await Order.findOne({ idempotencyKey });
   if (existing) {
-    return res.redirect(existing.paymentMethod === 'free' ? `/orders/${existing.orderNumber}` : `/payments/${existing.orderNumber}`);
+    return res.redirect(['free', 'wallet'].includes(existing.paymentMethod) ? `/orders/${existing.orderNumber}` : `/payments/${existing.orderNumber}`);
   }
 
-  const { items, subtotal: itemsSubtotal } = await getPricedCart(req.user._id);
+  const [{ items, subtotal: itemsSubtotal }, wallet] = await Promise.all([
+    getPricedCart(req.user._id),
+    walletService.getWallet(req.user._id)
+  ]);
   if (!items.length) throw new AppError('Keranjang kosong.', 400);
 
   let discountResult;
@@ -145,21 +201,56 @@ async function create(req, res) {
 
   const discountAmount = discountResult?.amount || 0;
   const subtotal = Math.max(0, itemsSubtotal - discountAmount);
-  const isFree = subtotal === 0;
   const settings = await getStoreSettings();
+  const option = String(req.body.paymentOption || '');
+  const walletEnabled = settings.wallet?.enabled !== false && wallet.status === 'active';
 
+  let paymentMethod = 'free';
+  let paymentChannel = 'free';
+  let walletAmount = 0;
+  let externalSubtotal = 0;
   let rule = null;
-  let breakdown;
-  let paymentMethod;
+  let breakdown = freeBreakdown();
 
-  if (isFree) {
-    breakdown = freeBreakdown();
-    paymentMethod = 'free';
-  } else {
-    rule = settings.paymentFees.find((entry) => entry.method === req.body.paymentMethod && entry.active);
-    if (!rule) throw new AppError('Metode pembayaran tidak tersedia.', 400);
-    breakdown = calculateFeeSplit(subtotal, rule, settings.feeSplitThreshold);
-    paymentMethod = rule.method;
+  if (subtotal > 0) {
+    if (option === 'wallet') {
+      if (!walletEnabled) throw new AppError('Pembayaran dengan saldo sedang tidak tersedia.', 503, 'WALLET_DISABLED');
+      if (wallet.balance < subtotal) throw new AppError('Saldo dompet tidak mencukupi.', 400, 'WALLET_INSUFFICIENT');
+      walletAmount = subtotal;
+      breakdown = internalBreakdown(subtotal, walletAmount);
+      paymentMethod = 'wallet';
+      paymentChannel = 'wallet';
+    } else {
+      const [type, method] = option.split(':');
+      if (!['gateway', 'hybrid'].includes(type) || !method) throw new AppError('Pilih metode pembayaran.', 400, 'PAYMENT_OPTION_REQUIRED');
+      rule = settings.paymentFees.find((entry) => entry.method === method && entry.active);
+      if (!rule) throw new AppError('Metode pembayaran tidak tersedia.', 400, 'PAYMENT_METHOD_UNAVAILABLE');
+
+      if (type === 'hybrid') {
+        if (!walletEnabled) throw new AppError('Pembayaran gabungan sedang tidak tersedia.', 503, 'WALLET_DISABLED');
+        walletAmount = Math.min(wallet.balance, subtotal);
+        if (walletAmount <= 0 || walletAmount >= subtotal) throw new AppError('Pilihan kombinasi saldo tidak tersedia.', 400, 'HYBRID_NOT_AVAILABLE');
+        paymentChannel = 'hybrid';
+      } else {
+        walletAmount = 0;
+        paymentChannel = 'gateway';
+      }
+
+      externalSubtotal = subtotal - walletAmount;
+      const gateway = calculateFeeSplit(externalSubtotal, rule, settings.feeSplitThreshold);
+      breakdown = {
+        subtotal,
+        gatewayFee: gateway.gatewayFee,
+        userFee: gateway.userFee,
+        merchantFee: gateway.merchantFee,
+        merchantNet: walletAmount + gateway.merchantNet,
+        total: walletAmount + gateway.total,
+        pakasirAmount: gateway.pakasirAmount,
+        walletAmount,
+        externalSubtotal
+      };
+      paymentMethod = rule.method;
+    }
   }
 
   const orderNumber = randomId('ORD-');
@@ -184,47 +275,44 @@ async function create(req, res) {
     itemsSubtotal,
     ...(discountResult?.snapshot || {}),
     ...breakdown,
-    paymentMethod
+    paymentMethod,
+    paymentChannel
   });
 
   delete req.session.checkoutDiscountCode;
 
-  if (isFree) {
-    try {
-      await orderService.fulfillFreeOrder(order._id);
-      if (env.smtp.adminEmail) {
-        await emailService.sendSimple(
-          env.smtp.adminEmail,
-          'Pesanan gratis baru',
-          {
-            name: 'Admin',
-            message: `Pesanan ${orderNumber} dikonfirmasi otomatis tanpa payment gateway karena totalnya Rp0.`,
-            action: { label: 'Lihat pesanan', url: `${env.appUrl}/admin/orders/${orderNumber}` }
-          },
-          'admin_new_free_order'
-        );
-      }
-      req.flash('success', 'Pesanan gratis berhasil dikonfirmasi. Produk sudah tersedia di akun Anda.');
-      return res.redirect(`/orders/${orderNumber}`);
-    } catch (error) {
-      await Order.updateOne(
-        { _id: order._id, paymentStatus: { $ne: 'paid' } },
-        { $set: { paymentStatus: 'failed', orderStatus: 'cancelled' } }
-      ).catch(() => {});
-      throw error;
-    }
-  }
-
   try {
+    if (walletAmount > 0) {
+      await walletService.reserveForOrder({ userId: req.user._id, orderId: order._id, orderNumber, amount: walletAmount });
+    }
+
+    if (paymentChannel === 'free') {
+      await orderService.fulfillFreeOrder(order._id);
+      req.flash('success', 'Pesanan berhasil dikonfirmasi. Produk sudah tersedia di akun Anda.');
+      return res.redirect(`/orders/${orderNumber}`);
+    }
+
+    if (paymentChannel === 'wallet') {
+      await orderService.fulfillWalletOrder(order._id);
+      req.flash('success', 'Pembayaran dengan saldo berhasil. Produk sudah tersedia di akun Anda.');
+      return res.redirect(`/orders/${orderNumber}`);
+    }
+
     const result = await pakasir.createReconciledTransaction({
       method: rule.method,
       orderId: orderNumber,
-      subtotal,
+      subtotal: externalSubtotal,
       threshold: settings.feeSplitThreshold,
       initialAmount: breakdown.pakasirAmount
     });
     const payment = result.payment;
-    Object.assign(order, result.split, {
+    Object.assign(order, {
+      gatewayFee: result.split.gatewayFee,
+      userFee: result.split.userFee,
+      merchantFee: result.split.merchantFee,
+      merchantNet: walletAmount + result.split.merchantNet,
+      total: walletAmount + result.split.total,
+      pakasirAmount: result.split.pakasirAmount,
       pakasirTransactionId: payment.transaction_id || payment.order_id,
       paymentNumber: payment.payment_number,
       expiresAt: payment.expired_at ? new Date(payment.expired_at) : new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -246,25 +334,20 @@ async function create(req, res) {
       createRequest: result.safeRequest,
       createResponse: result.raw
     });
+
     if (env.smtp.adminEmail) {
-      await emailService.sendSimple(
-        env.smtp.adminEmail,
-        'Pesanan baru',
-        {
-          name: 'Admin',
-          message: `Pesanan ${orderNumber} dibuat dengan total ${order.total}.`,
-          action: { label: 'Lihat pesanan', url: `${env.appUrl}/admin/orders/${orderNumber}` }
-        },
-        'admin_new_order'
-      );
+      await emailService.sendSimple(env.smtp.adminEmail, 'Pesanan baru', {
+        name: 'Admin',
+        message: `Pesanan ${orderNumber} baru saja dibuat.`,
+        action: { label: 'Lihat pesanan', url: `${env.appUrl}/admin/orders/${orderNumber}` }
+      }, 'admin_new_order');
     }
     return res.redirect(`/payments/${orderNumber}`);
   } catch (error) {
-    order.paymentStatus = 'failed';
-    order.orderStatus = 'cancelled';
-    await order.save();
+    if (walletAmount > 0) await walletService.releaseReservedForOrder(order, 'Checkout tidak dapat diselesaikan.').catch(() => {});
+    await Order.updateOne({ _id: order._id, paymentStatus: { $ne: 'paid' } }, { $set: { paymentStatus: 'failed', orderStatus: 'cancelled' } }).catch(() => {});
     throw error;
   }
 }
 
-module.exports = { show, applyDiscount, removeDiscount, create, freeBreakdown };
+module.exports = { show, applyDiscount, removeDiscount, create, freeBreakdown, internalBreakdown, buildPaymentOptions };

@@ -1,0 +1,60 @@
+<section class="admin-shell">
+  <%- include('../partials/admin-nav') %>
+  <div class="admin-content">
+    <div class="admin-head"><div><span class="eyebrow">KEUANGAN</span><h1>Dompet pengguna</h1><p>Pantau saldo, deposit, bonus, dan aktivitas dompet dari satu halaman.</p></div></div>
+
+    <div class="admin-stat-grid wallet-admin-stats">
+      <article><small>Saldo tersedia</small><strong><%= rupiah(stats.available) %></strong><span><%= stats.users %> pengguna</span></article>
+      <article><small>Saldo tertahan</small><strong><%= rupiah(stats.held) %></strong></article>
+      <article><small>Total deposit</small><strong><%= rupiah(stats.depositTotal) %></strong><span><%= stats.depositCount %> transaksi berhasil</span></article>
+      <article><small>Bonus diberikan</small><strong><%= rupiah(stats.rewards) %></strong></article>
+    </div>
+
+    <section class="panel">
+      <div class="market-panel-head"><div><span class="eyebrow">PENGGUNA</span><h2>Daftar dompet</h2></div></div>
+      <% if (!wallets.length) { %>
+        <div class="empty compact"><h3>Belum ada dompet</h3><p>Dompet dibuat otomatis ketika pengguna membuka halaman Dompet.</p></div>
+      <% } else { %>
+        <div class="table-wrap"><table><thead><tr><th>Pengguna</th><th>Status</th><th>Saldo</th><th>Tertahan</th><th>Deposit</th><th>Belanja</th><th>Penyesuaian</th></tr></thead><tbody>
+          <% wallets.forEach(wallet => { %><tr>
+            <td><strong><%= wallet.user?.name || 'Pengguna' %></strong><br><small><%= wallet.user?.email || '-' %></small></td>
+            <td><span class="status status-<%= wallet.status === 'active' ? 'paid' : 'cancelled' %>"><%= wallet.status === 'active' ? 'Aktif' : 'Dinonaktifkan' %></span><form method="post" action="/admin/wallets/<%= wallet.user?._id %>/status" class="inline-form"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="status" value="<%= wallet.status === 'active' ? 'locked' : 'active' %>"><button class="text-button <%= wallet.status === 'active' ? 'danger' : '' %>" type="submit"><%= wallet.status === 'active' ? 'Nonaktifkan' : 'Aktifkan' %></button></form></td>
+            <td><strong><%= rupiah(wallet.balance) %></strong></td>
+            <td><%= rupiah(wallet.heldBalance) %></td>
+            <td><%= rupiah(wallet.totalDeposited) %></td>
+            <td><%= rupiah(wallet.totalSpent) %></td>
+            <td><form method="post" action="/admin/wallets/<%= wallet.user?._id %>/adjust" class="wallet-adjust-form"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><select name="direction"><option value="credit">Tambah</option><option value="debit">Kurangi</option></select><input type="number" name="amount" min="1" placeholder="Nominal" required><input name="reason" maxlength="300" placeholder="Catatan" required><button class="button button-sm" type="submit">Simpan</button></form></td>
+          </tr><% }) %>
+        </tbody></table></div>
+      <% } %>
+    </section>
+
+    <section class="panel">
+      <div class="market-panel-head"><div><span class="eyebrow">DEPOSIT</span><h2>Deposit terbaru</h2></div></div>
+      <% if (!deposits.length) { %>
+        <div class="empty compact"><h3>Belum ada deposit</h3><p>Aktivitas isi saldo pengguna akan tampil di sini.</p></div>
+      <% } else { %>
+        <div class="table-wrap"><table><thead><tr><th>Waktu</th><th>Nomor</th><th>Pengguna</th><th>Nominal saldo</th><th>Total bayar</th><th>Metode</th><th>Status</th></tr></thead><tbody>
+          <% deposits.forEach(deposit => { %><tr>
+            <td><small><%= formatDate(deposit.createdAt) %></small></td>
+            <td><strong><%= deposit.depositNumber %></strong></td>
+            <td><%= deposit.user?.name || '-' %><br><small><%= deposit.user?.email || '' %></small></td>
+            <td><strong><%= rupiah(deposit.amount) %></strong></td>
+            <td><%= rupiah(deposit.totalPayment) %></td>
+            <td><%= String(deposit.paymentMethod || '-').toUpperCase().replaceAll('_', ' ') %></td>
+            <td><span class="status status-<%= deposit.status %>"><%= deposit.status %></span></td>
+          </tr><% }) %>
+        </tbody></table></div>
+      <% } %>
+    </section>
+
+    <section class="panel">
+      <div class="market-panel-head"><div><span class="eyebrow">AKTIVITAS</span><h2>Mutasi terbaru</h2></div></div>
+      <% if (!transactions.length) { %><div class="empty compact"><h3>Belum ada aktivitas</h3></div><% } else { %>
+        <div class="table-wrap"><table><thead><tr><th>Waktu</th><th>Pengguna</th><th>Keterangan</th><th>Jenis</th><th>Nominal</th><th>Status</th></tr></thead><tbody>
+          <% transactions.forEach(item => { %><tr><td><small><%= formatDate(item.createdAt) %></small></td><td><%= item.user?.name || '-' %><br><small><%= item.user?.email || '' %></small></td><td><strong><%= item.title %></strong><br><small><%= item.description %></small></td><td><%= item.type %></td><td class="<%= item.direction === 'credit' ? 'money-credit' : 'money-debit' %>"><%= item.direction === 'credit' ? '+' : '-' %><%= rupiah(item.amount) %></td><td><span class="badge"><%= item.status %></span></td></tr><% }) %>
+        </tbody></table></div>
+      <% } %>
+    </section>
+  </div>
+</section>

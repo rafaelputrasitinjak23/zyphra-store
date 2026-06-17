@@ -1,7 +1,7 @@
 <section class="account-settings-page">
   <div class="container">
     <div class="settings-page-head">
-      <div><a class="back-link" href="/account"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>Kembali ke akun</a><span class="eyebrow">PENGATURAN</span><h1>Profil dan keamanan</h1><p>Atur identitas akun, foto profil, preferensi, dan keamanan login.</p></div>
+      <div><a class="back-link" href="/account"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>Kembali ke akun</a><span class="eyebrow">PENGATURAN</span><h1>Profil dan akun</h1><p>Atur identitas, foto profil, preferensi, dan akses akun Anda.</p></div>
     </div>
 
     <div class="market-settings-layout">
@@ -43,7 +43,7 @@
 
           <div class="profile-form-grid">
             <label>Nama lengkap<input name="name" value="<%= currentUser.name %>" required minlength="2" maxlength="80" autocomplete="name"></label>
-            <label>Email<input value="<%= currentUser.email %>" disabled><small>Email tidak dapat diubah langsung demi keamanan akun.</small></label>
+            <label>Email<input value="<%= currentUser.email %>" disabled><small>Email utama yang terhubung ke akun Anda.</small></label>
             <label>Nomor telepon<input name="phone" value="<%= currentUser.phone || '' %>" maxlength="24" placeholder="Contoh: +6281234567890" autocomplete="tel"></label>
             <label class="span-2">Bio singkat<textarea name="bio" rows="3" maxlength="160" placeholder="Ceritakan sedikit tentang Anda"><%= currentUser.bio || '' %></textarea><small><span data-bio-count><%= (currentUser.bio || '').length %></span>/160 karakter</small></label>
           </div>

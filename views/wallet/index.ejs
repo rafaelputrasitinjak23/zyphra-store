@@ -1,0 +1,59 @@
+<section class="wallet-page">
+  <div class="container">
+    <div class="wallet-hero">
+      <div class="wallet-hero-copy">
+        <span class="eyebrow">ZYPHRA WALLET</span>
+        <p>Saldo tersedia</p>
+        <h1><%= rupiah(wallet.balance) %></h1>
+        <% if (wallet.heldBalance > 0) { %><small><%= rupiah(wallet.heldBalance) %> sedang digunakan untuk pesanan berjalan</small><% } else { %><small>Siap digunakan untuk pembelian berikutnya</small><% } %>
+        <div class="actions wallet-actions">
+          <% if (walletEnabled) { %><a class="button button-light" href="/wallet/deposit"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Isi saldo</a><% } %>
+          <a class="button button-wallet-ghost" href="/products"><svg viewBox="0 0 24 24"><path d="M4 7h16l-1 14H5zM8 7a4 4 0 0 1 8 0"/></svg>Belanja</a>
+        </div>
+        <% if (!walletEnabled) { %><p class="wallet-unavailable-note">Dompet tetap dapat dilihat, tetapi transaksi saldo baru sedang dinonaktifkan.</p><% } %>
+      </div>
+      <div class="wallet-visual" aria-hidden="true">
+        <div class="wallet-card-art"><span>Z</span><div><small>Zyphra Wallet</small><strong>•••• <%= String(currentUser._id).slice(-4).toUpperCase() %></strong></div><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM16 11h5v5h-5z"/></svg></div>
+      </div>
+    </div>
+
+    <div class="wallet-overview-grid">
+      <article><span class="wallet-stat-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM16 11h5v5h-5z"/></svg></span><div><small>Total deposit</small><strong><%= rupiah(wallet.totalDeposited) %></strong></div></article>
+      <article><span class="wallet-stat-icon"><svg viewBox="0 0 24 24"><path d="M12 3v18M7 7h8a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h8"/></svg></span><div><small>Total digunakan</small><strong><%= rupiah(wallet.totalSpent) %></strong></div></article>
+      <article><span class="wallet-stat-icon"><svg viewBox="0 0 24 24"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 7v14M12 7H8a2.5 2.5 0 1 1 2.5-2.5C10.5 6 12 7 12 7Zm0 0h4a2.5 2.5 0 1 0-2.5-2.5C13.5 6 12 7 12 7Z"/></svg></span><div><small>Bonus diterima</small><strong><%= rupiah(wallet.totalRewards) %></strong></div></article>
+    </div>
+
+    <div class="wallet-layout">
+      <div class="wallet-main">
+        <section class="market-panel">
+          <div class="market-panel-head"><div><span class="eyebrow">MUTASI</span><h2>Riwayat saldo</h2></div></div>
+          <% if (!transactions.length) { %><div class="empty compact"><h3>Belum ada aktivitas</h3><p>Deposit, pembelian, dan bonus saldo akan tampil di sini.</p></div><% } else { %>
+            <div class="wallet-transaction-list">
+              <% transactions.forEach(item => { %><article class="wallet-transaction-item">
+                <span class="wallet-transaction-icon <%= item.direction %>"><svg viewBox="0 0 24 24"><path d="<%= item.direction === 'credit' ? 'M12 19V5m-5 5 5-5 5 5' : 'M12 5v14m-5-5 5 5 5-5' %>"/></svg></span>
+                <div class="wallet-transaction-copy"><strong><%= item.title %></strong><small><%= item.description || formatDate(item.createdAt) %></small><time><%= formatDate(item.createdAt) %></time></div>
+                <div class="wallet-transaction-value"><strong class="<%= item.direction === 'credit' ? 'money-credit' : 'money-debit' %>"><%= item.direction === 'credit' ? '+' : '-' %><%= rupiah(item.amount) %></strong><span class="badge"><%= item.status === 'completed' ? 'Selesai' : item.status === 'pending' ? 'Diproses' : 'Dikembalikan' %></span></div>
+              </article><% }) %>
+            </div>
+          <% } %>
+        </section>
+
+        <section class="market-panel">
+          <div class="market-panel-head"><div><span class="eyebrow">DEPOSIT</span><h2>Deposit terbaru</h2></div><% if (walletEnabled) { %><a href="/wallet/deposit">Isi saldo</a><% } %></div>
+          <% if (!deposits.length) { %><div class="empty compact"><h3>Belum ada deposit</h3><p>Isi saldo untuk mempercepat pembelian produk digital.</p></div><% } else { %>
+            <div class="wallet-deposit-list"><% deposits.forEach(deposit => { %><a href="/wallet/deposits/<%= deposit.depositNumber %>" class="wallet-deposit-item"><div><strong><%= deposit.depositNumber %></strong><small><%= formatDate(deposit.createdAt) %> · <%= deposit.paymentMethod.toUpperCase().replaceAll('_', ' ') %></small></div><div><strong><%= rupiah(deposit.amount) %></strong><span class="status status-<%= deposit.status %>"><%= deposit.status %></span></div><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a><% }) %></div>
+          <% } %>
+        </section>
+      </div>
+
+      <aside class="wallet-side">
+        <% if (walletEnabled) { %><section class="market-panel voucher-claim-card">
+          <span class="voucher-icon"><svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4zM12 7v10"/></svg></span>
+          <h2>Klaim voucher saldo</h2><p>Masukkan kode yang Anda dapatkan untuk menambahkan bonus ke dompet.</p>
+          <form method="post" action="/wallet/redeem" class="form-stack"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label>Kode voucher<input name="code" maxlength="40" placeholder="Masukkan kode" autocomplete="off" required></label><button class="button button-block" type="submit" data-submit-lock>Klaim sekarang</button></form>
+        </section><% } %>
+        <section class="market-panel wallet-info-card"><div class="security-icon"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v5c0 5 3 8 8 10 5-2 8-5 8-10V6zM9 12l2 2 4-5"/></svg></div><h3>Saldo tersimpan di akun</h3><p>Saldo dapat digunakan untuk membeli produk di Zyphra Store dan tidak dapat ditarik tunai.</p></section>
+      </aside>
+    </div>
+  </div>
+</section>

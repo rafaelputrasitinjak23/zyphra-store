@@ -1,19 +1,7 @@
 <section class="auth-section">
   <div class="auth-card">
-    <div class="auth-heading">
-      <span class="brand-mark">Z</span>
-      <h1>Buat akun</h1>
-      <p>Daftar menggunakan email, password, dan verifikasi OTP.</p>
-    </div>
-    <form method="post" action="/auth/register" class="form-stack">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <label>Nama<input name="name" required minlength="2" maxlength="80" autocomplete="name"></label>
-      <label>Email<input type="email" name="email" required autocomplete="email"></label>
-      <label>Password<input type="password" name="password" required minlength="8" autocomplete="new-password"><small>Minimal 8 karakter, huruf besar, kecil, dan angka.</small></label>
-      <label>Konfirmasi password<input type="password" name="confirmPassword" required autocomplete="new-password"></label>
-      <%- include('../partials/captcha', { captchaId }) %>
-      <button class="button button-block" type="submit">Daftar dan kirim OTP</button>
-    </form>
-    <p class="auth-foot">Sudah punya akun? <a href="/auth/login">Login</a></p>
+    <div class="auth-heading"><span class="brand-mark">Z</span><h1>Buat akun baru</h1><p>Daftar untuk menyimpan keranjang, produk, dan riwayat pesanan.</p></div>
+    <form method="post" action="/auth/register" class="form-stack"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label>Nama<input name="name" minlength="2" maxlength="80" autocomplete="name" required></label><label>Email<input type="email" name="email" autocomplete="email" required></label><label>Password<input type="password" name="password" autocomplete="new-password" required></label><label>Konfirmasi password<input type="password" name="confirmPassword" autocomplete="new-password" required></label><%- include('../partials/captcha') %><button class="button button-block" type="submit" data-submit-lock>Daftar</button></form>
+    <div class="auth-links"><span>Sudah punya akun? <a href="/auth/login">Masuk</a></span></div>
   </div>
 </section>

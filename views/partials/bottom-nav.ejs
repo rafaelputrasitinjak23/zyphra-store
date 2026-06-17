@@ -1,24 +1,9 @@
 <% if (currentUser) { %>
 <nav class="mobile-bottom-nav" aria-label="Navigasi utama pengguna">
-  <a class="<%= currentPath === '/' ? 'active' : '' %>" href="/">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3z"/></svg>
-    <span>Beranda</span>
-  </a>
-  <a class="<%= currentPath.startsWith('/products') || currentPath.startsWith('/cart') || currentPath.startsWith('/checkout') ? 'active' : '' %>" href="/products">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16l-1 14H5zM8 7a4 4 0 0 1 8 0"/></svg>
-    <span>Belanja</span>
-  </a>
-  <a class="<%= currentPath.startsWith('/orders') || currentPath.startsWith('/payments') ? 'active' : '' %>" href="/orders">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h8"/></svg>
-    <span>Pesanan</span>
-  </a>
-  <a class="<%= currentPath.startsWith('/account/purchases') || currentPath.startsWith('/downloads') ? 'active' : '' %>" href="/account/purchases">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>
-    <span>Koleksi</span>
-  </a>
-  <a class="<%= currentPath.startsWith('/account') && !currentPath.startsWith('/account/purchases') ? 'active' : '' %>" href="/account">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/></svg>
-    <span>Akun</span>
-  </a>
+  <a class="<%= currentPath === '/' ? 'active' : '' %>" href="/"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3z"/></svg><span>Beranda</span></a>
+  <a class="<%= currentPath.startsWith('/products') || currentPath.startsWith('/cart') || currentPath.startsWith('/checkout') ? 'active' : '' %>" href="/products"><svg viewBox="0 0 24 24"><path d="M4 7h16l-1 14H5zM8 7a4 4 0 0 1 8 0"/></svg><span>Belanja</span></a>
+  <a class="<%= currentPath.startsWith('/wallet') ? 'active' : '' %>" href="/wallet"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM16 11h5v5h-5z"/></svg><span>Dompet</span></a>
+  <a class="<%= currentPath.startsWith('/orders') || currentPath.startsWith('/payments') ? 'active' : '' %>" href="/orders"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h8"/></svg><span>Pesanan</span></a>
+  <a class="<%= currentPath.startsWith('/account') ? 'active' : '' %>" href="/account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/></svg><span>Akun</span></a>
 </nav>
 <% } %>

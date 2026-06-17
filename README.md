@@ -1,6 +1,6 @@
 # Zyphra Store
 
-Zyphra Store adalah proyek e-commerce produk digital berbasis Node.js, Express.js, MongoDB, Mongoose, EJS, autentikasi email, CAPTCHA teks bawaan, OTP untuk registrasi/reset password, produk gratis Rp0, dan Pakasir. Proyek ini menyediakan katalog produk, keranjang, checkout, invoice, dashboard pengguna/admin, proteksi download, pembatalan transaksi pending, chatbot AI berbasis katalog, generator deskripsi produk, webhook idempoten, dan pencatatan kegagalan email.
+Zyphra Store adalah marketplace produk digital berbasis Node.js, Express.js, MongoDB, Mongoose, dan EJS. Proyek ini menyediakan katalog, keranjang, checkout, produk gratis, Zyphra Wallet, deposit saldo, pembayaran saldo atau gabungan, voucher saldo, flash sale, promo, invoice, dashboard pengguna/admin, proteksi download, chatbot AI berbasis katalog, dan integrasi Pakasir.
 
 ## Fitur utama
 
@@ -9,7 +9,7 @@ Zyphra Store adalah proyek e-commerce produk digital berbasis Node.js, Express.j
 - Dashboard akun modern dengan foto profil, statistik pesanan, total belanja, pesanan terbaru, dan akses cepat.
 - Pengguna dapat mengunggah foto profil JPG/PNG/WebP hingga 750 KB; foto disimpan di MongoDB agar kompatibel dengan Vercel tanpa filesystem lokal.
 - Profil mendukung nama, nomor telepon, bio singkat, dan preferensi notifikasi.
-- Navigasi bawah mobile menggunakan ikon SVG untuk Beranda, Belanja, Pesanan, Koleksi, dan Akun.
+- Navigasi bawah mobile menggunakan ikon SVG untuk Beranda, Belanja, Dompet, Pesanan, dan Akun.
 - Halaman keamanan untuk perubahan password dan logout seluruh perangkat.
 
 
@@ -18,6 +18,11 @@ Zyphra Store adalah proyek e-commerce produk digital berbasis Node.js, Express.j
 - Reset password melalui OTP dengan respons yang tidak membocorkan status email dan invalidasi seluruh sesi lama.
 - Session MongoDB, cookie `httpOnly`, `sameSite=lax`, dan `secure` pada production.
 - Produk digital, kategori, promo, stok/unlimited, galeri, versi, changelog, instruksi, URL file rahasia, dan batas download.
+- Zyphra Wallet dengan saldo tersedia, saldo tertahan, total deposit, total pemakaian, bonus, dan riwayat mutasi.
+- Deposit saldo melalui metode pembayaran aktif dengan nomor deposit unik, status, pembatalan, pengecekan ulang, dan kredit saldo idempoten.
+- Checkout mendukung pembayaran saldo penuh, metode pembayaran biasa, atau kombinasi saldo dan metode pembayaran.
+- Saldo untuk pesanan pending ditahan sementara, kemudian diselesaikan saat pesanan berhasil atau dikembalikan saat gagal, kedaluwarsa, atau dibatalkan.
+- Admin dapat membuat voucher saldo, mengatur kuota dan batas klaim per pengguna, menambah/mengurangi saldo, melihat deposit, serta mengaktifkan atau menonaktifkan dompet pengguna.
 - Keranjang MongoDB dan seluruh perhitungan harga ulang di server.
 - Produk dapat memiliki harga mulai dari Rp0. Harga normal, promo, atau flash sale boleh bernilai nol.
 - Voucher/kode promo boleh memberi diskon hingga 100% atau sebesar seluruh subtotal sehingga total akhir menjadi Rp0.
@@ -182,7 +187,7 @@ npm test
 npm run check
 ```
 
-Test mencakup fee di bawah/tepat/di atas batas, pembulatan fee ganjil, produk Rp0, promo Rp0, checkout gratis tanpa gateway fee, voucher 100% hingga total nol, OTP registrasi/reset yang kedaluwarsa dan sekali pakai, login tanpa OTP, CAPTCHA teks sekali pakai, flash sale, voucher semua produk, promo produk tertentu, event key webhook idempoten, proteksi download, harga database, parser AI, dan pembatalan transaksi.
+Test mencakup perhitungan transaksi, produk Rp0, checkout gratis, voucher 100%, registrasi/reset, login, kode verifikasi teks, flash sale, voucher semua produk, promo produk tertentu, webhook idempoten, proteksi download, harga database, parser AI, pembatalan transaksi, opsi pembayaran saldo penuh, dan pembayaran gabungan.
 
 ## Chatbot AI dan auto-deskripsi produk
 
@@ -199,6 +204,23 @@ AI_TIMEOUT_MS=30000
 Chatbot hanya menerima konteks publik yang dipilih server: nama produk, deskripsi singkat, kategori, harga, stok, versi, tag, batas download, dan URL halaman publik. `digitalFileUrl`, data SMTP, session secret, API key Pakasir, dan data pribadi pengguna tidak dimasukkan ke prompt. Riwayat percakapan dibatasi di session dan endpoint dilindungi CSRF serta rate limit.
 
 Pada dashboard admin, buka form tambah/edit produk lalu isi minimal nama dan kategori. Tekan **Generate dengan AI**. Jika API tidak tersedia atau respons bukan JSON valid, server mengisi template konten lokal agar form tetap dapat digunakan. Chatbot juga memiliki jawaban fallback untuk bantuan dasar dan rekomendasi produk saat layanan AI eksternal sedang gagal.
+
+## Zyphra Wallet
+
+Dompet dibuat otomatis ketika pengguna membuka halaman `/wallet`. Pengguna dapat:
+
+- melihat saldo tersedia dan saldo yang sedang digunakan pada pesanan;
+- mengisi saldo melalui `/wallet/deposit`;
+- melihat riwayat deposit dan mutasi saldo;
+- mengklaim voucher saldo dari admin;
+- menggunakan saldo penuh saat checkout;
+- menggabungkan saldo dengan metode pembayaran lain saat saldo belum mencukupi.
+
+Setiap perubahan saldo dicatat pada `WalletTransaction` dengan idempotency key. Saldo pesanan pending dipindahkan ke `heldBalance`; saldo baru menjadi pengeluaran setelah pesanan berhasil dan otomatis dikembalikan jika transaksi gagal, kedaluwarsa, atau dibatalkan.
+
+Voucher saldo dibuat dari menu **Admin → Voucher & Promo** dengan manfaat **Saldo gratis untuk dompet pengguna**. Kode ini tidak dapat digunakan sebagai diskon checkout. Klaim disimpan di `WalletVoucherClaim`, mengikuti periode aktif, kuota total, dan batas per pengguna.
+
+Admin dapat melihat dompet, deposit, mutasi, melakukan penyesuaian saldo, dan menonaktifkan dompet tertentu melalui `/admin/wallets`. Batas deposit dan status fitur dompet dapat diatur dari `/admin/settings`.
 
 ## Produk gratis dan checkout Rp0
 
@@ -263,7 +285,7 @@ models/              schema Mongoose
 public/               CSS dan JavaScript frontend
 routes/               route modular
 scripts/              seed admin dan pemeriksaan proyek
-services/             OTP, email, CAPTCHA, Pakasir, fee, order, pembatalan, AI, download
+services/             email, kode verifikasi, pembayaran, wallet, order, promo, AI, download
 utils/                helper keamanan dan format
 views/                EJS publik, akun, invoice, dan admin
 tests/                test dasar

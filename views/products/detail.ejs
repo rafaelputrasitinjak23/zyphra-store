@@ -18,7 +18,7 @@
         <% if (pricing.flashActive) { %><span class="discount-badge">Flash Sale -<%= pricing.discountPercent %>%</span><% } else if (pricing.hasPromo) { %><span class="discount-badge">Promo</span><% } %>
       </div>
       <% if (pricing.flashActive) { %><div class="flash-countdown" data-flash-expiry="<%= pricing.flashEndsAt.toISOString() %>"><span>Flash sale berakhir dalam</span><strong data-flash-countdown>--:--:--</strong></div><% } else if (pricing.flashUpcoming) { %><div class="notice"><strong>Flash sale akan datang</strong><p>Mulai <%= formatDate(pricing.flashStartsAt) %>.</p></div><% } %>
-      <p class="price-note"><%= pricing.effectivePrice === 0 ? 'Produk ini gratis. Tidak perlu QRIS, virtual account, atau metode pembayaran lainnya.' : 'Belum termasuk bagian fee metode pembayaran. Rinciannya ditampilkan sebelum membuat transaksi.' %></p>
+      <p class="price-note"><%= pricing.effectivePrice === 0 ? 'Produk ini dapat langsung diklaim secara gratis.' : 'Rincian pembayaran lengkap ditampilkan saat checkout.' %></p>
       <div class="product-quick-stats">
         <span><strong><%= product.soldCount || 0 %></strong> terjual</span>
         <span><strong><%= product.viewCount || 0 %></strong> dilihat</span>
@@ -41,7 +41,7 @@
           </div>
         </form>
       <% } %>
-      <div class="safe-note"><svg viewBox="0 0 24 24"><path d="m12 3 8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7zM9 12l2 2 4-4"/></svg><div><strong>Pengiriman digital aman</strong><span><%= pricing.effectivePrice === 0 ? 'File langsung tersedia setelah pesanan gratis dikonfirmasi.' : 'File tersedia setelah pembayaran terverifikasi.' %></span></div></div>
+      <div class="safe-note"><svg viewBox="0 0 24 24"><path d="m12 3 8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7zM9 12l2 2 4-4"/></svg><div><strong>Akses produk praktis</strong><span><%= pricing.effectivePrice === 0 ? 'Produk langsung tersedia setelah pesanan dikonfirmasi.' : 'Produk tersedia setelah pesanan selesai.' %></span></div></div>
     </div>
   </div>
 </section>
