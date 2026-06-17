@@ -11,12 +11,12 @@
       <label>Slug<input name="slug" value="<%= product?.slug || '' %>" placeholder="otomatis dari nama"></label>
       <label>Kategori<select name="category" required data-category-select><option value="">Pilih kategori</option><% categories.forEach(category => { %><option value="<%= category._id %>" data-name="<%= category.name %>" <%= String(product?.category?._id || product?.category || '') === String(category._id) ? 'selected' : '' %>><%= category.name %></option><% }) %></select></label>
       <label>Versi<input name="version" value="<%= product?.version || '1.0.0' %>"></label>
-      <label>Harga<input type="number" name="price" min="0" value="<%= product?.price ?? 0 %>" required></label>
-      <label>Harga promo<input type="number" name="promoPrice" min="0" value="<%= product?.promoPrice ?? '' %>"></label>
+      <label>Harga<input type="number" name="price" min="0" step="1" value="<%= product?.price ?? 0 %>" required><small>Isi 0 untuk menjadikan produk gratis tanpa payment gateway.</small></label>
+      <label>Harga promo<input type="number" name="promoPrice" min="0" step="1" value="<%= product?.promoPrice ?? '' %>"><small>Boleh 0 agar promo membuat produk gratis.</small></label>
       <div class="span-2 flash-sale-admin-box">
         <div><strong>Flash sale</strong><p>Harga aktif otomatis hanya selama periode yang ditentukan.</p></div>
         <label class="check"><input type="checkbox" name="flashSaleEnabled" <%= product?.flashSale?.enabled ? 'checked' : '' %>> Aktifkan flash sale</label>
-        <label>Harga flash sale<input type="number" name="flashSalePrice" min="0" value="<%= product?.flashSale?.price ?? '' %>"></label>
+        <label>Harga flash sale<input type="number" name="flashSalePrice" min="0" step="1" value="<%= product?.flashSale?.price ?? '' %>"><small>Boleh 0 selama lebih rendah dari harga aktif.</small></label>
         <label>Mulai<input type="datetime-local" name="flashSaleStartsAt" value="<%= datetimeLocal(product?.flashSale?.startsAt) %>"></label>
         <label>Berakhir<input type="datetime-local" name="flashSaleEndsAt" value="<%= datetimeLocal(product?.flashSale?.endsAt) %>"></label>
       </div>

@@ -42,7 +42,7 @@ function validateFlashSale(payload) {
   const flash = payload.flashSale;
   if (!flash?.enabled) return;
   const basePrice = payload.promoPrice !== null && payload.promoPrice < payload.price ? payload.promoPrice : payload.price;
-  if (flash.price === null || flash.price < 1 || flash.price >= basePrice) throw new AppError('Harga flash sale harus lebih rendah dari harga aktif produk.', 400, 'INVALID_FLASH_PRICE');
+  if (flash.price === null || flash.price < 0 || flash.price >= basePrice) throw new AppError('Harga flash sale harus mulai Rp0 dan lebih rendah dari harga aktif produk.', 400, 'INVALID_FLASH_PRICE');
   if (!flash.startsAt || !flash.endsAt || flash.endsAt <= flash.startsAt) throw new AppError('Waktu mulai dan selesai flash sale tidak valid.', 400, 'INVALID_FLASH_PERIOD');
 }
 
@@ -130,7 +130,20 @@ async function users(req, res) { res.render('admin/users', { title: 'Pengguna', 
 async function updateUser(req, res) { const user = await User.findById(req.params.id); if (!user) throw new AppError('Pengguna tidak ditemukan.', 404); if (String(user._id) === String(req.user._id) && req.body.status === 'blocked') throw new AppError('Admin tidak dapat memblokir dirinya sendiri.', 400); user.role = ['user', 'admin'].includes(req.body.role) ? req.body.role : user.role; user.status = ['active', 'blocked', 'pending'].includes(req.body.status) ? req.body.status : user.status; user.sessionVersion += 1; await user.save(); req.flash('success', 'Pengguna diperbarui.'); res.redirect('/admin/users'); }
 async function orders(req, res) { const query = req.query.status ? { paymentStatus: req.query.status } : {}; res.render('admin/orders/list', { title: 'Pesanan', orders: await Order.find(query).populate('user', 'name email').sort({ createdAt: -1 }).limit(500), status: req.query.status || '' }); }
 async function orderDetail(req, res) { const order = await Order.findOne({ orderNumber: req.params.orderNumber }).populate('user', 'name email'); if (!order) throw new AppError('Pesanan tidak ditemukan.', 404); const payment = await Payment.findOne({ order: order._id }); res.render('admin/orders/detail', { title: order.orderNumber, order, payment }); }
-async function recheckOrder(req, res) { const order = await Order.findOne({ orderNumber: req.params.orderNumber }); if (!order) throw new AppError('Pesanan tidak ditemukan.', 404); const transaction = await pakasir.getTransactionDetail({ orderId: order.orderNumber, amount: order.pakasirAmount }); if (['completed', 'paid'].includes(transaction.status)) await orderService.markPaid(order._id, transaction); else if (['failed', 'expired', 'cancelled'].includes(transaction.status)) await orderService.updateNonPaidStatus(order, transaction.status, transaction); req.flash('success', `Status Pakasir: ${transaction.status}`); res.redirect(`/admin/orders/${order.orderNumber}`); }
+async function recheckOrder(req, res) {
+  const order = await Order.findOne({ orderNumber: req.params.orderNumber });
+  if (!order) throw new AppError('Pesanan tidak ditemukan.', 404);
+  if (order.paymentMethod === 'free' || order.total === 0) {
+    if (order.paymentStatus !== 'paid') await orderService.fulfillFreeOrder(order._id);
+    req.flash('success', 'Pesanan gratis dikonfirmasi secara internal dan tidak menggunakan Pakasir.');
+    return res.redirect(`/admin/orders/${order.orderNumber}`);
+  }
+  const transaction = await pakasir.getTransactionDetail({ orderId: order.orderNumber, amount: order.pakasirAmount });
+  if (['completed', 'paid'].includes(transaction.status)) await orderService.markPaid(order._id, transaction);
+  else if (['failed', 'expired', 'cancelled'].includes(transaction.status)) await orderService.updateNonPaidStatus(order, transaction.status, transaction);
+  req.flash('success', `Status Pakasir: ${transaction.status}`);
+  return res.redirect(`/admin/orders/${order.orderNumber}`);
+}
 async function cancelOrder(req, res) {
   const order = await cancellationService.cancelOrder({ orderNumber: req.params.orderNumber, userId: req.user._id, isAdmin: true, reason: req.body.reason || 'Dibatalkan oleh admin' });
   req.flash('success', `Transaksi ${order.orderNumber} berhasil dibatalkan.`);

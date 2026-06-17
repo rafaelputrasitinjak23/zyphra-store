@@ -1,6 +1,6 @@
 # Zyphra Store
 
-Zyphra Store adalah proyek e-commerce produk digital berbasis Node.js, Express.js, MongoDB, Mongoose, EJS, autentikasi email, CAPTCHA teks bawaan, OTP untuk registrasi/reset password, dan Pakasir. Proyek ini menyediakan katalog produk, keranjang, checkout, invoice, dashboard pengguna/admin, proteksi download, pembatalan transaksi pending, chatbot AI berbasis katalog, generator deskripsi produk, webhook idempoten, dan pencatatan kegagalan email.
+Zyphra Store adalah proyek e-commerce produk digital berbasis Node.js, Express.js, MongoDB, Mongoose, EJS, autentikasi email, CAPTCHA teks bawaan, OTP untuk registrasi/reset password, produk gratis Rp0, dan Pakasir. Proyek ini menyediakan katalog produk, keranjang, checkout, invoice, dashboard pengguna/admin, proteksi download, pembatalan transaksi pending, chatbot AI berbasis katalog, generator deskripsi produk, webhook idempoten, dan pencatatan kegagalan email.
 
 ## Fitur utama
 
@@ -19,6 +19,9 @@ Zyphra Store adalah proyek e-commerce produk digital berbasis Node.js, Express.j
 - Session MongoDB, cookie `httpOnly`, `sameSite=lax`, dan `secure` pada production.
 - Produk digital, kategori, promo, stok/unlimited, galeri, versi, changelog, instruksi, URL file rahasia, dan batas download.
 - Keranjang MongoDB dan seluruh perhitungan harga ulang di server.
+- Produk dapat memiliki harga mulai dari Rp0. Harga normal, promo, atau flash sale boleh bernilai nol.
+- Voucher/kode promo boleh memberi diskon hingga 100% atau sebesar seluruh subtotal sehingga total akhir menjadi Rp0.
+- Pesanan dengan total Rp0 tidak membuat transaksi Pakasir, tidak menampilkan QRIS/VA, langsung dikonfirmasi sebagai berhasil, mengurangi stok sekali, mencatat penggunaan voucher, memberi akses download, dan membuat invoice.
 - Integrasi Pakasir via API untuk QRIS dan Virtual Account, cek status, cancel, simulasi sandbox, serta webhook.
 - Pengguna dan admin dapat membatalkan transaksi pending. Server mengecek status Pakasir sebelum dan setelah pembatalan agar transaksi yang sudah lunas tidak ikut dibatalkan.
 - Chatbot Zyphra Assistant mengambil konteks produk aktif, kategori, harga, stok, serta aturan website langsung dari database tanpa mengirim URL file digital atau credential.
@@ -179,7 +182,7 @@ npm test
 npm run check
 ```
 
-Test mencakup fee di bawah/tepat/di atas batas, pembulatan fee ganjil, OTP registrasi/reset yang kedaluwarsa dan sekali pakai, login tanpa OTP, CAPTCHA teks sekali pakai, flash sale, voucher semua produk, promo produk tertentu, event key webhook idempoten, proteksi download, harga database, parser AI, dan pembatalan transaksi.
+Test mencakup fee di bawah/tepat/di atas batas, pembulatan fee ganjil, produk Rp0, promo Rp0, checkout gratis tanpa gateway fee, voucher 100% hingga total nol, OTP registrasi/reset yang kedaluwarsa dan sekali pakai, login tanpa OTP, CAPTCHA teks sekali pakai, flash sale, voucher semua produk, promo produk tertentu, event key webhook idempoten, proteksi download, harga database, parser AI, dan pembatalan transaksi.
 
 ## Chatbot AI dan auto-deskripsi produk
 
@@ -196,6 +199,23 @@ AI_TIMEOUT_MS=30000
 Chatbot hanya menerima konteks publik yang dipilih server: nama produk, deskripsi singkat, kategori, harga, stok, versi, tag, batas download, dan URL halaman publik. `digitalFileUrl`, data SMTP, session secret, API key Pakasir, dan data pribadi pengguna tidak dimasukkan ke prompt. Riwayat percakapan dibatasi di session dan endpoint dilindungi CSRF serta rate limit.
 
 Pada dashboard admin, buka form tambah/edit produk lalu isi minimal nama dan kategori. Tekan **Generate dengan AI**. Jika API tidak tersedia atau respons bukan JSON valid, server mengisi template konten lokal agar form tetap dapat digunakan. Chatbot juga memiliki jawaban fallback untuk bantuan dasar dan rekomendasi produk saat layanan AI eksternal sedang gagal.
+
+## Produk gratis dan checkout Rp0
+
+Admin dapat membuat produk gratis dengan mengisi harga `0`. Harga promo dan harga flash sale juga dapat diisi `0` selama memenuhi aturan harga yang lebih rendah dari harga aktif.
+
+Voucher atau kode promo boleh membuat subtotal setelah diskon menjadi tepat `Rp0`. Untuk pesanan seperti ini:
+
+1. Website tidak meminta pengguna memilih QRIS atau Virtual Account.
+2. Tidak ada request pembuatan transaksi ke Pakasir.
+3. Order disimpan dengan metode `free`, fee gateway `0`, dan total `0`.
+4. Status langsung menjadi `paid` dan `fulfilled` melalui konfirmasi internal.
+5. Stok dan jumlah terjual diperbarui satu kali.
+6. Kuota voucher dicatat satu kali.
+7. Produk langsung muncul di **Produk Saya** dan dapat diunduh.
+8. Invoice dan notifikasi email tetap dibuat.
+
+Jika keranjang berisi produk gratis dan berbayar sekaligus, payment gateway hanya digunakan selama subtotal akhir masih lebih dari Rp0.
 
 ## Pembatalan transaksi
 
@@ -221,7 +241,7 @@ Jangan menggunakan nilai total yang terlihat di browser sebagai input API. Contr
 
 ## Deploy ke Vercel
 
-1. Push proyek ke GitHub tanpa `.env`.
+1. Push proyek ke GitHub tanpa `.env`. ZIP ini sengaja tidak menyertakan `package-lock.json`; Vercel akan memasang dependency dari `package.json`.
 2. Import repository di Vercel.
 3. Tambahkan seluruh environment variable dari `.env.example` pada Project Settings → Environment Variables.
 4. Set `NODE_ENV=production` dan `APP_URL=https://domain-anda`.

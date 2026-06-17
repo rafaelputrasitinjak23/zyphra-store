@@ -1,23 +1,33 @@
-<section class="page-head"><div class="container"><span class="eyebrow">CHECKOUT</span><h1>Pilih metode pembayaran</h1><p>Harga, flash sale, voucher, kode promo, dan fee dihitung ulang oleh server.</p></div></section>
+<section class="page-head"><div class="container"><span class="eyebrow">CHECKOUT</span><h1><%= isFree ? 'Konfirmasi produk gratis' : 'Pilih metode pembayaran' %></h1><p><%= isFree ? 'Total pesanan Rp0. Tidak perlu QRIS, virtual account, atau metode pembayaran lainnya.' : 'Harga, flash sale, voucher, kode promo, dan fee dihitung ulang oleh server.' %></p></div></section>
 <section class="section pt-small"><div class="container checkout-grid">
   <form method="post" action="/checkout" class="panel form-stack">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="checkoutNonce" value="<%= nonce %>">
-    <h2>Metode pembayaran</h2>
-    <div class="payment-methods"><% methods.forEach((method, index) => { %><label class="payment-option"><input type="radio" name="paymentMethod" value="<%= method.method %>" <%= index === 0 ? 'checked' : '' %> required><span><strong><%= method.label %></strong><small>Fee gateway <%= rupiah(method.quote.gatewayFee) %> · bagian Anda <%= rupiah(method.quote.userFee) %></small></span><b><%= rupiah(method.quote.total) %></b></label><% }) %></div>
-    <div class="notice"><strong>Aturan pembagian fee</strong><p>Subtotal setelah diskon di bawah <%= rupiah(threshold) %>: fee dibagi dua. Mulai <%= rupiah(threshold) %>: seluruh fee dibayar pengguna.</p></div>
-    <button class="button button-block" type="submit" data-submit-lock>Buat pembayaran</button>
+    <% if (isFree) { %>
+      <input type="hidden" name="paymentMethod" value="free">
+      <div class="free-checkout-box">
+        <div class="free-checkout-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 7v14M12 7H7.5A2.5 2.5 0 1 1 10 4.5C10 6 12 7 12 7Zm0 0h4.5A2.5 2.5 0 1 0 14 4.5C14 6 12 7 12 7Z"/></svg></div>
+        <div><span class="badge badge-accent">GRATIS</span><h2>Tidak perlu metode pembayaran</h2><p>Setelah dikonfirmasi, pesanan langsung berstatus berhasil dan produk tersedia di menu Produk Saya.</p></div>
+      </div>
+      <button class="button button-block" type="submit" data-submit-lock>Konfirmasi & dapatkan produk gratis</button>
+    <% } else { %>
+      <h2>Metode pembayaran</h2>
+      <div class="payment-methods"><% methods.forEach((method, index) => { %><label class="payment-option"><input type="radio" name="paymentMethod" value="<%= method.method %>" <%= index === 0 ? 'checked' : '' %> required><span><strong><%= method.label %></strong><small>Fee gateway <%= rupiah(method.quote.gatewayFee) %> · bagian Anda <%= rupiah(method.quote.userFee) %></small></span><b><%= rupiah(method.quote.total) %></b></label><% }) %></div>
+      <div class="notice"><strong>Aturan pembagian fee</strong><p>Subtotal setelah diskon di bawah <%= rupiah(threshold) %>: fee dibagi dua. Mulai <%= rupiah(threshold) %>: seluruh fee dibayar pengguna.</p></div>
+      <button class="button button-block" type="submit" data-submit-lock>Buat pembayaran</button>
+    <% } %>
   </form>
   <aside class="summary-card">
     <h2>Rincian pesanan</h2>
-    <% items.forEach(item => { %><div class="summary-row"><span><%= item.product.name %> × <%= item.quantity %><% if (item.priceInfo.flashActive) { %><small class="flash-inline">Flash sale</small><% } %></span><strong><%= rupiah(item.lineTotal) %></strong></div><% }) %>
+    <% items.forEach(item => { %><div class="summary-row"><span><%= item.product.name %> × <%= item.quantity %><% if (item.priceInfo.flashActive) { %><small class="flash-inline">Flash sale</small><% } %></span><strong><%= item.lineTotal === 0 ? 'Gratis' : rupiah(item.lineTotal) %></strong></div><% }) %>
     <hr>
-    <div class="summary-row"><span>Subtotal produk</span><strong><%= rupiah(itemsSubtotal) %></strong></div>
+    <div class="summary-row"><span>Subtotal produk</span><strong><%= itemsSubtotal === 0 ? 'Gratis' : rupiah(itemsSubtotal) %></strong></div>
     <% if (appliedDiscount) { %>
       <div class="applied-discount"><div><span class="badge"><%= appliedDiscount.kind === 'voucher' ? 'Voucher' : 'Kode promo' %></span><strong><%= appliedDiscount.code %></strong><small><%= appliedDiscount.scope === 'all' ? 'Berlaku untuk semua produk' : 'Berlaku untuk produk tertentu' %></small></div><b>-<%= rupiah(appliedDiscount.amount) %></b></div>
       <form method="post" action="/checkout/discount/remove"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="text-button danger" type="submit">Hapus kode</button></form>
-    <% } else { %>
+    <% } else if (itemsSubtotal > 0) { %>
       <form class="discount-form" method="post" action="/checkout/discount"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label>Voucher atau kode promo<div class="input-action"><input name="discountCode" placeholder="Masukkan kode" maxlength="40" autocomplete="off"><button class="button button-sm" type="submit">Terapkan</button></div></label></form>
     <% } %>
-    <hr><div class="summary-row total"><span>Subtotal setelah diskon</span><strong><%= rupiah(subtotal) %></strong></div><p class="muted">Total pembayaran akhir mengikuti metode yang dipilih dan respons aktual Pakasir.</p>
+    <hr><div class="summary-row total"><span>Total akhir</span><strong><%= isFree ? 'Gratis' : rupiah(subtotal) %></strong></div>
+    <p class="muted"><%= isFree ? 'Pesanan Rp0 dikonfirmasi otomatis tanpa menghubungi Pakasir.' : 'Total pembayaran akhir mengikuti metode yang dipilih dan respons aktual Pakasir.' %></p>
   </aside>
 </div></section>

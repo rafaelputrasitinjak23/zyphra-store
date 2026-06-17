@@ -2,7 +2,7 @@
 <article class="product-card">
   <a class="product-image" href="/products/<%= product.slug %>" aria-label="Lihat <%= product.name %>">
     <img src="<%= product.thumbnail %>" alt="Thumbnail <%= product.name %>" loading="lazy">
-    <span class="product-image-price"><%= rupiah(pricing.effectivePrice) %></span>
+    <span class="product-image-price"><%= pricing.effectivePrice === 0 ? 'Gratis' : rupiah(pricing.effectivePrice) %></span>
     <% if (pricing.flashActive) { %><span class="flash-sale-ribbon">FLASH SALE</span><% } %>
   </a>
   <div class="product-body">
@@ -15,7 +15,7 @@
     <% } %>
     <div class="product-card-main">
       <div class="product-card-name"><span class="product-field-label">Nama script</span><h3><a href="/products/<%= product.slug %>"><%= product.name %></a></h3></div>
-      <div class="product-card-price"><span class="product-field-label">Harga script</span><% if (pricing.compareAtPrice) { %><span class="old-price"><%= rupiah(pricing.compareAtPrice) %></span><% } %><strong><%= rupiah(pricing.effectivePrice) %></strong></div>
+      <div class="product-card-price"><span class="product-field-label">Harga script</span><% if (pricing.compareAtPrice) { %><span class="old-price"><%= rupiah(pricing.compareAtPrice) %></span><% } %><strong><%= pricing.effectivePrice === 0 ? 'Gratis' : rupiah(pricing.effectivePrice) %></strong></div>
     </div>
     <% if (product.shortDescription) { %><p><%= product.shortDescription %></p><% } %>
     <div class="product-stats"><span><%= product.soldCount || 0 %> terjual</span><span>v<%= product.version %></span></div>

@@ -42,8 +42,23 @@ test('kode promo dinormalisasi menjadi huruf besar tanpa spasi', () => {
   assert.equal(normalizeCode(' zyphra 10 '), 'ZYPHRA10');
 });
 
-test('diskon tidak dapat membuat subtotal pembayaran menjadi nol', () => {
+test('voucher 100 persen boleh membuat subtotal menjadi nol', () => {
   const items = [{ product: { _id: 'a' }, lineTotal: 50000 }];
   const discount = { scope: 'all', discountType: 'percentage', value: 100, maxDiscount: 0, minSubtotal: 0, products: [] };
-  assert.throws(() => calculateDiscountAmount(discount, items, 50000), /Rp0/);
+  assert.equal(calculateDiscountAmount(discount, items, 50000).amount, 50000);
+});
+
+test('produk boleh memiliki harga langsung Rp0', () => {
+  const product = { price: 0, promoPrice: null, flashSale: { enabled: false } };
+  const pricing = getProductPriceInfo(product);
+  assert.equal(pricing.regularPrice, 0);
+  assert.equal(pricing.effectivePrice, 0);
+});
+
+test('harga promo Rp0 membuat produk gratis', () => {
+  const product = { price: 25000, promoPrice: 0, flashSale: { enabled: false } };
+  const pricing = getProductPriceInfo(product);
+  assert.equal(pricing.hasPromo, true);
+  assert.equal(pricing.effectivePrice, 0);
+  assert.equal(pricing.compareAtPrice, 25000);
 });

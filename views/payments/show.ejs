@@ -1,4 +1,4 @@
-<section class="page-head"><div class="container"><span class="eyebrow">PEMBAYARAN</span><h1><%= order.orderNumber %></h1><p>Selesaikan pembayaran sebelum <%= formatDate(order.expiresAt) %>.</p></div></section>
+<% if (order.paymentMethod === 'free') { %><section class="page-head"><div class="container"><span class="eyebrow">PESANAN GRATIS</span><h1><%= order.orderNumber %></h1><p>Pesanan ini tidak memerlukan pembayaran.</p></div></section><section class="section pt-small"><div class="container"><div class="panel"><a class="button" href="/orders/<%= order.orderNumber %>">Lihat pesanan</a></div></div></section><% } else { %><section class="page-head"><div class="container"><span class="eyebrow">PEMBAYARAN</span><h1><%= order.orderNumber %></h1><p>Selesaikan pembayaran sebelum <%= formatDate(order.expiresAt) %>.</p></div></section>
 <section class="section pt-small">
   <div class="container payment-layout">
     <div class="panel payment-box">
@@ -24,3 +24,5 @@
     <aside class="summary-card"><h2>Rincian biaya</h2><div class="summary-row"><span>Subtotal produk</span><strong><%= rupiah(order.itemsSubtotal || (order.subtotal + (order.discountAmount || 0))) %></strong></div><% if (order.discountAmount > 0) { %><div class="summary-row discount-row"><span><%= order.discountKind === 'voucher' ? 'Voucher' : 'Kode promo' %> <strong><%= order.discountCodeText %></strong></span><strong>-<%= rupiah(order.discountAmount) %></strong></div><div class="summary-row"><span>Subtotal setelah diskon</span><strong><%= rupiah(order.subtotal) %></strong></div><% } %><div class="summary-row"><span>Fee gateway</span><strong><%= rupiah(order.gatewayFee) %></strong></div><div class="summary-row"><span>Fee dibayar pengguna</span><strong><%= rupiah(order.userFee) %></strong></div><div class="summary-row"><span>Fee ditanggung merchant</span><strong><%= rupiah(order.merchantFee) %></strong></div><hr><div class="summary-row total"><span>Total pembayaran</span><strong><%= rupiah(order.total) %></strong></div></aside>
   </div>
 </section>
+
+<% } %>

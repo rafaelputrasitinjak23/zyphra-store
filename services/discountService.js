@@ -32,7 +32,6 @@ function calculateDiscountAmount(discount, items, itemsSubtotal) {
     amount = Math.min(Number(discount.value), eligibleSubtotal);
   }
   amount = Math.max(0, Math.min(Math.round(amount), itemsSubtotal));
-  if (amount >= itemsSubtotal) throw new AppError('Diskon tidak boleh membuat subtotal menjadi Rp0.', 400, 'DISCOUNT_TOTAL_ZERO');
   if (amount <= 0) throw new AppError('Nilai diskon tidak valid untuk keranjang ini.', 400, 'DISCOUNT_ZERO');
   return { amount, eligibleSubtotal };
 }
