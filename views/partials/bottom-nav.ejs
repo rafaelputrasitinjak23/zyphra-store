@@ -1,4 +1,4 @@
-<% if (currentUser) { %>
+<% if (currentUser && !currentPath.startsWith('/admin')) { %>
 <nav class="mobile-bottom-nav" aria-label="Navigasi utama pengguna">
   <a class="<%= currentPath === '/' ? 'active' : '' %>" href="/" <%- currentPath === '/' ? 'aria-current="page"' : '' %>>
     <span class="mobile-nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v11h5v-6h4v6h5V10"/></svg></span>

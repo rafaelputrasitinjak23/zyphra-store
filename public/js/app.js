@@ -1,28 +1,64 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const toggle = document.querySelector('[data-nav-toggle]');
-  const closeNavButton = document.querySelector('[data-nav-close]');
-  const nav = document.querySelector('[data-nav]');
-  const navOverlay = document.querySelector('[data-nav-overlay]');
-  const setNavOpen = (open) => {
-    if (!nav) return;
-    nav.classList.toggle('open', open);
-    nav.setAttribute('aria-hidden', String(!open));
-    toggle?.setAttribute('aria-expanded', String(open));
-    if (navOverlay) navOverlay.hidden = !open;
-    document.body.classList.toggle('nav-open', open);
+  const siteToggle = document.querySelector('[data-nav-toggle]');
+  const siteClose = document.querySelector('[data-nav-close]');
+  const siteNav = document.querySelector('[data-nav]');
+  const siteOverlay = document.querySelector('[data-nav-overlay]');
+
+  const setSiteNavOpen = (open) => {
+    if (!siteNav) return;
+    const mobile = window.matchMedia('(max-width: 820px)').matches;
+    const next = Boolean(open && mobile);
+    siteNav.classList.toggle('open', next);
+    siteNav.setAttribute('aria-hidden', mobile ? String(!next) : 'false');
+    siteToggle?.setAttribute('aria-expanded', String(next));
+    if (siteOverlay) siteOverlay.hidden = !next;
+    document.body.classList.toggle('nav-open', next);
   };
-  toggle?.addEventListener('click', () => setNavOpen(!nav?.classList.contains('open')));
-  closeNavButton?.addEventListener('click', () => setNavOpen(false));
-  navOverlay?.addEventListener('click', () => setNavOpen(false));
-  nav?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
-    if (window.innerWidth <= 780) setNavOpen(false);
+
+  siteToggle?.addEventListener('click', () => setSiteNavOpen(!siteNav?.classList.contains('open')));
+  siteClose?.addEventListener('click', () => setSiteNavOpen(false));
+  siteOverlay?.addEventListener('click', () => setSiteNavOpen(false));
+  siteNav?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+    if (window.innerWidth <= 820) setSiteNavOpen(false);
   }));
+
+  const adminSidebar = document.querySelector('[data-admin-sidebar]');
+  const adminOpenButtons = document.querySelectorAll('[data-admin-open]');
+  const adminClose = document.querySelector('[data-admin-close]');
+  const adminOverlay = document.querySelector('[data-admin-overlay]');
+
+  const setAdminSidebarOpen = (open) => {
+    if (!adminSidebar) return;
+    const mobile = window.matchMedia('(max-width: 820px)').matches;
+    const next = Boolean(open && mobile);
+    adminSidebar.classList.toggle('open', next);
+    adminSidebar.setAttribute('aria-hidden', mobile ? String(!next) : 'false');
+    adminOpenButtons.forEach((button) => button.setAttribute('aria-expanded', String(next)));
+    if (adminOverlay) adminOverlay.hidden = !next;
+    document.body.classList.toggle('admin-sidebar-open', next);
+  };
+
+  adminOpenButtons.forEach((button) => button.addEventListener('click', () => setAdminSidebarOpen(true)));
+  adminClose?.addEventListener('click', () => setAdminSidebarOpen(false));
+  adminOverlay?.addEventListener('click', () => setAdminSidebarOpen(false));
+  adminSidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+    if (window.innerWidth <= 820) setAdminSidebarOpen(false);
+  }));
+
   window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') setNavOpen(false);
+    if (event.key !== 'Escape') return;
+    setSiteNavOpen(false);
+    setAdminSidebarOpen(false);
   });
+
   window.addEventListener('resize', () => {
-    if (window.innerWidth > 780) setNavOpen(false);
+    if (window.innerWidth > 820) setSiteNavOpen(false);
+    if (window.innerWidth > 820) setAdminSidebarOpen(false);
   });
+
+  setSiteNavOpen(false);
+  setAdminSidebarOpen(false);
+
 
   document.querySelectorAll('[data-toast-close]').forEach((button) => button.addEventListener('click', () => button.closest('[data-toast]')?.remove()));
   setTimeout(() => document.querySelectorAll('[data-toast]').forEach((toast) => toast.classList.add('toast-hide')), 5000);

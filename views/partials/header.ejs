@@ -1,38 +1,73 @@
 <header class="site-header">
   <div class="container nav-wrap">
-    <a class="brand" href="/" aria-label="Zyphra Store"><span class="brand-mark">Z</span><span>Zyphra Store</span></a>
-    <button class="nav-toggle" type="button" data-nav-toggle aria-label="Buka navigasi" aria-expanded="false" aria-controls="siteNavDrawer">
+    <a class="brand" href="/" aria-label="Zyphra Store">
+      <span class="brand-mark">Z</span>
+      <span>Zyphra Store</span>
+    </a>
+
+    <button class="nav-toggle" type="button" data-nav-toggle aria-label="Buka menu" aria-expanded="false" aria-controls="siteNavDrawer">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
 
     <div class="nav-overlay" data-nav-overlay hidden></div>
-    <nav class="nav" id="siteNavDrawer" data-nav aria-hidden="true">
+
+    <nav class="nav" id="siteNavDrawer" data-nav aria-label="Navigasi utama">
       <div class="nav-drawer-head">
-        <a class="brand" href="/" aria-label="Zyphra Store"><span class="brand-mark">Z</span><span>Zyphra Store</span></a>
-        <button class="nav-close" type="button" data-nav-close aria-label="Tutup navigasi">
+        <a class="brand" href="/" aria-label="Zyphra Store">
+          <span class="brand-mark">Z</span>
+          <span>Zyphra Store</span>
+        </a>
+        <button class="nav-close" type="button" data-nav-close aria-label="Tutup menu">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
         </button>
       </div>
+
       <div class="nav-links">
         <a class="<%= currentPath.startsWith('/products') ? 'active' : '' %>" href="/products">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
           <span>Produk</span>
         </a>
+
         <% if (currentUser) { %>
-          <a class="<%= currentPath.startsWith('/cart') ? 'active' : '' %>" href="/cart"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M3 4h2l2.5 11h10l2-8H6"/></svg><span>Keranjang</span></a>
-          <a class="<%= currentPath.startsWith('/wallet') ? 'active' : '' %>" href="/wallet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h14a2 2 0 0 1 2 2v10H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><path d="M16 10h6v5h-6a2.5 2.5 0 0 1 0-5Z"/></svg><span>Dompet</span></a>
-          <a class="<%= currentPath.startsWith('/orders') ? 'active' : '' %>" href="/orders"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><span>Pesanan</span></a>
-          <a class="<%= currentPath.startsWith('/account/purchases') ? 'active' : '' %>" href="/account/purchases"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg><span>Produk Saya</span></a>
+          <a class="<%= currentPath.startsWith('/cart') ? 'active' : '' %>" href="/cart">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M3 4h2l2.5 11h10l2-8H6"/></svg>
+            <span>Keranjang</span>
+          </a>
+          <a class="<%= currentPath.startsWith('/wallet') ? 'active' : '' %>" href="/wallet">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h14a2 2 0 0 1 2 2v10H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><path d="M16 10h6v5h-6a2.5 2.5 0 0 1 0-5Z"/></svg>
+            <span>Dompet</span>
+          </a>
+          <a class="<%= currentPath.startsWith('/orders') ? 'active' : '' %>" href="/orders">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>
+            <span>Pesanan</span>
+          </a>
+          <a class="<%= currentPath.startsWith('/account/purchases') ? 'active' : '' %>" href="/account/purchases">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>
+            <span>Produk Saya</span>
+          </a>
           <% if (currentUser.role === 'admin') { %>
-            <a class="<%= currentPath.startsWith('/admin') ? 'active' : '' %>" href="/admin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7v5c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10V7z"/><path d="M9.5 12.5 11 14l3.5-4"/></svg><span>Admin</span></a>
+            <a class="<%= currentPath.startsWith('/admin') ? 'active' : '' %>" href="/admin">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7v5c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10V7z"/><path d="M9.5 12.5 11 14l3.5-4"/></svg>
+              <span>Admin</span>
+            </a>
           <% } %>
           <a class="header-account <%= currentPath.startsWith('/account') ? 'active' : '' %>" href="/account">
-            <% if (currentUser.avatar) { %><img src="<%= currentUser.avatar %>" alt="Foto <%= currentUser.name %>"><% } else { %><span><%= currentUser.name.charAt(0).toUpperCase() %></span><% } %>
+            <% if (currentUser.avatar) { %>
+              <img src="<%= currentUser.avatar %>" alt="Foto <%= currentUser.name %>">
+            <% } else { %>
+              <span class="header-avatar-fallback"><%= currentUser.name.charAt(0).toUpperCase() %></span>
+            <% } %>
             <b><%= currentUser.name %></b>
           </a>
         <% } else { %>
-          <a class="<%= currentPath.startsWith('/auth/login') ? 'active' : '' %>" href="/auth/login"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17 15 12 10 7M15 12H3"/><path d="M14 4h6v16h-6"/></svg><span>Login</span></a>
-          <a class="button button-sm nav-signup" href="/auth/register"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c.8-4.6 3.2-7 7-7M17 8v8M13 12h8"/></svg><span>Daftar</span></a>
+          <a class="<%= currentPath.startsWith('/auth/login') ? 'active' : '' %>" href="/auth/login">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17 15 12 10 7M15 12H3"/><path d="M14 4h6v16h-6"/></svg>
+            <span>Login</span>
+          </a>
+          <a class="button button-sm nav-signup" href="/auth/register">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c.8-4.6 3.2-7 7-7M17 8v8M13 12h8"/></svg>
+            <span>Daftar</span>
+          </a>
         <% } %>
       </div>
     </nav>
