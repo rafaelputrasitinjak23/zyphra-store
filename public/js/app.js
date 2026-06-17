@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const setSiteNavOpen = (open) => {
     if (!siteNav) return;
-    const mobile = window.matchMedia('(max-width: 820px)').matches;
+    const mobile = window.matchMedia('(max-width: 900px)').matches;
     const next = Boolean(open && mobile);
     siteNav.classList.toggle('open', next);
     siteNav.setAttribute('aria-hidden', mobile ? String(!next) : 'false');
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   siteClose?.addEventListener('click', () => setSiteNavOpen(false));
   siteOverlay?.addEventListener('click', () => setSiteNavOpen(false));
   siteNav?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
-    if (window.innerWidth <= 820) setSiteNavOpen(false);
+    if (window.innerWidth <= 900) setSiteNavOpen(false);
   }));
 
   const adminSidebar = document.querySelector('[data-admin-sidebar]');
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const setAdminSidebarOpen = (open) => {
     if (!adminSidebar) return;
-    const mobile = window.matchMedia('(max-width: 820px)').matches;
+    const mobile = window.matchMedia('(max-width: 900px)').matches;
     const next = Boolean(open && mobile);
     adminSidebar.classList.toggle('open', next);
     adminSidebar.setAttribute('aria-hidden', mobile ? String(!next) : 'false');
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   adminClose?.addEventListener('click', () => setAdminSidebarOpen(false));
   adminOverlay?.addEventListener('click', () => setAdminSidebarOpen(false));
   adminSidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
-    if (window.innerWidth <= 820) setAdminSidebarOpen(false);
+    if (window.innerWidth <= 900) setAdminSidebarOpen(false);
   }));
 
   window.addEventListener('keydown', (event) => {
@@ -52,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener('resize', () => {
-    if (window.innerWidth > 820) setSiteNavOpen(false);
-    if (window.innerWidth > 820) setAdminSidebarOpen(false);
+    if (window.innerWidth > 900) setSiteNavOpen(false);
+    if (window.innerWidth > 900) setAdminSidebarOpen(false);
   });
 
   setSiteNavOpen(false);

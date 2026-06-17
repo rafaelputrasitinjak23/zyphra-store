@@ -609,3 +609,251 @@ select[multiple]{min-height:180px;padding:8px}
   .ui-clean .admin-stat-grid-modern,.ui-clean .stat-grid{grid-template-columns:1fr!important}
   .ui-clean .admin-chart-container{height:245px!important}
 }
+
+/* =========================================================
+   CLEAN UI v4 — COMPLETE MOBILE LAYOUT REBUILD
+   This final layer intentionally overrides older breakpoints.
+   ========================================================= */
+html{width:100%;max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
+body.ui-clean{width:100%;max-width:100%;overflow-x:hidden}
+body.ui-clean main,
+body.ui-clean main>section,
+body.ui-clean main>div{width:100%;max-width:100%;min-width:0}
+body.ui-clean *,body.ui-clean *::before,body.ui-clean *::after{box-sizing:border-box}
+body.ui-clean img,body.ui-clean video,body.ui-clean iframe,body.ui-clean canvas{max-width:100%}
+body.ui-clean pre,body.ui-clean code,body.ui-clean .json{max-width:100%;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+body.ui-clean .container,body.ui-clean .narrow{max-width:100%;min-width:0}
+body.ui-clean .panel,body.ui-clean .summary-card,body.ui-clean .market-panel,
+body.ui-clean .product-card,body.ui-clean .purchase-card,body.ui-clean .cart-item,
+body.ui-clean .account-hero-card,body.ui-clean .wallet-hero,body.ui-clean .payment-card,
+body.ui-clean .auth-card{min-width:0;max-width:100%}
+
+@media(max-width:900px){
+  html,body.ui-clean{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
+  body.ui-clean{padding-bottom:74px!important}
+  body.ui-clean.is-admin-page{padding-bottom:0!important}
+  body.ui-clean main{display:block!important;width:100%!important;max-width:100%!important;overflow-x:hidden!important}
+  body.ui-clean .container,body.ui-clean .narrow{
+    width:calc(100% - 24px)!important;
+    max-width:calc(100% - 24px)!important;
+    margin-inline:auto!important;
+    padding-inline:0!important
+  }
+
+  /* Header and right-side mobile drawer */
+  body.ui-clean .site-header{height:auto!important;min-height:62px!important}
+  body.ui-clean .nav-wrap{min-height:62px!important;width:100%!important;gap:10px!important}
+  body.ui-clean .nav-toggle{display:inline-grid!important;place-items:center;width:40px;height:40px;padding:0!important;border:1px solid var(--line)!important;border-radius:10px!important;background:#fff!important}
+  body.ui-clean .nav-overlay{position:fixed!important;inset:0!important;display:block!important;z-index:98!important;background:rgba(15,23,42,.48)!important;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease}
+  body.ui-clean .nav-overlay:not([hidden]){opacity:1!important;visibility:visible!important;pointer-events:auto!important}
+  body.ui-clean .nav{
+    position:fixed!important;top:0!important;right:0!important;bottom:0!important;left:auto!important;
+    z-index:100!important;display:flex!important;width:min(340px,88vw)!important;max-width:88vw!important;
+    height:100dvh!important;margin:0!important;padding:16px 14px max(24px,env(safe-area-inset-bottom))!important;
+    border:0!important;border-left:1px solid var(--line)!important;border-radius:0!important;background:#fff!important;
+    box-shadow:-18px 0 45px rgba(15,23,42,.16)!important;overflow-y:auto!important;overscroll-behavior:contain!important;
+    flex-direction:column!important;align-items:stretch!important;gap:10px!important;
+    transform:translateX(105%)!important;visibility:hidden!important;transition:transform .22s ease,visibility .22s ease!important
+  }
+  body.ui-clean .nav.open{transform:translateX(0)!important;visibility:visible!important}
+  body.ui-clean .nav-drawer-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding-bottom:13px!important;border-bottom:1px solid var(--line)!important}
+  body.ui-clean .nav-close{display:inline-grid!important;place-items:center!important;width:40px!important;height:40px!important;padding:0!important;border:1px solid var(--line)!important;border-radius:10px!important;background:#fff!important}
+  body.ui-clean .nav-links{display:flex!important;flex-direction:column!important;gap:5px!important;width:100%!important}
+  body.ui-clean .nav-links>a{display:flex!important;align-items:center!important;gap:11px!important;width:100%!important;padding:11px 12px!important;border-radius:10px!important}
+  body.ui-clean .nav-links>a svg{display:block!important;width:19px!important;height:19px!important;flex:0 0 auto!important}
+  body.ui-clean .nav-links .header-account{margin-top:5px!important;padding-top:11px!important;border-top:1px solid var(--line)!important;border-radius:0!important}
+  body.ui-clean.nav-open{overflow:hidden!important}
+
+  /* Universal section spacing */
+  body.ui-clean .hero,body.ui-clean .section,body.ui-clean .page-head,
+  body.ui-clean .account-marketplace,body.ui-clean .account-settings-page,
+  body.ui-clean .wallet-page{width:100%!important;max-width:100%!important}
+  body.ui-clean .hero{padding:42px 0!important}
+  body.ui-clean .section{padding:48px 0!important}
+  body.ui-clean .page-head{padding:30px 0 24px!important}
+  body.ui-clean .section-head,body.ui-clean .panel-head,body.ui-clean .admin-head{
+    display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:8px!important
+  }
+  body.ui-clean .section-head>a,body.ui-clean .panel-head>a{margin-top:2px!important}
+
+  /* Every desktop two-column area becomes mobile-first */
+  body.ui-clean .hero-grid,
+  body.ui-clean .product-detail,
+  body.ui-clean .detail-tabs,
+  body.ui-clean .checkout-grid,
+  body.ui-clean .payment-layout,
+  body.ui-clean .settings-grid,
+  body.ui-clean .two-col,
+  body.ui-clean .account-layout,
+  body.ui-clean .market-settings-layout,
+  body.ui-clean .wallet-layout,
+  body.ui-clean .wallet-hero{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;gap:16px!important
+  }
+  body.ui-clean .hero-copy,body.ui-clean .hero-panel,body.ui-clean .product-info,
+  body.ui-clean .account-main-column,body.ui-clean .account-side-column,
+  body.ui-clean .wallet-main,body.ui-clean .wallet-side,body.ui-clean .settings-content-stack{
+    width:100%!important;max-width:100%!important;min-width:0!important
+  }
+  body.ui-clean .summary-card,body.ui-clean .product-info,body.ui-clean .settings-side-nav{position:static!important;top:auto!important}
+
+  /* Home and catalogue */
+  body.ui-clean .hero h1{font-size:clamp(34px,8.5vw,48px)!important;line-height:1.08!important}
+  body.ui-clean .hero p{font-size:15px!important}
+  body.ui-clean .hero-panel{margin-top:0!important}
+  body.ui-clean .clean-showcase{width:100%!important;padding:17px!important}
+  body.ui-clean .product-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;width:100%!important}
+  body.ui-clean .category-grid,body.ui-clean .feature-grid,body.ui-clean .steps{
+    display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;width:100%!important
+  }
+  body.ui-clean .product-card{width:100%!important;height:auto!important}
+  body.ui-clean .product-image{width:100%!important;height:170px!important;flex:0 0 170px!important}
+  body.ui-clean .product-image img{width:100%!important;height:100%!important;object-fit:contain!important}
+  body.ui-clean .product-body{display:flex!important;flex:1!important;flex-direction:column!important;padding:13px!important}
+  body.ui-clean .product-card-footer{margin-top:auto!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important}
+  body.ui-clean .product-card-footer .button{width:100%!important}
+  body.ui-clean .filter-bar,body.ui-clean .filter-bar-advanced{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important;width:100%!important}
+  body.ui-clean .filter-bar>*{width:100%!important;min-width:0!important}
+  body.ui-clean .pagination{flex-wrap:wrap!important;gap:10px!important}
+
+  /* Product detail */
+  body.ui-clean .gallery-main,body.ui-clean .product-buy-card{width:100%!important;max-width:100%!important}
+  body.ui-clean .gallery-main img{width:100%!important;height:auto!important;max-height:440px!important;object-fit:contain!important}
+  body.ui-clean .thumb-grid{display:flex!important;gap:8px!important;overflow-x:auto!important;padding-bottom:4px!important}
+  body.ui-clean .thumb-grid>*{flex:0 0 74px!important}
+  body.ui-clean .buy-actions{grid-template-columns:1fr!important}
+  body.ui-clean .product-quick-stats{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+
+  /* Cart, checkout, payment and orders */
+  body.ui-clean .cart-item{display:grid!important;grid-template-columns:84px minmax(0,1fr)!important;gap:12px!important;width:100%!important;padding:13px!important}
+  body.ui-clean .cart-item img{width:84px!important;height:72px!important}
+  body.ui-clean .cart-actions{grid-column:1/-1!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;width:100%!important}
+  body.ui-clean .cart-actions form{max-width:100%!important;flex-wrap:wrap!important}
+  body.ui-clean .payment-box,body.ui-clean .payment-card,body.ui-clean .summary-card{width:100%!important}
+  body.ui-clean .payment-option,body.ui-clean .payment-option-rich{width:100%!important;min-width:0!important}
+  body.ui-clean .payment-number{align-items:flex-start!important;flex-direction:column!important}
+  body.ui-clean .payment-number code{font-size:17px!important;word-break:break-all!important}
+  body.ui-clean .order-item{grid-template-columns:54px minmax(0,1fr)!important;gap:10px!important}
+  body.ui-clean .order-item>strong,body.ui-clean .order-item>span{grid-column:2!important}
+  body.ui-clean .invoice{width:100%!important;max-width:100%!important;padding:18px!important}
+
+  /* Account */
+  body.ui-clean .account-marketplace,body.ui-clean .account-settings-page{padding:14px 0 84px!important}
+  body.ui-clean .account-hero-card{display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important;width:100%!important;padding:21px 15px!important;gap:15px!important}
+  body.ui-clean .account-avatar-lg{width:88px!important;height:88px!important;margin:auto!important}
+  body.ui-clean .account-title-row{display:flex!important;flex-direction:column!important;align-items:center!important;gap:8px!important;width:100%!important}
+  body.ui-clean .account-title-row h1{font-size:23px!important;overflow-wrap:anywhere!important}
+  body.ui-clean .account-contact-row{justify-content:center!important;gap:8px 12px!important;width:100%!important}
+  body.ui-clean .account-contact-row span{max-width:100%!important;overflow-wrap:anywhere!important}
+  body.ui-clean .account-hero-actions{display:flex!important;flex-direction:column!important;width:100%!important;gap:8px!important}
+  body.ui-clean .account-hero-actions .button{width:100%!important}
+  body.ui-clean .account-stat-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;width:100%!important}
+  body.ui-clean .account-stat-grid article{min-width:0!important;padding:13px 10px!important}
+  body.ui-clean .account-side-column{display:flex!important;flex-direction:column!important;gap:14px!important}
+  body.ui-clean .market-panel{width:100%!important;padding:17px 13px!important}
+  body.ui-clean .market-order-item{display:grid!important;grid-template-columns:40px minmax(0,1fr) 16px!important;gap:9px!important;align-items:start!important}
+  body.ui-clean .market-order-value{grid-column:2!important;text-align:left!important}
+  body.ui-clean .market-chevron{grid-column:3!important;grid-row:1/span 2!important;align-self:center!important}
+  body.ui-clean .market-shortcut-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+  body.ui-clean .account-bottom-shortcuts{display:none!important}
+  body.ui-clean .settings-side-nav{display:flex!important;flex-direction:row!important;width:100%!important;overflow-x:auto!important;white-space:nowrap!important}
+  body.ui-clean .settings-side-nav a{flex:0 0 auto!important}
+  body.ui-clean .avatar-editor{flex-direction:column!important;align-items:center!important;text-align:center!important}
+  body.ui-clean .profile-form-grid,body.ui-clean .form-subgrid{grid-template-columns:1fr!important}
+  body.ui-clean .session-card{flex-direction:column!important;align-items:stretch!important}
+  body.ui-clean .session-card form .button{width:100%!important}
+
+  /* Wallet */
+  body.ui-clean .wallet-page{padding:14px 0 84px!important}
+  body.ui-clean .wallet-hero{padding:24px 18px!important}
+  body.ui-clean .wallet-visual{display:none!important}
+  body.ui-clean .wallet-overview-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+  body.ui-clean .wallet-side{display:flex!important;flex-direction:column!important;gap:14px!important}
+  body.ui-clean .wallet-transaction-item{display:grid!important;grid-template-columns:42px minmax(0,1fr)!important;gap:10px!important}
+  body.ui-clean .wallet-transaction-value{grid-column:2!important;align-items:flex-start!important;text-align:left!important}
+  body.ui-clean .wallet-deposit-item{grid-template-columns:minmax(0,1fr) auto!important}
+  body.ui-clean .wallet-deposit-item>svg{display:none!important}
+  body.ui-clean .deposit-form,body.ui-clean .payment-card{padding:18px!important}
+  body.ui-clean .checkout-wallet-banner{align-items:flex-start!important;flex-wrap:wrap!important}
+  body.ui-clean .checkout-wallet-banner>a{margin-left:0!important;width:100%!important}
+
+  /* Forms */
+  body.ui-clean .form-grid,body.ui-clean .profile-form-grid,body.ui-clean .mini-grid{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important
+  }
+  body.ui-clean .span-2{grid-column:auto!important}
+  body.ui-clean .inline-edit{grid-template-columns:minmax(0,1fr)!important;width:100%!important}
+  body.ui-clean .row-actions,body.ui-clean .inline-actions{flex-wrap:wrap!important;width:100%!important}
+  body.ui-clean input,body.ui-clean select,body.ui-clean textarea,body.ui-clean button{max-width:100%!important}
+  body.ui-clean .auth-section{min-height:auto!important;padding:30px 12px 90px!important}
+  body.ui-clean .auth-card{width:100%!important;max-width:480px!important;padding:24px 18px!important}
+  body.ui-clean .captcha-preview{align-items:stretch!important;flex-direction:column!important}
+  body.ui-clean .captcha-preview img,body.ui-clean .captcha-refresh{width:100%!important}
+
+  /* Footer and fixed mobile actions */
+  body.ui-clean .clean-footer-grid{grid-template-columns:1fr 1fr!important;gap:28px 18px!important}
+  body.ui-clean .clean-footer-brand{grid-column:1/-1!important}
+  body.ui-clean .clean-footer-bottom{align-items:flex-start!important;flex-direction:column!important;padding-bottom:92px!important}
+  body.ui-clean .mobile-bottom-nav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;left:0!important;right:0!important;bottom:0!important;width:100%!important;max-width:100%!important;z-index:85!important}
+  body.ui-clean .mobile-bottom-nav a{min-width:0!important;overflow:hidden!important}
+  body.ui-clean .mobile-bottom-nav a>span:last-child{max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+  body.ui-clean .ai-chat{right:12px!important;bottom:82px!important}
+
+  /* Admin: left drawer on mobile, fixed left sidebar on desktop */
+  body.ui-clean .admin-shell{display:block!important;width:100%!important;min-height:0!important}
+  body.ui-clean .admin-mobile-bar{position:sticky!important;top:62px!important;z-index:45!important;display:flex!important;align-items:center!important;justify-content:space-between!important;width:100%!important;padding:10px 12px!important;border-bottom:1px solid var(--line)!important;background:#fff!important}
+  body.ui-clean .admin-sidebar-overlay{position:fixed!important;inset:0!important;z-index:108!important;display:block!important;background:rgba(15,23,42,.48)!important;opacity:0;visibility:hidden;pointer-events:none}
+  body.ui-clean .admin-sidebar-overlay:not([hidden]){opacity:1!important;visibility:visible!important;pointer-events:auto!important}
+  body.ui-clean .admin-nav{
+    position:fixed!important;top:0!important;left:0!important;bottom:0!important;z-index:110!important;
+    width:min(320px,88vw)!important;max-width:88vw!important;height:100dvh!important;padding:16px 14px 24px!important;
+    border-right:1px solid var(--line)!important;background:#fff!important;overflow-y:auto!important;
+    transform:translateX(-105%)!important;visibility:hidden!important;transition:transform .22s ease,visibility .22s ease!important
+  }
+  body.ui-clean .admin-nav.open{transform:translateX(0)!important;visibility:visible!important}
+  body.ui-clean .admin-nav-head{position:sticky!important;top:-16px!important;z-index:2!important;margin:-16px -14px 12px!important;padding:16px 14px 13px!important;background:#fff!important;border-bottom:1px solid var(--line)!important}
+  body.ui-clean .admin-nav-close{display:inline-grid!important}
+  body.ui-clean .admin-nav nav{display:flex!important;flex-direction:column!important;overflow:visible!important}
+  body.ui-clean .admin-content{width:100%!important;max-width:100%!important;padding:17px 12px 40px!important;overflow-x:hidden!important}
+  body.ui-clean .admin-stat-grid-modern,body.ui-clean .stat-grid,body.ui-clean .wallet-admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  body.ui-clean .admin-stat-wide{grid-column:1/-1!important}
+  body.ui-clean .admin-chart-container{width:100%!important;height:270px!important;overflow:hidden!important}
+  body.ui-clean .admin-chart-container canvas{max-width:100%!important}
+  body.ui-clean .table-wrap{display:block!important;width:100%!important;max-width:100%!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;contain:inline-size}
+  body.ui-clean .table-wrap table{width:max-content!important;min-width:660px!important;max-width:none!important}
+  body.ui-clean .wallet-adjust-form{min-width:600px!important}
+  body.ui-clean.admin-sidebar-open{overflow:hidden!important}
+}
+
+@media(max-width:560px){
+  body.ui-clean .container,body.ui-clean .narrow{width:calc(100% - 16px)!important;max-width:calc(100% - 16px)!important}
+  body.ui-clean .hero{padding:34px 0!important}
+  body.ui-clean .hero h1{font-size:34px!important}
+  body.ui-clean .section{padding:40px 0!important}
+  body.ui-clean .actions{display:flex!important;flex-direction:column!important;width:100%!important;gap:8px!important}
+  body.ui-clean .actions .button{width:100%!important}
+  body.ui-clean .product-grid,body.ui-clean .category-grid,body.ui-clean .feature-grid,body.ui-clean .steps,
+  body.ui-clean .purchase-grid{grid-template-columns:minmax(0,1fr)!important}
+  body.ui-clean .product-image{height:220px!important;flex-basis:220px!important}
+  body.ui-clean .product-quick-stats{grid-template-columns:1fr!important}
+  body.ui-clean .account-stat-grid,body.ui-clean .wallet-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  body.ui-clean .account-stat-grid article,body.ui-clean .wallet-overview-grid article{padding:11px 9px!important}
+  body.ui-clean .account-contact-row{flex-direction:column!important;align-items:center!important}
+  body.ui-clean .market-shortcut-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  body.ui-clean .payment-option-rich{grid-template-columns:auto minmax(0,1fr)!important}
+  body.ui-clean .payment-option-rich>b{grid-column:2!important}
+  body.ui-clean .clean-footer-grid{grid-template-columns:minmax(0,1fr)!important}
+  body.ui-clean .clean-footer-brand{grid-column:auto!important}
+  body.ui-clean .admin-stat-grid-modern,body.ui-clean .stat-grid,body.ui-clean .wallet-admin-stats{grid-template-columns:minmax(0,1fr)!important}
+  body.ui-clean .admin-stat-wide{grid-column:auto!important}
+  body.ui-clean .admin-content{padding:14px 8px 34px!important}
+  body.ui-clean .admin-content .panel,body.ui-clean .admin-content .summary-card{padding:15px 11px!important}
+  body.ui-clean .admin-chart-container{height:230px!important}
+  body.ui-clean .table-wrap table{min-width:620px!important}
+}
+
+@media(max-width:380px){
+  body.ui-clean .account-stat-grid,body.ui-clean .wallet-overview-grid,body.ui-clean .market-shortcut-grid{grid-template-columns:minmax(0,1fr)!important}
+  body.ui-clean .mobile-bottom-nav a{font-size:8px!important}
+  body.ui-clean .mobile-nav-icon{width:30px!important}
+}
