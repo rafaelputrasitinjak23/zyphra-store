@@ -1,6 +1,6 @@
 {
   "name": "zyphra-store",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "private": true,
   "description": "E-commerce produk digital dengan akun marketplace, foto profil, navigasi SVG mobile, login email OTP, CAPTCHA teks, Pakasir, pembatalan transaksi, dan chatbot AI.",
   "main": "server.js",
