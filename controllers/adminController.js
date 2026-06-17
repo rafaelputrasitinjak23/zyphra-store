@@ -6,6 +6,7 @@ const Payment = require('../models/Payment');
 const WebhookLog = require('../models/WebhookLog');
 const EmailLog = require('../models/EmailLog');
 const StoreSetting = require('../models/StoreSetting');
+const DiscountCode = require('../models/DiscountCode');
 const { getStoreSettings } = require('../services/settingService');
 const { slugify } = require('../utils/helpers');
 const { AppError } = require('../utils/errors');
@@ -17,6 +18,8 @@ const cancellationService = require('../services/orderCancellationService');
 
 function number(value, fallback = 0) { const parsed = Number(value); return Number.isFinite(parsed) ? Math.round(parsed) : fallback; }
 function bool(value) { return value === 'on' || value === 'true' || value === true; }
+function dateOrNull(value) { const raw = String(value || '').trim(); if (!raw) return null; const normalized = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(raw) ? `${raw}:00+07:00` : raw; const date = new Date(normalized); return !Number.isNaN(date.getTime()) ? date : null; }
+function array(value) { return Array.isArray(value) ? value : value ? [value] : []; }
 function productPayload(body) {
   const gallery = String(body.gallery || '').split(/\r?\n|,/).map((v) => v.trim()).filter(Boolean);
   const tags = String(body.tags || '').split(',').map((v) => v.trim()).filter(Boolean);
@@ -25,9 +28,86 @@ function productPayload(body) {
     price: number(body.price), promoPrice: body.promoPrice === '' ? null : number(body.promoPrice), category: body.category, thumbnail: String(body.thumbnail || '').trim(), gallery,
     unlimitedStock: bool(body.unlimitedStock), stock: number(body.stock), allowMultipleQuantity: bool(body.allowMultipleQuantity), version: String(body.version || '1.0.0').trim(),
     changelog: String(body.changelog || '').trim(), tags, active: bool(body.active), featured: bool(body.featured), digitalFileUrl: assertSafeExternalUrl(String(body.digitalFileUrl || '').trim()),
-    fileName: String(body.fileName || '').trim(), instructions: String(body.instructions || '').trim(), downloadLimit: Math.max(1, number(body.downloadLimit, 5))
+    fileName: String(body.fileName || '').trim(), instructions: String(body.instructions || '').trim(), downloadLimit: Math.max(1, number(body.downloadLimit, 5)),
+    flashSale: {
+      enabled: bool(body.flashSaleEnabled),
+      price: body.flashSalePrice === '' ? null : Math.max(0, number(body.flashSalePrice)),
+      startsAt: dateOrNull(body.flashSaleStartsAt),
+      endsAt: dateOrNull(body.flashSaleEndsAt)
+    }
   };
 }
+
+function validateFlashSale(payload) {
+  const flash = payload.flashSale;
+  if (!flash?.enabled) return;
+  const basePrice = payload.promoPrice !== null && payload.promoPrice < payload.price ? payload.promoPrice : payload.price;
+  if (flash.price === null || flash.price < 1 || flash.price >= basePrice) throw new AppError('Harga flash sale harus lebih rendah dari harga aktif produk.', 400, 'INVALID_FLASH_PRICE');
+  if (!flash.startsAt || !flash.endsAt || flash.endsAt <= flash.startsAt) throw new AppError('Waktu mulai dan selesai flash sale tidak valid.', 400, 'INVALID_FLASH_PERIOD');
+}
+
+function discountPayload(body) {
+  const scope = body.scope === 'products' ? 'products' : 'all';
+  const discountType = body.discountType === 'fixed' ? 'fixed' : 'percentage';
+  const products = scope === 'products' ? array(body.products).filter(Boolean) : [];
+  const payload = {
+    name: String(body.name || '').trim(),
+    code: String(body.code || '').trim().toUpperCase().replace(/\s+/g, ''),
+    kind: body.kind === 'voucher' ? 'voucher' : 'promo',
+    description: String(body.description || '').trim(),
+    discountType,
+    value: Math.max(1, number(body.value, 1)),
+    maxDiscount: Math.max(0, number(body.maxDiscount, 0)),
+    minSubtotal: Math.max(0, number(body.minSubtotal, 0)),
+    scope,
+    products,
+    usageLimit: Math.max(0, number(body.usageLimit, 0)),
+    perUserLimit: Math.max(1, number(body.perUserLimit, 1)),
+    startsAt: dateOrNull(body.startsAt),
+    endsAt: dateOrNull(body.endsAt),
+    active: bool(body.active)
+  };
+  if (!payload.name || !payload.code) throw new AppError('Nama dan kode wajib diisi.', 400, 'DISCOUNT_REQUIRED_FIELDS');
+  if (discountType === 'percentage' && payload.value > 100) throw new AppError('Persentase diskon maksimal 100%.', 400, 'INVALID_DISCOUNT_PERCENT');
+  if (!payload.startsAt || !payload.endsAt || payload.endsAt <= payload.startsAt) throw new AppError('Periode voucher/kode promo tidak valid.', 400, 'INVALID_DISCOUNT_PERIOD');
+  if (scope === 'products' && products.length === 0) throw new AppError('Pilih minimal satu produk untuk cakupan produk tertentu.', 400, 'DISCOUNT_PRODUCTS_REQUIRED');
+  return payload;
+}
+
+async function discounts(req, res) {
+  const discounts = await DiscountCode.find().populate('products', 'name slug').sort({ createdAt: -1 });
+  res.render('admin/discounts/list', { title: 'Voucher & kode promo', discounts });
+}
+async function newDiscount(req, res) {
+  res.render('admin/discounts/form', { title: 'Tambah voucher/kode promo', discount: null, products: await Product.find({ active: true }).sort({ name: 1 }) });
+}
+async function createDiscount(req, res) {
+  await DiscountCode.create(discountPayload(req.body));
+  req.flash('success', 'Voucher atau kode promo berhasil dibuat.');
+  res.redirect('/admin/discounts');
+}
+async function editDiscount(req, res) {
+  const discount = await DiscountCode.findById(req.params.id);
+  if (!discount) throw new AppError('Voucher atau kode promo tidak ditemukan.', 404);
+  res.render('admin/discounts/form', { title: 'Edit voucher/kode promo', discount, products: await Product.find({ active: true }).sort({ name: 1 }) });
+}
+async function updateDiscount(req, res) {
+  const discount = await DiscountCode.findById(req.params.id);
+  if (!discount) throw new AppError('Voucher atau kode promo tidak ditemukan.', 404);
+  Object.assign(discount, discountPayload(req.body));
+  await discount.save();
+  req.flash('success', 'Voucher atau kode promo diperbarui.');
+  res.redirect('/admin/discounts');
+}
+async function toggleDiscount(req, res) {
+  const discount = await DiscountCode.findById(req.params.id);
+  if (!discount) throw new AppError('Voucher atau kode promo tidak ditemukan.', 404);
+  discount.active = !discount.active;
+  await discount.save();
+  req.flash('success', 'Status voucher atau kode promo diperbarui.');
+  res.redirect('/admin/discounts');
+}
+
 async function dashboard(req, res) {
   const [users, products, orders, revenue, recent, chart] = await Promise.all([
     User.countDocuments(), Product.countDocuments(), Order.countDocuments(),
@@ -39,9 +119,9 @@ async function dashboard(req, res) {
 }
 async function products(req, res) { res.render('admin/products/list', { title: 'Kelola produk', products: await Product.find().populate('category').sort({ createdAt: -1 }) }); }
 async function newProduct(req, res) { res.render('admin/products/form', { title: 'Tambah produk', product: null, categories: await Category.find().sort({ name: 1 }) }); }
-async function createProduct(req, res) { const payload = productPayload(req.body); if (!payload.name || !payload.slug || !payload.digitalFileUrl || !payload.category || payload.price < 0) throw new AppError('Data produk wajib belum lengkap.', 400); await Product.create(payload); req.flash('success', 'Produk berhasil ditambahkan.'); res.redirect('/admin/products'); }
+async function createProduct(req, res) { const payload = productPayload(req.body); if (!payload.name || !payload.slug || !payload.digitalFileUrl || !payload.category || payload.price < 0) throw new AppError('Data produk wajib belum lengkap.', 400); validateFlashSale(payload); await Product.create(payload); req.flash('success', 'Produk berhasil ditambahkan.'); res.redirect('/admin/products'); }
 async function editProduct(req, res) { const product = await Product.findById(req.params.id).select('+digitalFileUrl'); if (!product) throw new AppError('Produk tidak ditemukan.', 404); res.render('admin/products/form', { title: 'Edit produk', product, categories: await Category.find().sort({ name: 1 }) }); }
-async function updateProduct(req, res) { const product = await Product.findById(req.params.id).select('+digitalFileUrl'); if (!product) throw new AppError('Produk tidak ditemukan.', 404); Object.assign(product, productPayload(req.body)); await product.save(); req.flash('success', 'Produk diperbarui.'); res.redirect('/admin/products'); }
+async function updateProduct(req, res) { const product = await Product.findById(req.params.id).select('+digitalFileUrl'); if (!product) throw new AppError('Produk tidak ditemukan.', 404); const payload = productPayload(req.body); validateFlashSale(payload); Object.assign(product, payload); await product.save(); req.flash('success', 'Produk diperbarui.'); res.redirect('/admin/products'); }
 async function toggleProduct(req, res) { const product = await Product.findById(req.params.id); if (!product) throw new AppError('Produk tidak ditemukan.', 404); product.active = !product.active; await product.save(); req.flash('success', 'Status produk diperbarui.'); res.redirect('/admin/products'); }
 async function categories(req, res) { res.render('admin/categories', { title: 'Kategori', categories: await Category.find().sort({ name: 1 }) }); }
 async function createCategory(req, res) { const name = String(req.body.name || '').trim(); if (!name) throw new AppError('Nama kategori wajib diisi.', 400); await Category.create({ name, slug: slugify(req.body.slug || name), description: String(req.body.description || ''), active: true }); req.flash('success', 'Kategori ditambahkan.'); res.redirect('/admin/categories'); }
@@ -90,4 +170,4 @@ async function retryEmail(req, res) {
   res.redirect('/admin/logs/emails');
 }
 
-module.exports = { dashboard, products, newProduct, createProduct, editProduct, updateProduct, toggleProduct, categories, createCategory, updateCategory, users, updateUser, orders, orderDetail, recheckOrder, cancelOrder, resendInvoice, settings, updateSettings, webhookLogs, emailLogs, retryEmail };
+module.exports = { dashboard, products, newProduct, createProduct, editProduct, updateProduct, toggleProduct, discounts, newDiscount, createDiscount, editDiscount, updateDiscount, toggleDiscount, categories, createCategory, updateCategory, users, updateUser, orders, orderDetail, recheckOrder, cancelOrder, resendInvoice, settings, updateSettings, webhookLogs, emailLogs, retryEmail };

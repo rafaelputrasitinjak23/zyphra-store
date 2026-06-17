@@ -1,0 +1,27 @@
+<section class="admin-shell">
+  <%- include('../../partials/admin-nav') %>
+  <div class="admin-content">
+    <div class="admin-head">
+      <div><span class="eyebrow">PROMOSI</span><h1>Voucher & kode promo</h1><p>Kelola diskon untuk semua produk atau produk tertentu.</p></div>
+      <a class="button" href="/admin/discounts/new">Tambah kode</a>
+    </div>
+    <% if (!discounts.length) { %>
+      <div class="empty"><h3>Belum ada voucher atau kode promo</h3><p>Buat kode pertama untuk meningkatkan konversi pembelian.</p></div>
+    <% } else { %>
+      <div class="table-wrap panel"><table><thead><tr><th>Kode</th><th>Jenis</th><th>Diskon</th><th>Cakupan</th><th>Periode</th><th>Penggunaan</th><th>Status</th><th>Aksi</th></tr></thead><tbody>
+        <% discounts.forEach(discount => { const activeNow = discount.active && new Date() >= discount.startsAt && new Date() < discount.endsAt; %>
+          <tr>
+            <td><strong><%= discount.code %></strong><br><small><%= discount.name %></small></td>
+            <td><span class="badge"><%= discount.kind === 'voucher' ? 'Voucher' : 'Kode promo' %></span></td>
+            <td><%= discount.discountType === 'percentage' ? `${discount.value}%` : rupiah(discount.value) %><% if (discount.maxDiscount > 0 && discount.discountType === 'percentage') { %><br><small>Maks. <%= rupiah(discount.maxDiscount) %></small><% } %></td>
+            <td><%= discount.scope === 'all' ? 'Semua produk' : `${discount.products.length} produk` %></td>
+            <td><small><%= formatDate(discount.startsAt) %><br>s.d. <%= formatDate(discount.endsAt) %></small></td>
+            <td><%= discount.usedCount %>/<%= discount.usageLimit > 0 ? discount.usageLimit : '∞' %></td>
+            <td><span class="badge <%= activeNow ? 'badge-success' : '' %>"><%= discount.active ? (activeNow ? 'Aktif' : 'Terjadwal/berakhir') : 'Nonaktif' %></span></td>
+            <td><div class="inline-actions"><a class="button button-sm button-ghost" href="/admin/discounts/<%= discount._id %>/edit">Edit</a><form method="post" action="/admin/discounts/<%= discount._id %>/toggle"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="text-button" type="submit"><%= discount.active ? 'Nonaktifkan' : 'Aktifkan' %></button></form></div></td>
+          </tr>
+        <% }) %>
+      </tbody></table></div>
+    <% } %>
+  </div>
+</section>

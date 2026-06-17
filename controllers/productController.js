@@ -4,12 +4,14 @@ const { escapeRegex } = require('../utils/helpers');
 const { AppError } = require('../utils/errors');
 
 async function home(req, res) {
-  const [featured, categories, popular] = await Promise.all([
+  const now = new Date();
+  const [featured, categories, popular, flashSales] = await Promise.all([
     Product.find({ active: true, featured: true }).populate('category').sort({ soldCount: -1, createdAt: -1 }).limit(8),
     Category.find({ active: true }).sort({ name: 1 }).limit(12),
-    Product.find({ active: true }).populate('category').sort({ soldCount: -1, viewCount: -1, createdAt: -1 }).limit(4)
+    Product.find({ active: true }).populate('category').sort({ soldCount: -1, viewCount: -1, createdAt: -1 }).limit(4),
+    Product.find({ active: true, 'flashSale.enabled': true, 'flashSale.startsAt': { $lte: now }, 'flashSale.endsAt': { $gt: now } }).populate('category').sort({ 'flashSale.endsAt': 1 }).limit(8)
   ]);
-  res.render('home', { title: 'Produk digital untuk proyek Anda', featured, categories, popular });
+  res.render('home', { title: 'Produk digital untuk proyek Anda', featured, categories, popular, flashSales });
 }
 
 async function list(req, res) {

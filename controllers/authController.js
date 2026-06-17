@@ -27,7 +27,7 @@ function renderRegister(req, res) { res.render('auth/register', { title: 'Daftar
 function renderLogin(req, res) { res.render('auth/login', { title: 'Login', form: {}, captchaId: createCaptchaId() }); }
 function renderOtp(req, res) {
   const flow = req.params.flow;
-  const pending = flow === 'register' ? req.session.pendingRegister : flow === 'login' ? req.session.pendingLogin : req.session.pendingReset;
+  const pending = flow === 'register' ? req.session.pendingRegister : flow === 'reset' ? req.session.pendingReset : null;
   if (!pending) return res.redirect('/auth/login');
   res.render('auth/otp', { title: 'Verifikasi OTP', flow, email: pending.email });
 }
@@ -64,11 +64,15 @@ async function login(req, res) {
     await user.save();
     return invalid();
   }
-  user.loginFailures = 0; user.lockUntil = undefined; await user.save();
-  await issueOtp({ user, email, purpose: 'login' });
-  req.session.pendingLogin = { userId: String(user._id), email };
-  req.flash('success', 'OTP login telah dikirim.');
-  res.redirect('/auth/otp/login');
+  user.loginFailures = 0;
+  user.lockUntil = undefined;
+  const client = getClientInfo(req);
+  user.lastLoginAt = new Date();
+  user.lastLoginIp = client.ip;
+  await user.save();
+  const target = await establishLogin(req, user);
+  await emailService.sendLoginNotice(user.email, { name: user.name, ...client, time: new Date() });
+  res.redirect(target);
 }
 
 async function establishLogin(req, user) {
@@ -85,11 +89,12 @@ async function establishLogin(req, user) {
 
 async function verifyOtpFlow(req, res) {
   const flow = req.params.flow;
-  if (!['register', 'login', 'reset'].includes(flow)) throw new AppError('Alur OTP tidak valid.', 400);
-  const key = flow === 'register' ? 'pendingRegister' : flow === 'login' ? 'pendingLogin' : 'pendingReset';
+  if (!['register', 'reset'].includes(flow)) throw new AppError('Alur OTP tidak valid.', 400);
+  const key = flow === 'register' ? 'pendingRegister' : 'pendingReset';
+  if (!key) throw new AppError('Alur OTP tidak valid.', 400);
   const pending = req.session[key];
   if (!pending) throw new AppError('Sesi OTP tidak ditemukan.', 400, 'OTP_SESSION_MISSING');
-  const purpose = flow === 'reset' ? 'password_reset' : flow;
+  const purpose = flow === 'reset' ? 'password_reset' : 'register';
   await verifyOtp({ email: pending.email, purpose, code: req.body.code, userId: pending.userId });
   const user = await User.findById(pending.userId);
   if (!user) throw new AppError('Akun tidak ditemukan.', 404);
@@ -104,16 +109,13 @@ async function verifyOtpFlow(req, res) {
     req.session.resetAuthorized = { userId: String(user._id), expiresAt: Date.now() + 10 * 60 * 1000 };
     return res.redirect('/auth/reset-password');
   }
-  const client = getClientInfo(req);
-  user.lastLoginAt = new Date(); user.lastLoginIp = client.ip; await user.save();
-  const target = await establishLogin(req, user);
-  await emailService.sendLoginNotice(user.email, { name: user.name, ...client, time: new Date() });
-  res.redirect(target);
+  throw new AppError('Alur OTP tidak valid.', 400);
 }
 
 async function resendOtp(req, res) {
   const flow = req.params.flow;
-  const key = flow === 'register' ? 'pendingRegister' : flow === 'login' ? 'pendingLogin' : 'pendingReset';
+  if (!['register', 'reset'].includes(flow)) throw new AppError('Alur OTP tidak valid.', 400);
+  const key = flow === 'register' ? 'pendingRegister' : 'pendingReset';
   const pending = req.session[key];
   if (!pending) throw new AppError('Sesi OTP tidak ditemukan.', 400);
   const user = await User.findById(pending.userId);

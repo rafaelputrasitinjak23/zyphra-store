@@ -1,44 +1,24 @@
+<% const pricing = productPrice(product); %>
 <article class="product-card">
   <a class="product-image" href="/products/<%= product.slug %>" aria-label="Lihat <%= product.name %>">
     <img src="<%= product.thumbnail %>" alt="Thumbnail <%= product.name %>" loading="lazy">
-    <span class="product-image-price"><%= rupiah(product.promoPrice !== null && product.promoPrice < product.price ? product.promoPrice : product.price) %></span>
+    <span class="product-image-price"><%= rupiah(pricing.effectivePrice) %></span>
+    <% if (pricing.flashActive) { %><span class="flash-sale-ribbon">FLASH SALE</span><% } %>
   </a>
-
   <div class="product-body">
     <div class="meta-row">
       <span class="badge"><%= product.category?.name || 'Digital' %></span>
-      <% if (product.featured) { %><span class="badge badge-accent">Unggulan</span><% } %>
+      <% if (pricing.flashActive) { %><span class="badge badge-danger">Hemat <%= pricing.discountPercent %>%</span><% } else if (product.featured) { %><span class="badge badge-accent">Unggulan</span><% } %>
     </div>
-
-    <div class="product-card-main">
-      <div class="product-card-name">
-        <span class="product-field-label">Nama script</span>
-        <h3><a href="/products/<%= product.slug %>"><%= product.name %></a></h3>
-      </div>
-
-      <div class="product-card-price">
-        <span class="product-field-label">Harga script</span>
-        <% if (product.promoPrice !== null && product.promoPrice < product.price) { %>
-          <span class="old-price"><%= rupiah(product.price) %></span>
-          <strong><%= rupiah(product.promoPrice) %></strong>
-        <% } else { %>
-          <strong><%= rupiah(product.price) %></strong>
-        <% } %>
-      </div>
-    </div>
-
-    <% if (product.shortDescription) { %>
-      <p><%= product.shortDescription %></p>
+    <% if (pricing.flashActive) { %>
+      <div class="flash-countdown compact" data-flash-expiry="<%= pricing.flashEndsAt.toISOString() %>"><span>Berakhir dalam</span><strong data-flash-countdown>--:--:--</strong></div>
     <% } %>
-
-    <div class="product-stats">
-      <span><%= product.soldCount || 0 %> terjual</span>
-      <span>v<%= product.version %></span>
+    <div class="product-card-main">
+      <div class="product-card-name"><span class="product-field-label">Nama script</span><h3><a href="/products/<%= product.slug %>"><%= product.name %></a></h3></div>
+      <div class="product-card-price"><span class="product-field-label">Harga script</span><% if (pricing.compareAtPrice) { %><span class="old-price"><%= rupiah(pricing.compareAtPrice) %></span><% } %><strong><%= rupiah(pricing.effectivePrice) %></strong></div>
     </div>
-
-    <div class="product-card-footer">
-      <span class="stock-text"><%= product.unlimitedStock ? 'Stok tersedia' : (product.stock > 0 ? `${product.stock} stok tersisa` : 'Stok habis') %></span>
-      <a class="button button-sm" href="/products/<%= product.slug %>">Lihat detail</a>
-    </div>
+    <% if (product.shortDescription) { %><p><%= product.shortDescription %></p><% } %>
+    <div class="product-stats"><span><%= product.soldCount || 0 %> terjual</span><span>v<%= product.version %></span></div>
+    <div class="product-card-footer"><span class="stock-text"><%= product.unlimitedStock ? 'Stok tersedia' : (product.stock > 0 ? `${product.stock} stok tersisa` : 'Stok habis') %></span><a class="button button-sm" href="/products/<%= product.slug %>">Lihat detail</a></div>
   </div>
 </article>

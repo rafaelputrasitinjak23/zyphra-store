@@ -1,3 +1,4 @@
+<% const pricing = productPrice(product); %>
 <section class="section product-detail-section">
   <div class="container product-detail">
     <div class="gallery-main">
@@ -12,10 +13,11 @@
       <p class="lead"><%= product.shortDescription %></p>
       <div class="price-label">Harga produk</div>
       <div class="detail-price">
-        <% if (product.promoPrice !== null && product.promoPrice < product.price) { %>
-          <span class="old-price"><%= rupiah(product.price) %></span><strong><%= rupiah(product.promoPrice) %></strong><span class="discount-badge">Promo</span>
-        <% } else { %><strong><%= rupiah(product.price) %></strong><% } %>
+        <% if (pricing.compareAtPrice) { %><span class="old-price"><%= rupiah(pricing.compareAtPrice) %></span><% } %>
+        <strong><%= rupiah(pricing.effectivePrice) %></strong>
+        <% if (pricing.flashActive) { %><span class="discount-badge">Flash Sale -<%= pricing.discountPercent %>%</span><% } else if (pricing.hasPromo) { %><span class="discount-badge">Promo</span><% } %>
       </div>
+      <% if (pricing.flashActive) { %><div class="flash-countdown" data-flash-expiry="<%= pricing.flashEndsAt.toISOString() %>"><span>Flash sale berakhir dalam</span><strong data-flash-countdown>--:--:--</strong></div><% } else if (pricing.flashUpcoming) { %><div class="notice"><strong>Flash sale akan datang</strong><p>Mulai <%= formatDate(pricing.flashStartsAt) %>.</p></div><% } %>
       <p class="price-note">Belum termasuk bagian fee metode pembayaran. Rinciannya ditampilkan sebelum membuat transaksi.</p>
       <div class="product-quick-stats">
         <span><strong><%= product.soldCount || 0 %></strong> terjual</span>

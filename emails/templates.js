@@ -6,7 +6,7 @@ function shell(title, content) {
 }
 function button(label, url) { return `<p style="margin:24px 0"><a href="${url}" style="background:#4f46e5;color:#fff;text-decoration:none;padding:12px 18px;border-radius:9px;display:inline-block">${label}</a></p>`; }
 function otpTemplate({ name, code, purpose }) {
-  const labels = { register: 'Verifikasi pendaftaran', login: 'Verifikasi login', password_reset: 'Reset password' };
+  const labels = { register: 'Verifikasi pendaftaran', password_reset: 'Reset password' };
   return shell(labels[purpose] || 'Kode OTP', `<p>Halo ${name || 'Pengguna'},</p><p>Gunakan kode berikut. Kode berlaku selama 10 menit dan hanya dapat digunakan satu kali.</p><div style="font-size:32px;font-weight:800;letter-spacing:8px;background:#f4f4f5;padding:18px;text-align:center;border-radius:10px">${code}</div><p>Jangan berikan kode ini kepada siapa pun.</p>`);
 }
 function loginTemplate({ name, ip, userAgent, device, time }) {
@@ -17,6 +17,8 @@ function simpleTemplate(title, name, message, action) {
 }
 function invoiceTemplate({ order, actionUrl }) {
   const rows = order.items.map((item) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${item.name} × ${item.quantity}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right">${rupiah(item.lineTotal)}</td></tr>`).join('');
-  return shell(`Invoice ${order.invoiceNumber}`, `<p>Nomor pesanan: <strong>${order.orderNumber}</strong></p><table style="width:100%;border-collapse:collapse">${rows}<tr><td style="padding:8px">Subtotal</td><td style="text-align:right">${rupiah(order.subtotal)}</td></tr><tr><td style="padding:8px">Fee pengguna</td><td style="text-align:right">${rupiah(order.userFee)}</td></tr><tr><td style="padding:8px;font-weight:bold">Total</td><td style="text-align:right;font-weight:bold">${rupiah(order.total)}</td></tr><tr><td style="padding:8px">Status</td><td style="text-align:right">${order.paymentStatus}</td></tr></table>${actionUrl ? button('Lihat pesanan', actionUrl) : ''}`);
+  const discountRow = order.discountAmount > 0 ? `<tr><td style="padding:8px">${order.discountKind === 'voucher' ? 'Voucher' : 'Kode promo'} ${order.discountCodeText}</td><td style="text-align:right;color:#6d28d9">-${rupiah(order.discountAmount)}</td></tr>` : '';
+  const itemsSubtotal = order.itemsSubtotal || (order.subtotal + (order.discountAmount || 0));
+  return shell(`Invoice ${order.invoiceNumber}`, `<p>Nomor pesanan: <strong>${order.orderNumber}</strong></p><table style="width:100%;border-collapse:collapse">${rows}<tr><td style="padding:8px">Subtotal produk</td><td style="text-align:right">${rupiah(itemsSubtotal)}</td></tr>${discountRow}<tr><td style="padding:8px">Subtotal setelah diskon</td><td style="text-align:right">${rupiah(order.subtotal)}</td></tr><tr><td style="padding:8px">Fee pengguna</td><td style="text-align:right">${rupiah(order.userFee)}</td></tr><tr><td style="padding:8px;font-weight:bold">Total</td><td style="text-align:right;font-weight:bold">${rupiah(order.total)}</td></tr><tr><td style="padding:8px">Status</td><td style="text-align:right">${order.paymentStatus}</td></tr></table>${actionUrl ? button('Lihat pesanan', actionUrl) : ''}`);
 }
 module.exports = { otpTemplate, loginTemplate, simpleTemplate, invoiceTemplate };

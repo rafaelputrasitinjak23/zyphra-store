@@ -1,1 +1,23 @@
-<section class="page-head"><div class="container"><span class="eyebrow">CHECKOUT</span><h1>Pilih metode pembayaran</h1><p>Semua harga dan fee dihitung ulang oleh server.</p></div></section><section class="section pt-small"><div class="container checkout-grid"><form method="post" action="/checkout" class="panel form-stack"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="checkoutNonce" value="<%= nonce %>"><h2>Metode pembayaran</h2><div class="payment-methods"><% methods.forEach((method, index) => { %><label class="payment-option"><input type="radio" name="paymentMethod" value="<%= method.method %>" <%= index === 0 ? 'checked' : '' %> required><span><strong><%= method.label %></strong><small>Fee gateway <%= rupiah(method.quote.gatewayFee) %> · bagian Anda <%= rupiah(method.quote.userFee) %></small></span><b><%= rupiah(method.quote.total) %></b></label><% }) %></div><div class="notice"><strong>Aturan pembagian fee</strong><p>Subtotal di bawah <%= rupiah(threshold) %>: fee dibagi dua. Subtotal mulai <%= rupiah(threshold) %>: seluruh fee dibayar pengguna.</p></div><button class="button button-block" type="submit" data-submit-lock>Buat pembayaran</button></form><aside class="summary-card"><h2>Rincian pesanan</h2><% items.forEach(item => { %><div class="summary-row"><span><%= item.product.name %> × <%= item.quantity %></span><strong><%= rupiah(item.lineTotal) %></strong></div><% }) %><hr><div class="summary-row total"><span>Subtotal</span><strong><%= rupiah(subtotal) %></strong></div><p class="muted">Total akhir mengikuti metode yang dipilih dan respons aktual Pakasir.</p></aside></div></section>
+<section class="page-head"><div class="container"><span class="eyebrow">CHECKOUT</span><h1>Pilih metode pembayaran</h1><p>Harga, flash sale, voucher, kode promo, dan fee dihitung ulang oleh server.</p></div></section>
+<section class="section pt-small"><div class="container checkout-grid">
+  <form method="post" action="/checkout" class="panel form-stack">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="checkoutNonce" value="<%= nonce %>">
+    <h2>Metode pembayaran</h2>
+    <div class="payment-methods"><% methods.forEach((method, index) => { %><label class="payment-option"><input type="radio" name="paymentMethod" value="<%= method.method %>" <%= index === 0 ? 'checked' : '' %> required><span><strong><%= method.label %></strong><small>Fee gateway <%= rupiah(method.quote.gatewayFee) %> · bagian Anda <%= rupiah(method.quote.userFee) %></small></span><b><%= rupiah(method.quote.total) %></b></label><% }) %></div>
+    <div class="notice"><strong>Aturan pembagian fee</strong><p>Subtotal setelah diskon di bawah <%= rupiah(threshold) %>: fee dibagi dua. Mulai <%= rupiah(threshold) %>: seluruh fee dibayar pengguna.</p></div>
+    <button class="button button-block" type="submit" data-submit-lock>Buat pembayaran</button>
+  </form>
+  <aside class="summary-card">
+    <h2>Rincian pesanan</h2>
+    <% items.forEach(item => { %><div class="summary-row"><span><%= item.product.name %> × <%= item.quantity %><% if (item.priceInfo.flashActive) { %><small class="flash-inline">Flash sale</small><% } %></span><strong><%= rupiah(item.lineTotal) %></strong></div><% }) %>
+    <hr>
+    <div class="summary-row"><span>Subtotal produk</span><strong><%= rupiah(itemsSubtotal) %></strong></div>
+    <% if (appliedDiscount) { %>
+      <div class="applied-discount"><div><span class="badge"><%= appliedDiscount.kind === 'voucher' ? 'Voucher' : 'Kode promo' %></span><strong><%= appliedDiscount.code %></strong><small><%= appliedDiscount.scope === 'all' ? 'Berlaku untuk semua produk' : 'Berlaku untuk produk tertentu' %></small></div><b>-<%= rupiah(appliedDiscount.amount) %></b></div>
+      <form method="post" action="/checkout/discount/remove"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="text-button danger" type="submit">Hapus kode</button></form>
+    <% } else { %>
+      <form class="discount-form" method="post" action="/checkout/discount"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label>Voucher atau kode promo<div class="input-action"><input name="discountCode" placeholder="Masukkan kode" maxlength="40" autocomplete="off"><button class="button button-sm" type="submit">Terapkan</button></div></label></form>
+    <% } %>
+    <hr><div class="summary-row total"><span>Subtotal setelah diskon</span><strong><%= rupiah(subtotal) %></strong></div><p class="muted">Total pembayaran akhir mengikuti metode yang dipilih dan respons aktual Pakasir.</p>
+  </aside>
+</div></section>

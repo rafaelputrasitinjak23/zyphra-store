@@ -1,8 +1,8 @@
 {
   "name": "zyphra-store",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "private": true,
-  "description": "E-commerce produk digital dengan kartu produk yang menampilkan nama dan harga secara jelas, akun marketplace, CAPTCHA teks, Pakasir, pembatalan transaksi, dan chatbot AI.",
+  "description": "E-commerce produk digital dengan login CAPTCHA tanpa OTP, flash sale, voucher, kode promo, akun marketplace, Pakasir, pembatalan transaksi, dan chatbot AI.",
   "main": "server.js",
   "engines": {
     "node": ">=20"

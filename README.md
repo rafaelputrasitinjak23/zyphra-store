@@ -1,6 +1,6 @@
 # Zyphra Store
 
-Zyphra Store adalah proyek e-commerce produk digital berbasis Node.js, Express.js, MongoDB, Mongoose, EJS, autentikasi email, OTP, CAPTCHA teks bawaan, dan Pakasir. Proyek ini menyediakan katalog produk, keranjang, checkout, invoice, dashboard pengguna/admin, proteksi download, pembatalan transaksi pending, chatbot AI berbasis katalog, generator deskripsi produk, webhook idempoten, dan pencatatan kegagalan email.
+Zyphra Store adalah proyek e-commerce produk digital berbasis Node.js, Express.js, MongoDB, Mongoose, EJS, autentikasi email, CAPTCHA teks bawaan, OTP untuk registrasi/reset password, dan Pakasir. Proyek ini menyediakan katalog produk, keranjang, checkout, invoice, dashboard pengguna/admin, proteksi download, pembatalan transaksi pending, chatbot AI berbasis katalog, generator deskripsi produk, webhook idempoten, dan pencatatan kegagalan email.
 
 ## Fitur utama
 
@@ -14,7 +14,7 @@ Zyphra Store adalah proyek e-commerce produk digital berbasis Node.js, Express.j
 
 
 - Register manual dengan CAPTCHA, password bcrypt, OTP enam digit, kedaluwarsa 10 menit, cooldown, batas percobaan, dan verifikasi email.
-- Login manual dengan CAPTCHA, password, OTP, proteksi brute force, session regeneration, serta notifikasi IP, perangkat, dan user-agent.
+- Login manual langsung dengan email, password, dan CAPTCHA teks tanpa OTP, disertai proteksi brute force, session regeneration, serta notifikasi IP, perangkat, dan user-agent.
 - Reset password melalui OTP dengan respons yang tidak membocorkan status email dan invalidasi seluruh sesi lama.
 - Session MongoDB, cookie `httpOnly`, `sameSite=lax`, dan `secure` pada production.
 - Produk digital, kategori, promo, stok/unlimited, galeri, versi, changelog, instruksi, URL file rahasia, dan batas download.
@@ -105,7 +105,7 @@ Contoh umum port:
 - Port `587` dengan `SMTP_SECURE=false` untuk STARTTLS.
 - Port `465` dengan `SMTP_SECURE=true` untuk TLS langsung.
 
-Kegagalan email disimpan pada koleksi `EmailLog` dan dapat dilihat dari dashboard admin. Invoice serta notifikasi non-OTP yang gagal dapat dicoba ulang dari halaman log; OTP harus dikirim ulang melalui alur OTP agar kode lama tidak dipakai kembali. Aplikasi tidak menyimpan password SMTP ke database.
+Kegagalan email disimpan pada koleksi `EmailLog` dan dapat dilihat dari dashboard admin. Invoice serta notifikasi non-OTP yang gagal dapat dicoba ulang dari halaman log; OTP registrasi/reset password harus dikirim ulang melalui alur OTP agar kode lama tidak dipakai kembali. Aplikasi tidak menyimpan password SMTP ke database.
 
 ## Pakasir
 
@@ -179,7 +179,7 @@ npm test
 npm run check
 ```
 
-Test mencakup fee di bawah/tepat/di atas batas, pembulatan fee ganjil, OTP kedaluwarsa dan sekali pakai, CAPTCHA teks sekali pakai, event key webhook idempoten, proteksi kepemilikan download, harga database, parser respons AI, fallback konten produk, dan aturan pembatalan transaksi.
+Test mencakup fee di bawah/tepat/di atas batas, pembulatan fee ganjil, OTP registrasi/reset yang kedaluwarsa dan sekali pakai, login tanpa OTP, CAPTCHA teks sekali pakai, flash sale, voucher semua produk, promo produk tertentu, event key webhook idempoten, proteksi download, harga database, parser AI, dan pembatalan transaksi.
 
 ## Chatbot AI dan auto-deskripsi produk
 

@@ -13,6 +13,13 @@
       <label>Versi<input name="version" value="<%= product?.version || '1.0.0' %>"></label>
       <label>Harga<input type="number" name="price" min="0" value="<%= product?.price ?? 0 %>" required></label>
       <label>Harga promo<input type="number" name="promoPrice" min="0" value="<%= product?.promoPrice ?? '' %>"></label>
+      <div class="span-2 flash-sale-admin-box">
+        <div><strong>Flash sale</strong><p>Harga aktif otomatis hanya selama periode yang ditentukan.</p></div>
+        <label class="check"><input type="checkbox" name="flashSaleEnabled" <%= product?.flashSale?.enabled ? 'checked' : '' %>> Aktifkan flash sale</label>
+        <label>Harga flash sale<input type="number" name="flashSalePrice" min="0" value="<%= product?.flashSale?.price ?? '' %>"></label>
+        <label>Mulai<input type="datetime-local" name="flashSaleStartsAt" value="<%= datetimeLocal(product?.flashSale?.startsAt) %>"></label>
+        <label>Berakhir<input type="datetime-local" name="flashSaleEndsAt" value="<%= datetimeLocal(product?.flashSale?.endsAt) %>"></label>
+      </div>
       <label class="span-2">Tags<input name="tags" value="<%= product?.tags?.join(', ') || '' %>" placeholder="nodejs, bot, api"></label>
       <div class="span-2 ai-copy-box">
         <div><strong>Isi deskripsi otomatis dengan AI</strong><p>AI akan membuat deskripsi singkat, deskripsi lengkap, tags, instruksi, dan changelog berdasarkan nama serta kategori.</p></div>
