@@ -1,0 +1,20 @@
+<section class="admin-shell">
+  <%- include('../../partials/admin-nav') %>
+  <div class="admin-content">
+    <div class="admin-head"><div><span class="eyebrow">SUPPORT</span><h1>Tiket bantuan</h1></div></div>
+    <div class="panel">
+      <div class="table-wrap"><table><thead><tr><th>Tiket</th><th>User</th><th>Produk</th><th>Status</th><th>Terakhir</th></tr></thead><tbody>
+        <% tickets.forEach(ticket => { %>
+          <tr>
+            <td><a href="/admin/support/<%= ticket.ticketNumber %>"><strong><%= ticket.ticketNumber %></strong><small><%= ticket.subject %></small></a></td>
+            <td><%= ticket.user?.email || '-' %></td>
+            <td><%= ticket.product?.name || '-' %></td>
+            <td><span class="status status-<%= ticket.status %>"><%= ticket.status %></span></td>
+            <td><%= formatDate(ticket.latestMessageAt) %></td>
+          </tr>
+        <% }) %>
+        <% if (!tickets.length) { %><tr><td colspan="5"><div class="empty compact">Belum ada tiket.</div></td></tr><% } %>
+      </tbody></table></div>
+    </div>
+  </div>
+</section>

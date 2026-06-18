@@ -1,0 +1,38 @@
+<section class="page-head">
+  <div class="container">
+    <span class="eyebrow">BANTUAN</span>
+    <h1>Buat tiket bantuan</h1>
+    <p>Jelaskan kebutuhan Anda dengan jelas agar admin dapat membantu lebih cepat.</p>
+  </div>
+</section>
+
+<section class="section pt-small">
+  <div class="container narrow">
+    <form class="panel form-stack" method="post" action="/support">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>Produk terkait
+        <select name="productId">
+          <option value="">Pertanyaan umum</option>
+          <% products.forEach(product => { %>
+            <option value="<%= product._id %>" <%= String(product._id) === String(query?.product || '') ? 'selected' : '' %>><%= product.name %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>Kategori
+        <select name="category">
+          <option value="produk">Produk</option>
+          <option value="instalasi">Instalasi</option>
+          <option value="pembayaran">Pembayaran</option>
+          <option value="akun">Akun</option>
+          <option value="lainnya">Lainnya</option>
+        </select>
+      </label>
+      <label>Prioritas
+        <select name="priority"><option value="normal">Normal</option><option value="tinggi">Tinggi</option></select>
+      </label>
+      <label>Judul tiket<input name="subject" maxlength="160" placeholder="Contoh: Bantuan instalasi script"></label>
+      <label>Pesan<textarea name="message" rows="8" maxlength="5000" placeholder="Jelaskan masalah, langkah yang sudah dicoba, dan informasi penting lainnya."></textarea></label>
+      <button class="button" type="submit" data-submit-lock>Kirim tiket</button>
+    </form>
+  </div>
+</section>

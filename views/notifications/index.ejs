@@ -1,0 +1,49 @@
+<section class="page-head">
+  <div class="container">
+    <span class="eyebrow">PUSAT NOTIFIKASI</span>
+    <h1>Notifikasi</h1>
+    <p>Lihat pembaruan penting dari pembelian, bantuan, produk, dan dompet Anda.</p>
+  </div>
+</section>
+
+<section class="section pt-small">
+  <div class="container feature-page-grid">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <span class="eyebrow">INBOX</span>
+          <h2>Semua notifikasi</h2>
+        </div>
+        <% if (unreadCount > 0) { %>
+          <form method="post" action="/notifications/read-all">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="button button-sm button-ghost" type="submit">Tandai semua dibaca</button>
+          </form>
+        <% } %>
+      </div>
+
+      <% if (!notifications.length) { %>
+        <div class="empty compact"><h3>Belum ada notifikasi</h3><p>Semua pembaruan penting akan tampil di sini.</p></div>
+      <% } else { %>
+        <div class="notification-list">
+          <% notifications.forEach(item => { %>
+            <article class="notification-item <%= item.readAt ? '' : 'unread' %>">
+              <span class="notification-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+              </span>
+              <div>
+                <strong><%= item.title %></strong>
+                <p><%= item.message %></p>
+                <small><%= formatDate(item.createdAt) %></small>
+              </div>
+              <form method="post" action="/notifications/<%= item._id %>/read">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button class="button button-sm <%= item.readAt ? 'button-ghost' : '' %>" type="submit"><%= item.readAt ? 'Buka' : 'Baca' %></button>
+              </form>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>

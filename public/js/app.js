@@ -234,3 +234,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (button) { button.disabled = true; button.textContent = 'Memproses...'; }
   }));
 });
+
+
+// PWA registration
+window.addEventListener('load', () => {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('/public/sw.js').catch(() => {});
+});

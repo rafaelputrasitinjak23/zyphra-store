@@ -2,6 +2,8 @@ const router = require('express').Router();
 const asyncHandler = require('../utils/asyncHandler');
 const controller = require('../controllers/adminController');
 const aiController = require('../controllers/aiController');
+const supportController = require('../controllers/supportController');
+const documentationController = require('../controllers/documentationController');
 const { requireAdmin } = require('../middlewares/auth');
 const { aiLimiter, cancelLimiter } = require('../middlewares/rateLimits');
 
@@ -28,8 +30,17 @@ router.get('/wallets', asyncHandler(controller.wallets));
 router.post('/wallets/:userId/adjust', asyncHandler(controller.adjustWallet));
 router.post('/wallets/:userId/status', asyncHandler(controller.updateWalletStatus));
 router.post('/users/:id', asyncHandler(controller.updateUser));
-router.get('/reviews', asyncHandler(controller.reviews));
-router.post('/reviews/:id/toggle', asyncHandler(controller.toggleReview));
+if (typeof controller.reviews === 'function' && typeof controller.toggleReview === 'function') {
+  router.get('/reviews', asyncHandler(controller.reviews));
+  router.post('/reviews/:id/toggle', asyncHandler(controller.toggleReview));
+}
+router.get('/support', asyncHandler(supportController.adminList));
+router.get('/support/:ticketNumber', asyncHandler(supportController.adminDetail));
+router.post('/support/:ticketNumber/reply', asyncHandler(supportController.adminReply));
+router.post('/support/:ticketNumber/close', asyncHandler(supportController.adminClose));
+router.get('/documentation', asyncHandler(documentationController.adminIndex));
+router.get('/documentation/:productId', asyncHandler(documentationController.adminEdit));
+router.post('/documentation/:productId', asyncHandler(documentationController.adminUpdate));
 router.get('/orders', asyncHandler(controller.orders));
 router.get('/orders/:orderNumber', asyncHandler(controller.orderDetail));
 router.post('/orders/:orderNumber/recheck', asyncHandler(controller.recheckOrder));

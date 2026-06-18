@@ -1,0 +1,27 @@
+<section class="admin-shell">
+  <%- include('../../partials/admin-nav') %>
+  <div class="admin-content">
+    <div class="admin-head"><div><span class="eyebrow">DOKUMENTASI</span><h1><%= product.name %></h1></div><a class="button button-sm button-ghost" href="/admin/documentation">Kembali</a></div>
+    <form class="panel form-stack" method="post" action="/admin/documentation/<%= product._id %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="check"><input type="checkbox" name="published" <%= !doc || doc.published ? 'checked' : '' %>> Terbitkan dokumentasi</label>
+      <label>Mulai cepat<textarea name="quickStart" rows="6"><%= doc?.quickStart || '' %></textarea></label>
+      <label>Persyaratan<textarea name="requirements" rows="5"><%= doc?.requirements || '' %></textarea></label>
+      <label>Instalasi<textarea name="installation" rows="8"><%= doc?.installation || '' %></textarea></label>
+      <label>Konfigurasi<textarea name="configuration" rows="8"><%= doc?.configuration || '' %></textarea></label>
+      <label>Penggunaan<textarea name="usage" rows="8"><%= doc?.usage || '' %></textarea></label>
+
+      <div class="docs-faq-editor">
+        <h2>FAQ</h2>
+        <% const faqs = doc?.faq?.length ? doc.faq : [{ question: '', answer: '' }, { question: '', answer: '' }, { question: '', answer: '' }]; %>
+        <% faqs.forEach(item => { %>
+          <div class="form-grid">
+            <label>Pertanyaan<input name="faqQuestion" value="<%= item.question || '' %>"></label>
+            <label>Jawaban<input name="faqAnswer" value="<%= item.answer || '' %>"></label>
+          </div>
+        <% }) %>
+      </div>
+      <button class="button" type="submit" data-submit-lock>Simpan dokumentasi</button>
+    </form>
+  </div>
+</section>

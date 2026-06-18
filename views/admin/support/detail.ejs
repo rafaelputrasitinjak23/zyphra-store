@@ -1,0 +1,37 @@
+<section class="admin-shell">
+  <%- include('../../partials/admin-nav') %>
+  <div class="admin-content">
+    <div class="admin-head"><div><span class="eyebrow">TIKET <%= ticket.ticketNumber %></span><h1><%= ticket.subject %></h1></div><a class="button button-sm button-ghost" href="/admin/support">Kembali</a></div>
+    <div class="feature-page-grid">
+      <div class="panel">
+        <div class="support-thread">
+          <% ticket.messages.forEach(message => { %>
+            <article class="support-message <%= message.senderRole === 'admin' ? 'admin' : 'user' %>">
+              <div class="support-message-head"><strong><%= message.sender?.name || message.senderRole %></strong><small><%= formatDate(message.createdAt) %></small></div>
+              <p><%= message.body %></p>
+            </article>
+          <% }) %>
+        </div>
+        <% if (ticket.status !== 'closed') { %>
+          <form class="form-stack support-reply-form" method="post" action="/admin/support/<%= ticket.ticketNumber %>/reply">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label>Balasan admin<textarea name="message" rows="6" maxlength="5000"></textarea></label>
+            <button class="button" type="submit" data-submit-lock>Kirim balasan</button>
+          </form>
+        <% } %>
+      </div>
+      <aside class="panel">
+        <h2>Informasi</h2>
+        <p><strong>User:</strong> <%= ticket.user?.email %></p>
+        <p><strong>Produk:</strong> <%= ticket.product?.name || '-' %></p>
+        <p><strong>Status:</strong> <span class="status status-<%= ticket.status %>"><%= ticket.status %></span></p>
+        <% if (ticket.status !== 'closed') { %>
+          <form method="post" action="/admin/support/<%= ticket.ticketNumber %>/close" data-confirm="Tutup tiket ini?">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="button button-ghost button-block" type="submit">Tutup tiket</button>
+          </form>
+        <% } %>
+      </aside>
+    </div>
+  </div>
+</section>

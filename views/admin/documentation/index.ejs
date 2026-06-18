@@ -1,0 +1,19 @@
+<section class="admin-shell">
+  <%- include('../../partials/admin-nav') %>
+  <div class="admin-content">
+    <div class="admin-head"><div><span class="eyebrow">DOKUMENTASI</span><h1>Dokumentasi produk</h1></div></div>
+    <div class="panel">
+      <div class="table-wrap"><table><thead><tr><th>Produk</th><th>Kategori</th><th>Status</th><th>Diperbarui</th><th>Aksi</th></tr></thead><tbody>
+        <% products.forEach(product => { const doc = docs.get(String(product._id)); %>
+          <tr>
+            <td><div class="table-product"><img src="<%= product.thumbnail %>" alt=""><div><strong><%= product.name %></strong><small>/docs/<%= product.slug %></small></div></div></td>
+            <td><%= product.category?.name || '-' %></td>
+            <td><span class="status status-<%= doc?.published ? 'paid' : 'pending' %>"><%= doc ? (doc.published ? 'published' : 'draft') : 'belum ada' %></span></td>
+            <td><%= doc ? formatDate(doc.updatedAt) : '-' %></td>
+            <td><a class="button button-sm" href="/admin/documentation/<%= product._id %>">Edit</a></td>
+          </tr>
+        <% }) %>
+      </tbody></table></div>
+    </div>
+  </div>
+</section>

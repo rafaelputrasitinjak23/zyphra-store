@@ -1,0 +1,45 @@
+
+/* Feature Pack: support tickets, notifications, documentation, PWA */
+.feature-page-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:start}
+.notification-list,.support-ticket-list{display:flex;flex-direction:column;gap:12px}
+.notification-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff}
+.notification-item.unread{border-color:#d9ddff;background:#fafaff}
+.notification-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#eef2ff;color:var(--accent);flex:0 0 auto}
+.notification-item p{margin:3px 0;color:var(--muted);font-size:13px}
+.notification-item small{color:#98a2b3;font-size:11px}
+.support-ticket-card{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:17px;border:1px solid var(--line);border-radius:16px;background:#fff;transition:.18s}
+.support-ticket-card:hover{border-color:#d9ddff;box-shadow:0 10px 24px rgba(15,23,42,.06);transform:translateY(-1px)}
+.support-ticket-card h3{margin:8px 0 3px;font-size:17px}
+.support-ticket-card p{margin:0;color:var(--muted);font-size:13px}
+.support-ticket-card small{color:#98a2b3;font-size:12px;white-space:nowrap}
+.support-thread{display:flex;flex-direction:column;gap:14px}
+.support-message{max-width:84%;padding:15px 16px;border:1px solid var(--line);border-radius:16px;background:#fff}
+.support-message.admin{margin-left:auto;background:#eef2ff;border-color:#d9ddff}
+.support-message.user{margin-right:auto}
+.support-message-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:6px}
+.support-message-head small{color:var(--muted);font-size:11px}
+.support-message p{margin:0;white-space:pre-line;color:#374151}
+.support-reply-form{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.docs-layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:22px;align-items:start}
+.docs-sidebar{position:sticky;top:92px;display:flex;flex-direction:column;gap:7px}
+.docs-sidebar a{padding:9px 10px;border-radius:10px;color:#475467;font-size:13px;font-weight:750}
+.docs-sidebar a:hover{background:#f5f7fb;color:var(--accent)}
+.docs-content h2{scroll-margin-top:90px;margin-top:30px}
+.docs-content h2:first-child{margin-top:0}
+.docs-content .prose{padding:14px 0 8px;color:#374151}
+.feature-product-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.docs-faq-editor h2{margin:10px 0}
+.app-install-hint{display:none}
+@media(display-mode:browser){.app-install-hint{display:block}}
+@media(max-width:900px){
+  .feature-page-grid,.docs-layout{grid-template-columns:1fr}
+  .docs-sidebar{position:static}
+  .support-message{max-width:100%}
+  .notification-item{grid-template-columns:auto minmax(0,1fr)}
+  .notification-item form{grid-column:1/-1}
+  .notification-item form .button{width:100%}
+}
+@media(max-width:560px){
+  .support-ticket-card{align-items:flex-start;flex-direction:column}
+  .feature-product-actions{grid-template-columns:1fr}
+}

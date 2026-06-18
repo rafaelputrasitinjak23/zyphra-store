@@ -1,0 +1,47 @@
+<section class="page-head">
+  <div class="container">
+    <span class="eyebrow">TIKET <%= ticket.ticketNumber %></span>
+    <h1><%= ticket.subject %></h1>
+    <p>Status: <span class="status status-<%= ticket.status %>"><%= ticket.status %></span></p>
+  </div>
+</section>
+
+<section class="section pt-small">
+  <div class="container feature-page-grid">
+    <div class="panel">
+      <div class="support-thread">
+        <% ticket.messages.forEach(message => { %>
+          <article class="support-message <%= message.senderRole === 'admin' ? 'admin' : 'user' %>">
+            <div class="support-message-head">
+              <strong><%= message.sender?.name || (message.senderRole === 'admin' ? 'Admin' : 'User') %></strong>
+              <small><%= formatDate(message.createdAt) %></small>
+            </div>
+            <p><%= message.body %></p>
+          </article>
+        <% }) %>
+      </div>
+
+      <% if (ticket.status !== 'closed') { %>
+        <form class="form-stack support-reply-form" method="post" action="/support/<%= ticket.ticketNumber %>/reply">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <label>Balas tiket<textarea name="message" rows="5" maxlength="5000"></textarea></label>
+          <button class="button" type="submit" data-submit-lock>Kirim balasan</button>
+        </form>
+      <% } %>
+    </div>
+
+    <aside class="panel">
+      <h2>Detail tiket</h2>
+      <p><strong>Kategori:</strong> <%= ticket.category %></p>
+      <p><strong>Prioritas:</strong> <%= ticket.priority %></p>
+      <p><strong>Produk:</strong> <%= ticket.product?.name || '-' %></p>
+      <p><strong>Dibuat:</strong> <%= formatDate(ticket.createdAt) %></p>
+      <% if (ticket.status !== 'closed') { %>
+        <form method="post" action="/support/<%= ticket.ticketNumber %>/close" data-confirm="Tutup tiket ini?">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="button button-ghost button-block" type="submit">Tutup tiket</button>
+        </form>
+      <% } %>
+    </aside>
+  </div>
+</section>

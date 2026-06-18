@@ -1,0 +1,37 @@
+<section class="page-head">
+  <div class="container">
+    <span class="eyebrow">DOKUMENTASI PRODUK</span>
+    <h1><%= product.name %></h1>
+    <p>Panduan instalasi, konfigurasi, penggunaan, dan pertanyaan umum.</p>
+  </div>
+</section>
+
+<section class="section pt-small">
+  <div class="container docs-layout">
+    <aside class="docs-sidebar panel">
+      <a href="/products/<%= product.slug %>">← Kembali ke produk</a>
+      <a href="#quick">Mulai cepat</a>
+      <a href="#requirements">Persyaratan</a>
+      <a href="#installation">Instalasi</a>
+      <a href="#configuration">Konfigurasi</a>
+      <a href="#usage">Penggunaan</a>
+      <a href="#faq">FAQ</a>
+    </aside>
+    <article class="panel docs-content">
+      <% if (!doc) { %>
+        <div class="empty compact"><h3>Dokumentasi sedang disiapkan</h3><p>Admin belum menerbitkan dokumentasi khusus untuk produk ini.</p></div>
+        <% if (product.instructions) { %><h2>Instruksi penggunaan</h2><div class="prose preserve-lines"><%= product.instructions %></div><% } %>
+      <% } else { %>
+        <h2 id="quick">Mulai cepat</h2><div class="prose preserve-lines"><%= doc.quickStart || 'Belum ada panduan mulai cepat.' %></div>
+        <h2 id="requirements">Persyaratan</h2><div class="prose preserve-lines"><%= doc.requirements || '-' %></div>
+        <h2 id="installation">Instalasi</h2><div class="prose preserve-lines"><%= doc.installation || '-' %></div>
+        <h2 id="configuration">Konfigurasi</h2><div class="prose preserve-lines"><%= doc.configuration || '-' %></div>
+        <h2 id="usage">Penggunaan</h2><div class="prose preserve-lines"><%= doc.usage || '-' %></div>
+        <h2 id="faq">FAQ</h2>
+        <% if (doc.faq?.length) { doc.faq.forEach(item => { %>
+          <details><summary><%= item.question %></summary><p><%= item.answer %></p></details>
+        <% }) } else { %><p class="muted">Belum ada FAQ.</p><% } %>
+      <% } %>
+    </article>
+  </div>
+</section>

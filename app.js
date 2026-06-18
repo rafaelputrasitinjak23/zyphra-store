@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
@@ -43,6 +44,12 @@ app.use(sanitizeBody);
 app.use(globalLimiter);
 app.use(csrfMiddleware);
 
+function mountIfRouteExists(basePath, relativeRouteFile) {
+  const routeFile = path.join(__dirname, relativeRouteFile);
+  if (fs.existsSync(routeFile)) app.use(basePath, require(routeFile));
+}
+
+
 app.get('/', asyncHandler(productController.home));
 app.use('/auth', require('./routes/authRoutes'));
 app.use('/products', require('./routes/productRoutes'));
@@ -52,7 +59,10 @@ app.use('/orders', require('./routes/orderRoutes'));
 app.use('/payments', require('./routes/paymentRoutes'));
 app.use('/account', require('./routes/accountRoutes'));
 app.use('/wallet', require('./routes/walletRoutes'));
-app.use('/reviews', require('./routes/reviewRoutes'));
+app.use('/notifications', require('./routes/notificationRoutes'));
+app.use('/support', require('./routes/supportRoutes'));
+app.use('/docs', require('./routes/documentationRoutes'));
+mountIfRouteExists('/reviews', 'routes/reviewRoutes.js');
 app.use('/downloads', require('./routes/downloadRoutes'));
 app.use('/admin', require('./routes/adminRoutes'));
 app.use('/webhooks', require('./routes/webhookRoutes'));
