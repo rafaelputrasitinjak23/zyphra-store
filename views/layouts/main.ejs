@@ -7,11 +7,13 @@
   <meta name="csrf-token" content="<%= csrfToken %>">
   <meta name="current-path" content="<%= currentPath %>">
   <title><%= title ? `${title} — Zyphra Store` : 'Zyphra Store' %></title>
-  <link rel="stylesheet" href="/public/css/app.css?v=3.0.0-clean-ui-4.0.0-mobile-rebuild">
-  <script src="/public/js/app.js?v=3.0.0-clean-ui-4.0.0-mobile-rebuild" defer></script>
+  <link rel="stylesheet" href="/public/css/app.css?v=3.0.0-clean-ui-4.1.0-admin-mobile-final">
+  <script src="/public/js/app.js?v=3.0.0-clean-ui-4.1.0-admin-mobile-final" defer></script>
 </head>
 <body class="ui-clean <%= currentPath.startsWith('/admin') ? 'is-admin-page' : '' %>">
-  <%- include('../partials/header') %>
+  <% if (!currentPath.startsWith('/admin')) { %>
+    <%- include('../partials/header') %>
+  <% } %>
   <%- include('../partials/toasts') %>
   <main class="<%= currentPath.startsWith('/admin') ? 'admin-main' : '' %>"><%- body %></main>
   <% if (!currentPath.startsWith('/admin')) { %>
