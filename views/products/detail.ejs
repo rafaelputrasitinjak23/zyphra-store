@@ -66,17 +66,62 @@
 <section class="section section-soft">
   <div class="container detail-tabs">
     <article><h2>Deskripsi</h2><div class="prose preserve-lines"><%= product.description %></div></article>
-    <aside>
-      <h3>Informasi produk</h3>
-      <dl><div><dt>Versi</dt><dd><%= product.version %></dd></div><div><dt>Batas download</dt><dd><%= product.downloadLimit %> kali/pesanan</dd></div><div><dt>Diperbarui</dt><dd><%= formatDate(product.updatedAt) %></dd></div><div><dt>Pengiriman</dt><dd><%= pricing.effectivePrice === 0 ? 'Otomatis tanpa pembayaran' : 'Otomatis setelah pembayaran' %></dd></div></dl>
-      <% if (product.tags?.length) { %><div class="tag-list"><% product.tags.forEach(tag => { %><span><%= tag %></span><% }) %></div><% } %>
+    <aside class="product-info-card">
+      <div class="product-info-card-head">
+        <span class="eyebrow">DETAIL</span>
+        <h3>Informasi produk</h3>
+      </div>
+      <dl class="product-info-list">
+        <div>
+          <dt>Versi</dt>
+          <dd><%= product.version %></dd>
+        </div>
+        <div>
+          <dt>Batas download</dt>
+          <dd><%= product.downloadLimit %> kali/pesanan</dd>
+        </div>
+        <div>
+          <dt>Diperbarui</dt>
+          <dd><%= formatDate(product.updatedAt) %></dd>
+        </div>
+        <div>
+          <dt>Pengiriman</dt>
+          <dd><%= pricing.effectivePrice === 0 ? 'Langsung tersedia' : 'Setelah pembayaran selesai' %></dd>
+        </div>
+      </dl>
+      <% if (product.tags?.length) { %>
+        <div class="product-tag-section">
+          <span>Tag produk</span>
+          <div class="tag-list clean-tag-list">
+            <% product.tags.forEach(tag => { %><span><%= tag %></span><% }) %>
+          </div>
+        </div>
+      <% } %>
     </aside>
   </div>
 </section>
 <% if (product.changelog || product.instructions) { %>
 <section class="section"><div class="container two-col">
   <% if (product.changelog) { %><article class="panel"><h2>Changelog</h2><div class="prose preserve-lines"><%= product.changelog %></div></article><% } %>
-  <% if (product.instructions) { %><article class="panel"><h2>Instruksi penggunaan</h2><div class="prose preserve-lines"><%= product.instructions %></div></article><% } %>
+  <% if (product.instructions) { %>
+    <% const instructionSteps = String(product.instructions || '').split(/\s*(?=\d+\.\s+)/).map(step => step.trim()).filter(Boolean); %>
+    <article class="panel instruction-panel">
+      <div class="instruction-head">
+        <span class="eyebrow">PANDUAN</span>
+        <h2>Instruksi penggunaan</h2>
+        <p>Ikuti langkah berikut agar produk dapat digunakan dengan benar.</p>
+      </div>
+      <% if (instructionSteps.length > 1) { %>
+        <ol class="instruction-steps">
+          <% instructionSteps.forEach(step => { %>
+            <li><%= step.replace(/^\d+\.\s*/, '') %></li>
+          <% }) %>
+        </ol>
+      <% } else { %>
+        <div class="prose preserve-lines clean-instruction-text"><%= product.instructions %></div>
+      <% } %>
+    </article>
+  <% } %>
 </div></section>
 <% } %>
 <section class="section section-soft" id="reviews">
