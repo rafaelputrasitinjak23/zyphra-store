@@ -1172,3 +1172,75 @@ body.ui-clean.is-admin-page table{
     min-width:600px!important;
   }
 }
+
+/* Hotfix: gray grid background */
+:root{
+  --grid-bg:#f3f4f6;
+  --grid-line:rgba(15,23,42,.055);
+  --grid-line-strong:rgba(15,23,42,.075);
+}
+body.ui-clean,
+body{
+  background-color:var(--grid-bg)!important;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(var(--grid-line-strong) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line-strong) 1px, transparent 1px)!important;
+  background-size:24px 24px,24px 24px,96px 96px,96px 96px!important;
+  background-position:-1px -1px,-1px -1px,-1px -1px,-1px -1px!important;
+  background-attachment:fixed!important;
+}
+main,
+.section,
+.section-soft,
+.page-head,
+.account-marketplace,
+.account-settings-page,
+.wallet-page,
+.auth-section,
+.admin-main,
+body.ui-clean.is-admin-page .admin-main,
+body.ui-clean.is-admin-page .admin-shell{
+  background:transparent!important;
+}
+.site-header,
+.panel,
+.summary-card,
+.product-card,
+.product-buy-card,
+.product-info-card,
+.market-panel,
+.auth-card,
+.account-hero-card,
+.wallet-card,
+.admin-content .panel,
+.admin-nav,
+.site-footer-modern,
+.clean-footer,
+.site-footer{
+  background-color:rgba(255,255,255,.94)!important;
+}
+.hero{
+  background:
+    radial-gradient(circle at 82% 18%,rgba(79,70,229,.12),transparent 32%),
+    transparent!important;
+}
+.section-dark{
+  background:#0b1020!important;
+}
+.site-header{
+  background:rgba(255,255,255,.86)!important;
+}
+body.ui-clean.is-admin-page .admin-mobile-bar{
+  background:rgba(255,255,255,.9)!important;
+}
+.mobile-bottom-nav{
+  background:rgba(255,255,255,.92)!important;
+}
+@media(max-width:700px){
+  body.ui-clean,
+  body{
+    background-size:20px 20px,20px 20px,80px 80px,80px 80px!important;
+  }
+}
