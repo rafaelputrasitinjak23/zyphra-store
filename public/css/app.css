@@ -1302,3 +1302,71 @@ body.ui-clean.is-admin-page .admin-mobile-bar{
     padding:3px!important;
   }
 }
+
+/* Final override: keep website background clean white after logo hotfix */
+:root{
+  --grid-bg:#ffffff!important;
+  --grid-line:transparent!important;
+  --grid-line-strong:transparent!important;
+}
+html,
+body,
+body.ui-clean{
+  background:#ffffff!important;
+  background-color:#ffffff!important;
+  background-image:none!important;
+  background-size:auto!important;
+  background-position:0 0!important;
+  background-attachment:scroll!important;
+}
+body::before,
+body::after,
+body.ui-clean::before,
+body.ui-clean::after{
+  background-image:none!important;
+}
+main,
+.section,
+.hero,
+.product-detail-section,
+.clean-footer,
+.site-footer,
+.site-footer-modern{
+  background:#ffffff!important;
+  background-image:none!important;
+}
+.page-head,
+.section-soft,
+.auth-section,
+.account-marketplace,
+.account-settings-page,
+.wallet-page{
+  background:#f7f8fb!important;
+  background-image:none!important;
+}
+.admin-main,
+body.ui-clean.is-admin-page .admin-main,
+body.ui-clean.is-admin-page .admin-shell,
+body.ui-clean.is-admin-page{
+  background:#f7f8fb!important;
+  background-image:none!important;
+}
+.site-header{
+  background:rgba(255,255,255,.92)!important;
+}
+.mobile-bottom-nav{
+  background:rgba(255,255,255,.96)!important;
+}
+.nav,
+.admin-nav,
+.panel,
+.summary-card,
+.product-card,
+.product-buy-card,
+.product-info-card,
+.market-panel,
+.auth-card,
+.account-hero-card,
+.wallet-card{
+  background-color:#ffffff!important;
+}
