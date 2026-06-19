@@ -1,7 +1,7 @@
 <header class="site-header">
   <div class="container nav-wrap">
     <a class="brand" href="/" aria-label="Zyphra Store">
-      <span class="brand-mark">Z</span>
+      <span class="brand-mark brand-logo-mark"><img src="https://athars.space/uploads/b53849a1.png" alt="Logo Zyphra Store" loading="eager" onerror="this.remove();this.parentElement.textContent='Z';"></span>
       <span>Zyphra Store</span>
     </a>
 
@@ -14,7 +14,7 @@
     <nav class="nav" id="siteNavDrawer" data-nav aria-label="Navigasi utama">
       <div class="nav-drawer-head">
         <a class="brand" href="/" aria-label="Zyphra Store">
-          <span class="brand-mark">Z</span>
+          <span class="brand-mark brand-logo-mark"><img src="https://athars.space/uploads/b53849a1.png" alt="Logo Zyphra Store" loading="eager" onerror="this.remove();this.parentElement.textContent='Z';"></span>
           <span>Zyphra Store</span>
         </a>
         <button class="nav-close" type="button" data-nav-close aria-label="Tutup menu">
@@ -40,14 +40,6 @@
           <a class="<%= currentPath.startsWith('/orders') ? 'active' : '' %>" href="/orders">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>
             <span>Pesanan</span>
-          </a>
-          <a class="<%= currentPath.startsWith('/support') ? 'active' : '' %>" href="/support">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13a8 8 0 0 1 16 0"/><path d="M4 13v5h4v-6H4M20 13v5h-4v-6h4M16 19c-1 1.3-2.3 2-4 2"/></svg>
-            <span>Bantuan</span>
-          </a>
-          <a class="<%= currentPath.startsWith('/notifications') ? 'active' : '' %>" href="/notifications">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
-            <span>Notifikasi</span>
           </a>
           <a class="<%= currentPath.startsWith('/account/purchases') ? 'active' : '' %>" href="/account/purchases">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>

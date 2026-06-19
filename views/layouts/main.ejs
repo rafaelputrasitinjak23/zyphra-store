@@ -8,11 +8,13 @@
   <meta name="current-path" content="<%= currentPath %>">
   <title><%= title ? `${title} — Zyphra Store` : 'Zyphra Store' %></title>
   <meta name="theme-color" content="#4f46e5">
+  <link rel="icon" type="image/png" href="https://athars.space/uploads/b53849a1.png">
+  <link rel="shortcut icon" type="image/png" href="https://athars.space/uploads/b53849a1.png">
   <link rel="manifest" href="/public/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/public/icons/icon-192.svg">
-  <link rel="stylesheet" href="/public/css/app.css?v=4.4.0-white-background">
+  <link rel="stylesheet" href="/public/css/app.css?v=4.5.0-logo-url">
   <link rel="stylesheet" href="/public/css/feature-pack.css?v=1.0.0-support-notification-docs-pwa">
-  <script src="/public/js/app.js?v=3.0.0-clean-ui-4.3.1-thanks-support-popup" defer></script>
+  <script src="/public/js/app.js?v=4.5.0-logo-url" defer></script>
 </head>
 <body class="ui-clean <%= currentPath.startsWith('/admin') ? 'is-admin-page' : '' %>">
   <% if (!currentPath.startsWith('/admin')) { %>

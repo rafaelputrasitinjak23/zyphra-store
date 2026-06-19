@@ -1257,53 +1257,48 @@ body.ui-clean.is-admin-page .admin-mobile-bar{
 .support-popup-options a{border-color:#e6e9f2!important}
 .support-popup-options a:hover{border-color:#c7d2fe!important;background:#f8f7ff!important}
 
-/* Hotfix: restore clean white website background */
-:root{
-  --grid-bg:#ffffff;
-  --grid-line:transparent;
-  --grid-line-strong:transparent;
+
+/* Logo URL hotfix */
+.brand-logo-mark{
+  overflow:hidden!important;
+  background:#fff!important;
+  border:1px solid rgba(229,231,235,.95)!important;
+  box-shadow:0 8px 22px rgba(15,23,42,.06)!important;
+  color:transparent!important;
 }
-html,
-body,
-body.ui-clean{
-  background:#ffffff!important;
-  background-color:#ffffff!important;
-  background-image:none!important;
-  background-size:auto!important;
-  background-position:0 0!important;
-  background-attachment:scroll!important;
+.brand-logo-mark img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  padding:4px!important;
+  display:block!important;
 }
-main{
-  background:#ffffff!important;
+.site-header .brand-logo-mark{
+  width:38px!important;
+  height:38px!important;
+  border-radius:12px!important;
 }
-.section,
-.hero,
-.product-detail-section{
-  background:#ffffff!important;
+.admin-nav .brand-logo-mark{
+  width:40px!important;
+  height:40px!important;
+  border-radius:13px!important;
+  background:#fff!important;
 }
-.section-soft,
-.page-head,
-.auth-section,
-.account-marketplace,
-.account-settings-page,
-.wallet-page{
-  background:#f7f8fb!important;
-  background-image:none!important;
+.nav-drawer-head .brand-logo-mark{
+  width:38px!important;
+  height:38px!important;
 }
-.admin-main,
-body.ui-clean.is-admin-page .admin-main,
-body.ui-clean.is-admin-page .admin-shell{
-  background:#f7f8fb!important;
-  background-image:none!important;
+.support-popup-card .brand-logo-mark{
+  width:42px!important;
+  height:42px!important;
 }
-.site-header{
-  background:rgba(255,255,255,.92)!important;
-}
-.mobile-bottom-nav{
-  background:rgba(255,255,255,.96)!important;
-}
-.clean-footer,
-.site-footer,
-.site-footer-modern{
-  background:#ffffff!important;
+@media(max-width:560px){
+  .site-header .brand-logo-mark{
+    width:34px!important;
+    height:34px!important;
+    border-radius:10px!important;
+  }
+  .brand-logo-mark img{
+    padding:3px!important;
+  }
 }
