@@ -228,6 +228,62 @@ document.addEventListener('DOMContentLoaded', () => {
     finally { input.disabled = false; input.focus(); }
   });
 
+
+
+  const supportPopup = document.querySelector('[data-support-popup]');
+  if (supportPopup) {
+    const supportPath = window.location.pathname;
+    const closeButtons = supportPopup.querySelectorAll('[data-support-popup-close]');
+    const titleNode = supportPopup.querySelector('[data-support-popup-title]');
+    const descNode = supportPopup.querySelector('[data-support-popup-description]');
+    const noteNode = supportPopup.querySelector('[data-support-popup-note]');
+    const optionsNode = supportPopup.querySelector('[data-support-popup-options]');
+    const openSupportPopup = () => { supportPopup.hidden = false; supportPopup.setAttribute('aria-hidden', 'false'); requestAnimationFrame(() => supportPopup.classList.add('is-open')); document.body.classList.add('support-popup-open'); };
+    const closeSupportPopup = () => { supportPopup.classList.remove('is-open'); supportPopup.setAttribute('aria-hidden', 'true'); document.body.classList.remove('support-popup-open'); setTimeout(() => { supportPopup.hidden = true; }, 180); };
+    closeButtons.forEach((button) => button.addEventListener('click', closeSupportPopup));
+    window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && supportPopup.classList.contains('is-open')) closeSupportPopup(); });
+    const renderProvider = (provider) => {
+      const link = document.createElement('a');
+      link.className = 'support-popup-option';
+      link.href = provider.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      const title = document.createElement('strong');
+      title.textContent = provider.title;
+      const desc = document.createElement('span');
+      desc.textContent = provider.description;
+      const cta = document.createElement('b');
+      cta.textContent = provider.label || 'Buka panduan';
+      const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      icon.setAttribute('viewBox', '0 0 24 24');
+      icon.setAttribute('aria-hidden', 'true');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M5 12h14M13 6l6 6-6 6');
+      icon.appendChild(path);
+      cta.appendChild(icon);
+      link.append(title, desc, cta);
+      return link;
+    };
+    const shouldFetchSupportPopup = supportPath === '/' || supportPath === '/index.html';
+    if (shouldFetchSupportPopup) {
+      fetch('/api/support-popup', { headers: { accept: 'application/json' } })
+        .then((response) => response.ok ? response.json() : null)
+        .then((payload) => {
+          if (!payload?.enabled || !Array.isArray(payload.providers) || !payload.providers.length) return;
+          if (payload.showOnHomeOnly && supportPath !== '/' && supportPath !== '/index.html') return;
+          const cacheKey = `zyphra-support-popup:${payload.updatedAt || 'default'}`;
+          if (payload.showOncePerSession && sessionStorage.getItem(cacheKey) === '1') return;
+          if (titleNode) titleNode.textContent = payload.title || 'Terima kasih kepada support kami';
+          if (descNode) descNode.textContent = payload.description || 'Website ini didukung oleh layanan pilihan.';
+          if (noteNode) noteNode.textContent = payload.primaryNote || '';
+          if (optionsNode) { optionsNode.innerHTML = ''; payload.providers.forEach((provider) => optionsNode.appendChild(renderProvider(provider))); }
+          if (payload.showOncePerSession) sessionStorage.setItem(cacheKey, '1');
+          setTimeout(openSupportPopup, 450);
+        })
+        .catch(() => {});
+    }
+  }
+
   document.querySelectorAll('form').forEach((form) => form.addEventListener('submit', (event) => {
     if (event.defaultPrevented || form.matches('[data-ai-form]')) return;
     const button = form.querySelector('[data-submit-lock]');

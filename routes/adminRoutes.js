@@ -1,9 +1,10 @@
 const router = require('express').Router();
 const asyncHandler = require('../utils/asyncHandler');
 const controller = require('../controllers/adminController');
+const supportPopupController = require('../controllers/supportPopupController');
 const aiController = require('../controllers/aiController');
-const supportController = require('../controllers/supportController');
-const documentationController = require('../controllers/documentationController');
+let supportController = null; try { supportController = require('../controllers/supportController'); } catch (_) {}
+let documentationController = null; try { documentationController = require('../controllers/documentationController'); } catch (_) {}
 const { requireAdmin } = require('../middlewares/auth');
 const { aiLimiter, cancelLimiter } = require('../middlewares/rateLimits');
 
@@ -34,18 +35,24 @@ if (typeof controller.reviews === 'function' && typeof controller.toggleReview =
   router.get('/reviews', asyncHandler(controller.reviews));
   router.post('/reviews/:id/toggle', asyncHandler(controller.toggleReview));
 }
+if (supportController) {
 router.get('/support', asyncHandler(supportController.adminList));
 router.get('/support/:ticketNumber', asyncHandler(supportController.adminDetail));
 router.post('/support/:ticketNumber/reply', asyncHandler(supportController.adminReply));
 router.post('/support/:ticketNumber/close', asyncHandler(supportController.adminClose));
+}
+if (documentationController) {
 router.get('/documentation', asyncHandler(documentationController.adminIndex));
 router.get('/documentation/:productId', asyncHandler(documentationController.adminEdit));
 router.post('/documentation/:productId', asyncHandler(documentationController.adminUpdate));
+}
 router.get('/orders', asyncHandler(controller.orders));
 router.get('/orders/:orderNumber', asyncHandler(controller.orderDetail));
 router.post('/orders/:orderNumber/recheck', asyncHandler(controller.recheckOrder));
 router.post('/orders/:orderNumber/cancel', cancelLimiter, asyncHandler(controller.cancelOrder));
 router.post('/orders/:orderNumber/resend-invoice', asyncHandler(controller.resendInvoice));
+router.get('/support-popup', asyncHandler(supportPopupController.edit));
+router.post('/support-popup', asyncHandler(supportPopupController.update));
 router.get('/settings', asyncHandler(controller.settings));
 router.post('/settings', asyncHandler(controller.updateSettings));
 router.get('/logs/webhooks', asyncHandler(controller.webhookLogs));

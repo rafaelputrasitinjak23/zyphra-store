@@ -1,0 +1,59 @@
+<section class="admin-shell">
+  <%- include('../partials/admin-nav') %>
+  <div class="admin-content">
+    <div class="admin-head">
+      <div>
+        <span class="eyebrow">THANKS POPUP</span>
+        <h1>Popup thanks support</h1>
+        <p>Atur popup ucapan terima kasih kepada support/partner yang muncul saat pengunjung membuka halaman utama.</p>
+      </div>
+      <a class="button button-sm button-ghost" href="/">Lihat toko</a>
+    </div>
+
+    <form class="panel form-stack support-popup-admin-form" method="post" action="/admin/support-popup">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <section class="settings-section">
+        <h2>Status popup</h2>
+        <div class="form-grid">
+          <label class="check"><input type="checkbox" name="enabled" <%= popup.enabled ? 'checked' : '' %>> Aktifkan popup thanks support</label>
+          <label class="check"><input type="checkbox" name="showOnHomeOnly" <%= popup.showOnHomeOnly !== false ? 'checked' : '' %>> Hanya tampil di halaman utama</label>
+          <label class="check span-2"><input type="checkbox" name="showOncePerSession" <%= popup.showOncePerSession !== false ? 'checked' : '' %>> Tampilkan sekali per sesi browser</label>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h2>Konten utama</h2>
+        <div class="form-grid">
+          <label>Judul popup<input name="title" maxlength="120" value="<%= popup.title %>"></label>
+          <label>Catatan kecil<input name="primaryNote" maxlength="160" value="<%= popup.primaryNote %>"></label>
+          <label class="span-2">Deskripsi<textarea name="description" rows="3" maxlength="400"><%= popup.description %></textarea></label>
+        </div>
+      </section>
+
+      <section class="settings-section support-provider-editor">
+        <h2>Vercel</h2>
+        <label class="check"><input type="checkbox" name="vercelEnabled" <%= popup.vercel?.enabled ? 'checked' : '' %>> Tampilkan partner Vercel</label>
+        <div class="form-grid">
+          <label>Judul<input name="vercelTitle" maxlength="80" value="<%= popup.vercel?.title || 'Vercel' %>"></label>
+          <label>Teks tombol<input name="vercelLabel" maxlength="60" value="<%= popup.vercel?.label || 'Kunjungi Vercel' %>"></label>
+          <label class="span-2">URL<input name="vercelUrl" value="<%= popup.vercel?.url || 'https://vercel.com' %>"></label>
+          <label class="span-2">Deskripsi<textarea name="vercelDescription" rows="3" maxlength="220"><%= popup.vercel?.description || '' %></textarea></label>
+        </div>
+      </section>
+
+      <section class="settings-section support-provider-editor">
+        <h2>Pakasir</h2>
+        <label class="check"><input type="checkbox" name="pakasirEnabled" <%= popup.pakasir?.enabled ? 'checked' : '' %>> Tampilkan partner Pakasir</label>
+        <div class="form-grid">
+          <label>Judul<input name="pakasirTitle" maxlength="80" value="<%= popup.pakasir?.title || 'Pakasir' %>"></label>
+          <label>Teks tombol<input name="pakasirLabel" maxlength="60" value="<%= popup.pakasir?.label || 'Kunjungi Pakasir' %>"></label>
+          <label class="span-2">URL<input name="pakasirUrl" value="<%= popup.pakasir?.url || 'https://pakasir.com' %>"></label>
+          <label class="span-2">Deskripsi<textarea name="pakasirDescription" rows="3" maxlength="220"><%= popup.pakasir?.description || '' %></textarea></label>
+        </div>
+      </section>
+
+      <button class="button" type="submit" data-submit-lock>Simpan popup</button>
+    </form>
+  </div>
+</section>
