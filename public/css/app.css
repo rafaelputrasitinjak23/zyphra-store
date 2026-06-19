@@ -1256,3 +1256,54 @@ body.ui-clean.is-admin-page .admin-mobile-bar{
 .support-popup-card h2{letter-spacing:-.035em}
 .support-popup-options a{border-color:#e6e9f2!important}
 .support-popup-options a:hover{border-color:#c7d2fe!important;background:#f8f7ff!important}
+
+/* Hotfix: restore clean white website background */
+:root{
+  --grid-bg:#ffffff;
+  --grid-line:transparent;
+  --grid-line-strong:transparent;
+}
+html,
+body,
+body.ui-clean{
+  background:#ffffff!important;
+  background-color:#ffffff!important;
+  background-image:none!important;
+  background-size:auto!important;
+  background-position:0 0!important;
+  background-attachment:scroll!important;
+}
+main{
+  background:#ffffff!important;
+}
+.section,
+.hero,
+.product-detail-section{
+  background:#ffffff!important;
+}
+.section-soft,
+.page-head,
+.auth-section,
+.account-marketplace,
+.account-settings-page,
+.wallet-page{
+  background:#f7f8fb!important;
+  background-image:none!important;
+}
+.admin-main,
+body.ui-clean.is-admin-page .admin-main,
+body.ui-clean.is-admin-page .admin-shell{
+  background:#f7f8fb!important;
+  background-image:none!important;
+}
+.site-header{
+  background:rgba(255,255,255,.92)!important;
+}
+.mobile-bottom-nav{
+  background:rgba(255,255,255,.96)!important;
+}
+.clean-footer,
+.site-footer,
+.site-footer-modern{
+  background:#ffffff!important;
+}
