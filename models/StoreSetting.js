@@ -20,7 +20,7 @@ const supportProviderSchema = new mongoose.Schema({
 
 const schema = new mongoose.Schema({
   key: { type: String, unique: true, default: 'store', index: true },
-  storeName: { type: String, default: 'Zyphra Store' },
+  storeName: { type: String, default: 'TOKOZYPHRA' },
   feeSplitThreshold: { type: Number, default: 50000 },
   paymentFees: [feeSchema],
   wallet: {
@@ -34,8 +34,8 @@ const schema = new mongoose.Schema({
     showOncePerSession: { type: Boolean, default: true },
     title: { type: String, trim: true, maxlength: 120, default: 'Terima kasih kepada support kami' },
     description: { type: String, trim: true, maxlength: 400, default: 'Website ini dapat berjalan dan menerima pembayaran dengan dukungan layanan dari Vercel dan Pakasir.' },
-    primaryNote: { type: String, trim: true, maxlength: 160, default: 'Partner yang membantu Zyphra Store tetap berjalan.' },
-    vercel: { type: supportProviderSchema, default: () => ({ enabled: true, title: 'Vercel', description: 'Platform deployment yang membantu Zyphra Store berjalan cepat, stabil, dan mudah diakses.', label: 'Kunjungi Vercel', url: 'https://vercel.com' }) },
+    primaryNote: { type: String, trim: true, maxlength: 160, default: 'Partner yang membantu TOKOZYPHRA tetap berjalan.' },
+    vercel: { type: supportProviderSchema, default: () => ({ enabled: true, title: 'Vercel', description: 'Platform deployment yang membantu TOKOZYPHRA berjalan cepat, stabil, dan mudah diakses.', label: 'Kunjungi Vercel', url: 'https://vercel.com' }) },
     pakasir: { type: supportProviderSchema, default: () => ({ enabled: true, title: 'Pakasir', description: 'Layanan pembayaran yang membantu proses transaksi digital menjadi lebih praktis.', label: 'Kunjungi Pakasir', url: 'https://pakasir.com' }) }
   }
 }, { timestamps: true });

@@ -2,7 +2,7 @@
   <div class="container">
     <div class="wallet-hero">
       <div class="wallet-hero-copy">
-        <span class="eyebrow">ZYPHRA WALLET</span>
+        <span class="eyebrow">TOKOZYPHRA WALLET</span>
         <p>Saldo tersedia</p>
         <h1><%= rupiah(wallet.balance) %></h1>
         <% if (wallet.heldBalance > 0) { %><small><%= rupiah(wallet.heldBalance) %> sedang digunakan untuk pesanan berjalan</small><% } else { %><small>Siap digunakan untuk pembelian berikutnya</small><% } %>
@@ -13,7 +13,7 @@
         <% if (!walletEnabled) { %><p class="wallet-unavailable-note">Dompet tetap dapat dilihat, tetapi transaksi saldo baru sedang dinonaktifkan.</p><% } %>
       </div>
       <div class="wallet-visual" aria-hidden="true">
-        <div class="wallet-card-art"><span>Z</span><div><small>Zyphra Wallet</small><strong>•••• <%= String(currentUser._id).slice(-4).toUpperCase() %></strong></div><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM16 11h5v5h-5z"/></svg></div>
+        <div class="wallet-card-art"><span>Z</span><div><small>TOKOZYPHRA Wallet</small><strong>•••• <%= String(currentUser._id).slice(-4).toUpperCase() %></strong></div><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM16 11h5v5h-5z"/></svg></div>
       </div>
     </div>
 
@@ -52,7 +52,7 @@
           <h2>Klaim voucher saldo</h2><p>Masukkan kode yang Anda dapatkan untuk menambahkan bonus ke dompet.</p>
           <form method="post" action="/wallet/redeem" class="form-stack"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label>Kode voucher<input name="code" maxlength="40" placeholder="Masukkan kode" autocomplete="off" required></label><button class="button button-block" type="submit" data-submit-lock>Klaim sekarang</button></form>
         </section><% } %>
-        <section class="market-panel wallet-info-card"><div class="security-icon"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v5c0 5 3 8 8 10 5-2 8-5 8-10V6zM9 12l2 2 4-5"/></svg></div><h3>Saldo tersimpan di akun</h3><p>Saldo dapat digunakan untuk membeli produk di Zyphra Store dan tidak dapat ditarik tunai.</p></section>
+        <section class="market-panel wallet-info-card"><div class="security-icon"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v5c0 5 3 8 8 10 5-2 8-5 8-10V6zM9 12l2 2 4-5"/></svg></div><h3>Saldo tersimpan di akun</h3><p>Saldo dapat digunakan untuk membeli produk di TOKOZYPHRA dan tidak dapat ditarik tunai.</p></section>
       </aside>
     </div>
   </div>

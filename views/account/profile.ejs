@@ -52,7 +52,7 @@
           <div class="notification-settings">
             <div><span class="eyebrow">NOTIFIKASI</span><h3>Preferensi email</h3><p>Pilih informasi yang ingin diterima melalui email.</p></div>
             <label class="market-switch-row"><div><strong>Status pesanan</strong><small>Invoice, pembayaran, pembatalan, dan akses produk.</small></div><input type="checkbox" name="orderUpdates" <%= currentUser.notificationPreferences?.orderUpdates !== false ? 'checked' : '' %>><span class="market-switch"></span></label>
-            <label class="market-switch-row"><div><strong>Produk dan pembaruan</strong><small>Informasi produk baru dan promo dari Zyphra Store.</small></div><input type="checkbox" name="productNews" <%= currentUser.notificationPreferences?.productNews ? 'checked' : '' %>><span class="market-switch"></span></label>
+            <label class="market-switch-row"><div><strong>Produk dan pembaruan</strong><small>Informasi produk baru dan promo dari TOKOZYPHRA.</small></div><input type="checkbox" name="productNews" <%= currentUser.notificationPreferences?.productNews ? 'checked' : '' %>><span class="market-switch"></span></label>
           </div>
 
           <div class="settings-submit-row"><button class="button" type="submit" data-submit-lock><svg viewBox="0 0 24 24"><path d="M5 4h12l2 2v14H5zM8 4v6h8V4M8 17h8"/></svg>Simpan perubahan</button></div>

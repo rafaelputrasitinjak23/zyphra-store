@@ -1,12 +1,12 @@
 {
-  "name": "Zyphra Store",
-  "short_name": "Zyphra",
-  "description": "Marketplace produk digital Zyphra Store.",
+  "name": "TOKOZYPHRA",
+  "short_name": "TOKOZYPHRA",
+  "description": "Marketplace produk digital TOKOZYPHRA.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#4f46e5",
+  "theme_color": "#111827",
   "orientation": "portrait-primary",
   "icons": [
     { "src": "/public/icons/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },

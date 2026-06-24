@@ -1,33 +1,43 @@
-<section class="hero clean-hero">
-  <div class="container hero-grid">
-    <div class="hero-copy">
-      <span class="eyebrow">ZYPHRA STORE</span>
-      <h1>Produk digital pilihan untuk membantu proyek Anda berkembang.</h1>
-      <p>Temukan script, bot, template, plugin, API, dan source code yang siap digunakan.</p>
+<section class="hero warung-hero">
+  <div class="container warung-hero-grid">
+    <div class="warung-hero-copy">
+      <span class="eyebrow">TOKOZYPHRA DIGITAL MARKET</span>
+      <h1>Script, bot, dan source code siap pakai untuk project online kamu.</h1>
+      <p>Belanja produk digital tanpa ribet. Pilih produk, checkout, lalu akses file pembelian langsung dari akun TOKOZYPHRA.</p>
       <div class="actions">
-        <a class="button" href="/products">Lihat produk</a>
+        <a class="button warung-primary" href="/products">Jelajahi Produk</a>
         <% if (!currentUser) { %>
-          <a class="button button-ghost" href="/auth/register">Buat akun</a>
+          <a class="button button-ghost warung-secondary" href="/auth/register">Mulai Sekarang</a>
         <% } else { %>
-          <a class="button button-ghost" href="/account/purchases">Produk saya</a>
+          <a class="button button-ghost warung-secondary" href="/account/purchases">Produk Saya</a>
         <% } %>
       </div>
-      <div class="hero-points">
-        <span>Produk terkurasi</span>
-        <span>Akses dari akun</span>
-        <span>Checkout praktis</span>
+      <div class="warung-style-chips" aria-label="Kategori produk populer">
+        <span>WhatsApp Bot</span>
+        <span>Website</span>
+        <span>API</span>
+        <span>Template</span>
+        <span>Source Code</span>
       </div>
     </div>
 
-    <div class="hero-panel clean-showcase" aria-label="Ringkasan Zyphra Store">
-      <div class="showcase-head">
-        <span class="showcase-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>
-        <div><small>MARKETPLACE DIGITAL</small><strong>Semua kebutuhan dalam satu tempat</strong></div>
+    <div class="warung-remix-board" aria-label="Preview TOKOZYPHRA">
+      <div class="warung-preview before">
+        <small>Before</small>
+        <strong>Ide project</strong>
+        <span>Butuh script cepat, rapi, dan siap deploy.</span>
       </div>
-      <div class="showcase-list">
-        <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg><span><strong>Script & source code</strong><small>Siap dipakai dan mudah dikelola</small></span></div>
-        <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v12H4z"/><path d="M16 11h5v5h-5z"/></svg><span><strong>Zyphra Wallet</strong><small>Simpan saldo untuk checkout lebih cepat</small></span></div>
-        <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7v5c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10V7z"/><path d="m9 12 2 2 4-5"/></svg><span><strong>Akses akun pribadi</strong><small>Pesanan dan produk tersimpan rapi</small></span></div>
+      <div class="warung-preview after">
+        <small>After</small>
+        <strong>Produk siap pakai</strong>
+        <span>Download, install, jalankan, dan lanjut upgrade.</span>
+      </div>
+      <div class="warung-live-card">
+        <div>
+          <small>MARKETPLACE DIGITAL</small>
+          <strong>TOKOZYPHRA</strong>
+        </div>
+        <span>Checkout praktis</span>
       </div>
     </div>
   </div>
@@ -42,53 +52,57 @@
 </section>
 <% } %>
 
-<section class="section">
+<section class="section warung-results-section">
   <div class="container">
-    <div class="section-head"><div><span class="eyebrow">PRODUK PILIHAN</span><h2>Produk unggulan</h2></div><a href="/products">Lihat semua</a></div>
-    <% if (featured.length) { %><div class="product-grid"><% featured.forEach(product => { %><%- include('partials/product-card', { product }) %><% }) %></div><% } else { %><div class="empty"><h3>Belum ada produk unggulan</h3><p>Produk terbaru akan tampil di sini.</p></div><% } %>
+    <div class="section-head"><div><span class="eyebrow">PRODUK PILIHAN</span><h2>Rekomendasi TOKOZYPHRA</h2><p>Produk digital yang cocok untuk mempercepat pekerjaan coding dan bisnis online.</p></div><a href="/products">Lihat semua</a></div>
+    <% if (featured.length) { %><div class="product-grid warung-product-grid"><% featured.forEach(product => { %><%- include('partials/product-card', { product }) %><% }) %></div><% } else { %><div class="empty"><h3>Belum ada produk unggulan</h3><p>Produk terbaru akan tampil di sini.</p></div><% } %>
   </div>
 </section>
 
 <% if (popular?.length) { %>
 <section class="section section-soft">
   <div class="container">
-    <div class="section-head"><div><span class="eyebrow">PALING DIMINATI</span><h2>Produk populer</h2></div><a href="/products?sort=popular">Lihat lainnya</a></div>
+    <div class="section-head"><div><span class="eyebrow">PALING DIMINATI</span><h2>Produk populer</h2><p>Banyak dipilih karena praktis digunakan dan mudah dikembangkan.</p></div><a href="/products?sort=popular">Lihat lainnya</a></div>
     <div class="product-grid"><% popular.forEach(product => { %><%- include('partials/product-card', { product }) %><% }) %></div>
   </div>
 </section>
 <% } %>
 
-<section class="section section-soft">
+<section class="section warung-category-section">
   <div class="container">
-    <div class="section-head"><div><span class="eyebrow">KATEGORI</span><h2>Temukan sesuai kebutuhan</h2></div></div>
+    <div class="section-head"><div><span class="eyebrow">KATEGORI</span><h2>Temukan sesuai kebutuhan</h2><p>Pilih kategori produk digital yang paling cocok untuk project kamu.</p></div></div>
     <div class="category-grid"><% categories.forEach(category => { %><a class="category-card" href="/products?category=<%= category.slug %>"><svg viewBox="0 0 24 24"><path d="M4 5h6l2 2h8v12H4z"/></svg><strong><%= category.name %></strong><span><%= category.description || 'Jelajahi produk' %></span></a><% }) %></div>
   </div>
 </section>
 
-<section class="section">
+<section class="section warung-how-section">
   <div class="container">
-    <div class="section-head"><div><span class="eyebrow">KENAPA ZYPHRA</span><h2>Belanja produk digital dengan lebih praktis</h2></div></div>
+    <div class="section-head"><div><span class="eyebrow">HOW IT WORKS</span><h2>Dapatkan produk dalam beberapa menit</h2><p>Alurnya dibuat simpel supaya kamu bisa langsung fokus ke project.</p></div></div>
+    <ol class="steps warung-steps">
+      <li><span>1</span><div><strong>Pilih Produk</strong><p>Cari script, bot, template, atau API yang kamu butuhkan.</p></div></li>
+      <li><span>2</span><div><strong>Checkout</strong><p>Gunakan metode pembayaran tersedia atau saldo TOKOZYPHRA Wallet.</p></div></li>
+      <li><span>3</span><div><strong>Akses File</strong><p>Produk masuk ke akun dan bisa dibuka dari menu Produk Saya.</p></div></li>
+    </ol>
+  </div>
+</section>
+
+<section class="section warung-benefit-section">
+  <div class="container">
+    <div class="section-head"><div><span class="eyebrow">KENAPA TOKOZYPHRA</span><h2>Marketplace yang dibuat untuk pembeli produk digital</h2></div></div>
     <div class="feature-grid">
-      <article><span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v5c0 5 3 8 8 10 5-2 8-5 8-10V6zM9 12l2 2 4-5"/></svg></span><h3>Akses pribadi</h3><p>Produk yang dibeli tersimpan rapi di akun Anda.</p></article>
-      <article><span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM16 11h5v5h-5z"/></svg></span><h3>Dompet digital</h3><p>Gunakan saldo untuk menyelesaikan checkout dengan cepat.</p></article>
-      <article><span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h8"/></svg></span><h3>Pesanan terorganisir</h3><p>Status, invoice, dan riwayat tersedia dalam satu halaman.</p></article>
+      <article><span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v5c0 5 3 8 8 10 5-2 8-5 8-10V6zM9 12l2 2 4-5"/></svg></span><h3>Akses akun pribadi</h3><p>Produk yang dibeli tersimpan rapi dan mudah ditemukan kembali.</p></article>
+      <article><span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM16 11h5v5h-5z"/></svg></span><h3>Saldo praktis</h3><p>Isi saldo dan gunakan untuk checkout lebih cepat saat membeli produk.</p></article>
+      <article><span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-4 2-4-2-3 2zM8 8h8M8 12h8"/></svg></span><h3>Riwayat jelas</h3><p>Status, invoice, dan riwayat pembelian tersedia dalam satu dashboard.</p></article>
     </div>
   </div>
 </section>
 
-<section class="section simple-steps-section">
-  <div class="container">
-    <div class="section-head"><div><span class="eyebrow">CARA BELANJA</span><h2>Empat langkah sederhana</h2></div></div>
-    <ol class="steps"><li><span>01</span><div><strong>Pilih produk</strong><p>Temukan produk yang sesuai.</p></div></li><li><span>02</span><div><strong>Masuk ke akun</strong><p>Simpan keranjang dan pesanan.</p></div></li><li><span>03</span><div><strong>Selesaikan checkout</strong><p>Gunakan saldo atau metode yang tersedia.</p></div></li><li><span>04</span><div><strong>Akses produk</strong><p>Buka melalui menu Produk Saya.</p></div></li></ol>
-  </div>
-</section>
-
 <section class="section">
-  <div class="container narrow">
+  <div class="container narrow warung-faq">
     <div class="section-head"><div><span class="eyebrow">FAQ</span><h2>Pertanyaan umum</h2></div></div>
     <details><summary>Kapan produk bisa digunakan?</summary><p>Produk tersedia di akun setelah pesanan berhasil diselesaikan.</p></details>
     <details><summary>Di mana file pembelian dapat ditemukan?</summary><p>Buka menu Produk Saya untuk melihat koleksi dan riwayat unduhan.</p></details>
-    <details><summary>Apakah bisa membayar dengan saldo?</summary><p>Bisa. Isi Zyphra Wallet lalu gunakan saldo saat checkout.</p></details>
+    <details><summary>Apakah bisa membayar dengan saldo?</summary><p>Bisa. Isi TOKOZYPHRA Wallet lalu gunakan saldo saat checkout.</p></details>
     <details><summary>Bagaimana menggunakan voucher?</summary><p>Kode promo digunakan saat checkout, sedangkan voucher saldo diklaim melalui halaman Dompet.</p></details>
   </div>
 </section>

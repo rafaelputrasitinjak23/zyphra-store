@@ -6,7 +6,7 @@ const { env } = require('./config/env');
 (async () => {
   await connectDatabase();
   app.listen(env.port, () => {
-    console.log(`Zyphra Store berjalan di ${env.appUrl}`);
+    console.log(`TOKOZYPHRA berjalan di ${env.appUrl}`);
   });
 })().catch((error) => {
   console.error('Gagal menjalankan server:', error);
