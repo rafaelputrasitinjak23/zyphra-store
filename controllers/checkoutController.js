@@ -52,7 +52,7 @@ function buildPaymentOptions(settings, subtotal, walletBalance) {
     options.push({
       value: 'wallet',
       type: 'wallet',
-      label: 'Saldo Zyphra',
+      label: 'Saldo TOKOZYPHRA',
       description: 'Bayar langsung dari dompet',
       walletAmount: subtotal,
       externalSubtotal: 0,

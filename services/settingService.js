@@ -20,11 +20,11 @@ const defaultSupportPopup = {
   showOncePerSession: true,
   title: 'Terima kasih kepada support kami',
   description: 'Website ini dapat berjalan dan menerima pembayaran dengan dukungan layanan dari Vercel dan Pakasir.',
-  primaryNote: 'Partner yang membantu Zyphra Store tetap berjalan.',
+  primaryNote: 'Partner yang membantu TOKOZYPHRA tetap berjalan.',
   vercel: {
     enabled: true,
     title: 'Vercel',
-    description: 'Platform deployment yang membantu Zyphra Store berjalan cepat, stabil, dan mudah diakses.',
+    description: 'Platform deployment yang membantu TOKOZYPHRA berjalan cepat, stabil, dan mudah diakses.',
     label: 'Kunjungi Vercel',
     url: 'https://vercel.com'
   },
@@ -49,7 +49,7 @@ function normalizeSupportPopup(popup = {}) {
 async function getStoreSettings() {
   const settings = await StoreSetting.findOneAndUpdate(
     { key: 'store' },
-    { $setOnInsert: { key: 'store', storeName: 'Zyphra Store', feeSplitThreshold: env.feeSplitThreshold, paymentFees: defaultFees, wallet: { enabled: true, minDeposit: 10000, maxDeposit: 5000000 }, supportPopup: defaultSupportPopup } },
+    { $setOnInsert: { key: 'store', storeName: 'TOKOZYPHRA', feeSplitThreshold: env.feeSplitThreshold, paymentFees: defaultFees, wallet: { enabled: true, minDeposit: 10000, maxDeposit: 5000000 }, supportPopup: defaultSupportPopup } },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
   let changed = false;

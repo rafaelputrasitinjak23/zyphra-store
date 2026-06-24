@@ -270,7 +270,7 @@ async function creditPaidDeposit(depositId, providerTransaction) {
         'Saldo berhasil ditambahkan',
         {
           name: claimed.user.name,
-          message: `Deposit ${claimed.depositNumber} sebesar Rp${claimed.amount.toLocaleString('id-ID')} sudah masuk ke Zyphra Wallet.`,
+          message: `Deposit ${claimed.depositNumber} sebesar Rp${claimed.amount.toLocaleString('id-ID')} sudah masuk ke TOKOZYPHRA Wallet.`,
           action: { label: 'Buka dompet', url: `${env.appUrl}/wallet` }
         },
         'wallet_deposit_success'
