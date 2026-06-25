@@ -29,8 +29,8 @@
         <span><strong><%= product.viewCount || 0 %></strong> dilihat</span>
         <span><strong><%= product.downloadLimit %>×</strong> download</span>
       </div>
-      <div class="stock"><span class="status-dot"></span><%= product.unlimitedStock ? 'Stok tidak terbatas' : `${product.stock} tersedia` %></div>
-      <% const productAvailable = product.unlimitedStock || product.stock > 0; %>
+      <div class="stock"><span class="status-dot"></span><%= product.unlimitedStock ? 'Stok tidak terbatas' : `${availableStock(product)} tersedia` %></div>
+      <% const productAvailable = product.unlimitedStock || availableStock(product) > 0; %>
       <% if (!productAvailable) { %>
         <button class="button button-block" type="button" disabled>Stok sedang habis</button>
       <% } else if (!currentUser) { %>
@@ -39,7 +39,7 @@
         <form method="post" action="/cart/add" class="buy-form">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <input type="hidden" name="productId" value="<%= product._id %>">
-          <% if (product.allowMultipleQuantity) { %><label>Jumlah<input type="number" name="quantity" value="1" min="1" max="99"></label><% } %>
+          <% if (product.allowMultipleQuantity) { %><label>Jumlah<input type="number" name="quantity" value="1" min="1" max="<%= product.unlimitedStock ? 99 : Math.min(99, availableStock(product)) %>"></label><% } %>
           <div class="buy-actions">
             <button class="button button-ghost" type="submit">Tambah ke keranjang</button>
             <button class="button" type="submit" name="next" value="/checkout">Beli sekarang</button>

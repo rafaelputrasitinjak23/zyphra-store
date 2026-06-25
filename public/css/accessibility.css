@@ -1,0 +1,5 @@
+.skip-link{position:fixed;left:1rem;top:1rem;z-index:1000;transform:translateY(-180%);padding:.75rem 1rem;border-radius:.75rem;background:#111827;color:#fff;font-weight:700;transition:transform .15s ease}.skip-link:focus{transform:translateY(0)}
+:focus-visible{outline:3px solid currentColor;outline-offset:3px}
+[data-nav][aria-hidden="true"],[data-admin-sidebar][aria-hidden="true"]{visibility:hidden}
+@media(min-width:901px){[data-nav][aria-hidden="true"],[data-admin-sidebar][aria-hidden="true"]{visibility:visible}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

@@ -11,7 +11,7 @@
 
     <div class="nav-overlay" data-nav-overlay hidden></div>
 
-    <nav class="nav" id="siteNavDrawer" data-nav aria-label="Navigasi utama">
+    <nav class="nav" id="siteNavDrawer" data-nav aria-label="Navigasi utama" tabindex="-1">
       <div class="nav-drawer-head">
         <a class="brand" href="/" aria-label="TOKOZYPHRA">
           <span class="brand-mark">T</span>
@@ -40,6 +40,10 @@
           <a class="<%= currentPath.startsWith('/orders') ? 'active' : '' %>" href="/orders">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>
             <span>Pesanan</span>
+          </a>
+          <a class="<%= currentPath.startsWith('/notifications') ? 'active' : '' %>" href="/notifications">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+            <span>Notifikasi</span>
           </a>
           <a class="<%= currentPath.startsWith('/account/purchases') ? 'active' : '' %>" href="/account/purchases">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>

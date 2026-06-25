@@ -1,0 +1,26 @@
+<div class="admin-shell">
+  <%- include('../../partials/admin-nav') %>
+  <section class="admin-content">
+    <div class="page-head">
+      <div><span class="eyebrow">AUDIT</span><h1>Log tindakan admin</h1><p>Riwayat perubahan sensitif beserta aktor, target, alamat IP, dan request ID.</p></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Waktu</th><th>Admin</th><th>Tindakan</th><th>Target</th><th>Request ID</th><th>IP</th></tr></thead>
+        <tbody>
+          <% logs.forEach((log) => { %>
+            <tr>
+              <td><%= formatDate(log.createdAt) %></td>
+              <td><strong><%= log.actor?.name || 'Sistem' %></strong><br><small><%= log.actor?.email || '-' %></small></td>
+              <td><code><%= log.action %></code></td>
+              <td><%= log.entityType %>: <%= log.entityId %></td>
+              <td><code><%= log.requestId || '-' %></code></td>
+              <td><%= log.ip || '-' %></td>
+            </tr>
+          <% }) %>
+          <% if (!logs.length) { %><tr><td colspan="6">Belum ada audit log.</td></tr><% } %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

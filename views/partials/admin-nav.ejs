@@ -10,7 +10,7 @@
 
 <div class="admin-sidebar-overlay" data-admin-overlay hidden></div>
 
-<aside class="admin-nav" id="adminSidebar" data-admin-sidebar aria-label="Navigasi admin">
+<aside class="admin-nav" id="adminSidebar" data-admin-sidebar aria-label="Navigasi admin" tabindex="-1">
   <div class="admin-nav-head">
     <a class="brand" href="/admin">
       <span class="brand-mark">T</span>
@@ -73,6 +73,10 @@
     <a class="<%= currentPath.startsWith('/admin/logs/webhooks') ? 'active' : '' %>" href="/admin/logs/webhooks">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8a4 4 0 0 1 4-4h4"/><path d="M16 16a4 4 0 0 1-4 4H8"/><path d="M8 12h8"/><path d="m14 8 4 4-4 4"/><path d="m10 8-4 4 4 4"/></svg>
       <span>Log webhook</span>
+    </a>
+    <a class="<%= currentPath.startsWith('/admin/logs/audit') ? 'active' : '' %>" href="/admin/logs/audit">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.4 8 8 9 4.6-1 8-4 8-9V6z"/><path d="M9 12h6M12 9v6"/></svg>
+      <span>Audit admin</span>
     </a>
     <a class="<%= currentPath.startsWith('/admin/logs/emails') ? 'active' : '' %>" href="/admin/logs/emails">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="m4 8 8 6 8-6"/></svg>

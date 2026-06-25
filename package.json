@@ -1,6 +1,6 @@
 {
   "name": "zyphra-store",
-  "version": "1.7.0",
+  "version": "2.0.0",
   "private": true,
   "description": "Marketplace produk digital dengan Zyphra Wallet, deposit saldo, pembayaran saldo atau gabungan, voucher saldo, flash sale, promo, produk gratis, Pakasir, akun marketplace, dan chatbot AI.",
   "main": "server.js",
@@ -12,9 +12,14 @@
     "start": "node server.js",
     "test": "node --test tests/*.test.js",
     "check": "node scripts/check-project.js",
-    "seed:admin": "node scripts/seedAdmin.js"
+    "seed:admin": "node scripts/seedAdmin.js",
+    "maintenance": "node scripts/run-maintenance.js",
+    "test:integration": "node --test tests/integration/*.test.js",
+    "migrate:avatars": "node scripts/migrate-avatars-to-storage.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1075.0",
+    "@aws-sdk/s3-request-presigner": "^3.1075.0",
     "axios": "^1.8.4",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.0",

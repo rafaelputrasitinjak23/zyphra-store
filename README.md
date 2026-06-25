@@ -1,331 +1,344 @@
-# Zyphra Store
+# TOKOZYPHRA
 
-Zyphra Store adalah marketplace produk digital berbasis Node.js, Express.js, MongoDB, Mongoose, dan EJS. Proyek ini menyediakan katalog, keranjang, checkout, produk gratis, Zyphra Wallet, deposit saldo, pembayaran saldo atau gabungan, voucher saldo, flash sale, promo, invoice, dashboard pengguna/admin, proteksi download, chatbot AI berbasis katalog, dan integrasi Pakasir.
+TOKOZYPHRA adalah marketplace produk digital berbasis Node.js, Express, MongoDB/Mongoose, dan EJS. Aplikasi mencakup katalog, keranjang, checkout, produk gratis, wallet, pembayaran gateway atau hybrid, voucher, flash sale, invoice, download terproteksi, dukungan pelanggan, ulasan, dokumentasi produk, notifikasi, dashboard admin, dan AI assistant.
 
-## Fitur utama
-
-### Pengalaman akun marketplace
-
-- Dashboard akun modern dengan foto profil, statistik pesanan, total belanja, pesanan terbaru, dan akses cepat.
-- Pengguna dapat mengunggah foto profil JPG/PNG/WebP hingga 750 KB; foto disimpan di MongoDB agar kompatibel dengan Vercel tanpa filesystem lokal.
-- Profil mendukung nama, nomor telepon, bio singkat, dan preferensi notifikasi.
-- Navigasi bawah mobile menggunakan ikon SVG untuk Beranda, Belanja, Dompet, Pesanan, dan Akun.
-- Halaman keamanan untuk perubahan password dan logout seluruh perangkat.
-
-
-- Register manual dengan CAPTCHA, password bcrypt, OTP enam digit, kedaluwarsa 10 menit, cooldown, batas percobaan, dan verifikasi email.
-- Login manual langsung dengan email, password, dan CAPTCHA teks tanpa OTP, disertai proteksi brute force, session regeneration, serta notifikasi IP, perangkat, dan user-agent.
-- Reset password melalui OTP dengan respons yang tidak membocorkan status email dan invalidasi seluruh sesi lama.
-- Session MongoDB, cookie `httpOnly`, `sameSite=lax`, dan `secure` pada production.
-- Produk digital, kategori, promo, stok/unlimited, galeri, versi, changelog, instruksi, URL file rahasia, dan batas download.
-- Zyphra Wallet dengan saldo tersedia, saldo tertahan, total deposit, total pemakaian, bonus, dan riwayat mutasi.
-- Deposit saldo melalui metode pembayaran aktif dengan nomor deposit unik, status, pembatalan, pengecekan ulang, dan kredit saldo idempoten.
-- Checkout mendukung pembayaran saldo penuh, metode pembayaran biasa, atau kombinasi saldo dan metode pembayaran.
-- Saldo untuk pesanan pending ditahan sementara, kemudian diselesaikan saat pesanan berhasil atau dikembalikan saat gagal, kedaluwarsa, atau dibatalkan.
-- Admin dapat membuat voucher saldo, mengatur kuota dan batas klaim per pengguna, menambah/mengurangi saldo, melihat deposit, serta mengaktifkan atau menonaktifkan dompet pengguna.
-- Keranjang MongoDB dan seluruh perhitungan harga ulang di server.
-- Produk dapat memiliki harga mulai dari Rp0. Harga normal, promo, atau flash sale boleh bernilai nol.
-- Voucher/kode promo boleh memberi diskon hingga 100% atau sebesar seluruh subtotal sehingga total akhir menjadi Rp0.
-- Pesanan dengan total Rp0 tidak membuat transaksi Pakasir, tidak menampilkan QRIS/VA, langsung dikonfirmasi sebagai berhasil, mengurangi stok sekali, mencatat penggunaan voucher, memberi akses download, dan membuat invoice.
-- Integrasi Pakasir via API untuk QRIS dan Virtual Account, cek status, cancel, simulasi sandbox, serta webhook.
-- Pengguna dan admin dapat membatalkan transaksi pending. Server mengecek status Pakasir sebelum dan setelah pembatalan agar transaksi yang sudah lunas tidak ikut dibatalkan.
-- Chatbot Zyphra Assistant mengambil konteks produk aktif, kategori, harga, stok, serta aturan website langsung dari database tanpa mengirim URL file digital atau credential.
-- Tombol AI pada form admin dapat membuat deskripsi singkat, deskripsi lengkap, tag, instruksi, dan changelog; fallback lokal tetap tersedia saat API AI gagal.
-- Harga terlihat pada kartu dan halaman detail, tersedia tombol Beli Sekarang, produk terkait, riwayat produk dilihat, sorting, pagination, statistik terjual/dilihat, dan countdown pembayaran.
-- Pembagian fee: di bawah batas fee dibagi dua; tepat/di atas batas seluruh fee dibayar pengguna.
-- Invoice web/cetak/email dengan subtotal, gateway fee, bagian pengguna, bagian merchant, total, dan merchant net.
-- Endpoint download memakai session, pemeriksaan kepemilikan, token sementara, batas download, dan proxy stream agar URL file asli tidak tampil pada frontend.
-- Dashboard admin untuk statistik, produk, kategori, user, order, cek ulang Pakasir, kirim ulang invoice, konfigurasi fee, log webhook, dan log email.
-- Helmet, CSP, CSRF berbasis session, rate limit, sanitasi key MongoDB, validasi input, proteksi admin, dan error page production.
-- Kompatibel dengan Vercel dan mode localhost.
+Versi ini telah diperkuat untuk alur transaksi production: stok per item dan kuota promo direservasi, saldo wallet ditahan secara idempoten, transaksi gateway memiliki kompensasi, order kedaluwarsa direkonsiliasi otomatis, webhook diverifikasi ulang ke provider, tindakan admin diaudit, dan file digital dapat disimpan pada object storage privat.
 
 ## Persyaratan
 
 - Node.js 20 atau lebih baru.
-- MongoDB Atlas atau MongoDB replica set. Transaksi database saat pembayaran berhasil membutuhkan replica set; MongoDB Atlas sudah mendukungnya.
-- Akun SMTP.
-- CAPTCHA teks sudah tersedia di dalam proyek dan tidak memerlukan layanan atau API key eksternal.
-- Proyek Pakasir aktif.
+- MongoDB yang mendukung transaction, yaitu MongoDB Atlas atau deployment replica set.
+- SMTP bila registrasi/reset password melalui OTP akan digunakan.
+- Credential Pakasir bila pembayaran eksternal diaktifkan.
+- S3-compatible object storage bila memakai private object key atau migrasi avatar.
 
-## Instalasi lokal
+MongoDB standalone tanpa replica set tidak sesuai untuk checkout, wallet, reservasi stok, dan reservasi promo karena bagian tersebut menggunakan transaksi database.
+
+## Instalasi
 
 ```bash
-npm install
+npm ci
 cp .env.example .env
+npm run check
+npm test
 npm run seed:admin
+npm start
+```
+
+Untuk development dengan auto-reload:
+
+```bash
 npm run dev
 ```
 
-Pada Windows PowerShell, salin `.env.example` menjadi `.env` secara manual atau gunakan:
+Aplikasi melakukan validasi konfigurasi saat startup. Production tidak akan berjalan bila secret wajib kosong, lemah, sama satu sama lain, atau URL penting tidak memakai HTTPS.
 
-```powershell
-Copy-Item .env.example .env
-```
+## Konfigurasi penting
 
-Buka `http://localhost:3000`.
+Gunakan `.env.example` sebagai daftar lengkap. Jangan commit `.env`.
 
-## MongoDB Atlas
-
-1. Buat akun dan cluster di MongoDB Atlas.
-2. Buat database user dengan password kuat.
-3. Tambahkan IP pengembangan ke Network Access. Untuk Vercel, aturan jaringan harus mengizinkan koneksi dari deployment Anda; banyak pengguna memakai `0.0.0.0/0` lalu mengandalkan user/password kuat, tetapi aturan yang lebih sempit lebih aman bila tersedia.
-4. Ambil connection string dan isi `MONGODB_URI`.
-5. Pastikan nama database ada pada URI, misalnya `mongodb+srv://user:password@cluster.mongodb.net/zyphra_store`.
-
-## Environment variable
-
-Salin `.env.example`, lalu isi seluruh nilai rahasia. Jangan commit `.env`.
-
-- `APP_URL`: URL absolut tanpa slash di akhir.
-- `MONGODB_URI`: connection string MongoDB.
-- `SESSION_SECRET`: string acak panjang.
-- `SMTP_*`: konfigurasi SMTP.
-- `ADMIN_EMAIL`: email admin utama dan tujuan notifikasi order baru.
-- `ADMIN_INITIAL_PASSWORD`: hanya dibutuhkan oleh seed saat akun admin belum ada; jangan simpan setelah seed selesai.
-- `PAKASIR_*`: slug, API key, base URL, dan secret webhook opsional.
-- `FEE_SPLIT_THRESHOLD`: default `50000`.
-- `DOWNLOAD_TOKEN_SECRET`: string acak khusus token download.
-- `AI_ENABLED`, `AI_BASE_URL`, `AI_PATH`, `AI_TEMPERATURE`, dan `AI_TIMEOUT_MS`: konfigurasi chatbot serta generator konten produk.
-
-Buat secret dengan Node.js:
-
-```bash
-node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
-```
-
-## CAPTCHA teks bawaan
-
-CAPTCHA dibuat langsung oleh server sebagai gambar SVG berisi lima karakter. Pengguna cukup mengetik teks yang terlihat pada form login, register, atau lupa password.
-
-- Tidak membutuhkan akun Cloudflare.
-- Tidak membutuhkan `SITE_KEY` atau `SECRET_KEY`.
-- Kode berlaku selama 5 menit.
-- Kode hanya dapat digunakan satu kali.
-- Tombol **Muat ulang kode** membuat kode baru.
-- Challenge disimpan pada session MongoDB dalam bentuk hash HMAC, bukan teks asli.
-
-## SMTP / Nodemailer
-
-Isi `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_NAME`, dan `SMTP_FROM_EMAIL`.
-
-Contoh umum port:
-
-- Port `587` dengan `SMTP_SECURE=false` untuk STARTTLS.
-- Port `465` dengan `SMTP_SECURE=true` untuk TLS langsung.
-
-Kegagalan email disimpan pada koleksi `EmailLog` dan dapat dilihat dari dashboard admin. Invoice serta notifikasi non-OTP yang gagal dapat dicoba ulang dari halaman log; OTP registrasi/reset password harus dikirim ulang melalui alur OTP agar kode lama tidak dipakai kembali. Aplikasi tidak menyimpan password SMTP ke database.
-
-## Pakasir
-
-Dokumentasi resmi Pakasir menggunakan:
-
-- Create: `POST /api/transactioncreate/{method}`.
-- Detail: `GET /api/transactiondetail`.
-- Cancel: `POST /api/transactioncancel`.
-- Sandbox simulation: `POST /api/paymentsimulation`.
-- Webhook sukses mengirim `amount`, `order_id`, `project`, `status`, `payment_method`, dan `completed_at`.
-
-Isi:
+### Aplikasi dan database
 
 ```env
-PAKASIR_SLUG=slug-proyek
-PAKASIR_API_KEY=api-key-proyek
+NODE_ENV=production
+APP_URL=https://domain-anda
+MONGODB_URI=mongodb+srv://...
+SESSION_SECRET=<secret-acak-minimal-32-karakter>
+DOWNLOAD_TOKEN_SECRET=<secret-acak-berbeda>
+CRON_SECRET=<secret-acak-khusus-cron>
+```
+
+`SESSION_SECRET`, `DOWNLOAD_TOKEN_SECRET`, dan `CRON_SECRET` harus berbeda. `DOWNLOAD_TOKEN_SECRET` dipakai untuk token download berumur pendek, bukan sebagai secret session.
+
+### SMTP
+
+```env
+SMTP_REQUIRED=true
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM_NAME=TOKOZYPHRA
+SMTP_FROM_EMAIL=
+ADMIN_EMAIL=
+```
+
+Di development, `SMTP_REQUIRED=false` dapat digunakan. Di production, aktifkan SMTP agar OTP, invoice, dan notifikasi dapat dikirim.
+
+### Pakasir
+
+Pembayaran eksternal bersifat opt-in:
+
+```env
+PAKASIR_ENABLED=true
+PAKASIR_SLUG=
+PAKASIR_API_KEY=
 PAKASIR_BASE_URL=https://app.pakasir.com
 PAKASIR_WEBHOOK_SECRET=
 ```
 
-URL webhook yang dimasukkan pada halaman proyek Pakasir:
+Webhook:
 
 ```text
 https://domain-anda/webhooks/pakasir
 ```
 
-Dokumentasi resmi Pakasir saat proyek ini dibuat tidak mendokumentasikan signature webhook. Karena itu aplikasi tidak pernah mempercayai webhook sebagai sumber kebenaran: `order_id`, proyek, dan amount diperiksa, lalu status dikonfirmasi lagi melalui Transaction Detail API. `PAKASIR_WEBHOOK_SECRET` bersifat opsional untuk skenario reverse proxy yang menambahkan header `x-webhook-secret`; jangan mengisinya bila Pakasir tidak mengirim header tersebut.
+`PAKASIR_WEBHOOK_SECRET` bersifat opsional dan hanya diisi bila reverse proxy Anda menambahkan header `x-webhook-secret`. Validasi utama tidak bergantung pada payload webhook: aplikasi mencocokkan proyek, order, dan nominal, lalu mengambil Transaction Detail dari provider sebelum mengubah status finansial.
 
-Metode yang disediakan:
+Biaya per metode dikelola melalui **Admin → Pengaturan**. Jangan mengandalkan angka biaya hard-coded sebagai referensi permanen; cocokkan dengan konfigurasi provider yang sedang berlaku.
 
-- `qris`
-- `cimb_niaga_va`
-- `bni_va`
-- `sampoerna_va`
-- `bnc_va`
-- `maybank_va`
-- `permata_va`
-- `atm_bersama_va`
-- `artha_graha_va`
-- `bri_va`
+### Object storage S3-compatible
 
-Konfigurasi fee awal mengikuti halaman biaya Pakasir yang tersedia saat proyek diperbarui: QRIS 0,7% + Rp310, QRIS di atas Rp105.000 menjadi 1%, VA tertentu Rp3.500, serta Artha Graha/Sampoerna Rp2.000. Karena biaya dapat berubah, admin dapat memperbaruinya melalui `/admin/settings`.
-
-### Cara kerja pembagian fee dengan API Pakasir
-
-Pakasir mengembalikan `fee` dan `total_payment` di atas field `amount`. Untuk transaksi di bawah batas, aplikasi menghitung bagian merchant lalu mengurangi field amount yang dikirim ke Pakasir. Setelah respons diterima, fee aktual direkonsiliasi. Jika belum seimbang akibat pembulatan/persentase, transaksi dibatalkan dan dibuat ulang maksimal beberapa kali dengan amount yang sudah dikoreksi. Order hanya disimpan sebagai siap bayar ketika:
-
-```text
-total_payment = subtotal + userFee
-amount = subtotal - merchantFee
-userFee = ceil(fee / 2)
-merchantFee = fee - userFee
+```env
+OBJECT_STORAGE_ENABLED=true
+OBJECT_STORAGE_ENDPOINT=
+OBJECT_STORAGE_REGION=us-east-1
+OBJECT_STORAGE_BUCKET=
+OBJECT_STORAGE_ACCESS_KEY_ID=
+OBJECT_STORAGE_SECRET_ACCESS_KEY=
+OBJECT_STORAGE_FORCE_PATH_STYLE=false
+OBJECT_STORAGE_PUBLIC_BASE_URL=
+OBJECT_STORAGE_AVATAR_PREFIX=avatars
+OBJECT_STORAGE_PRODUCT_PREFIX=products
+OBJECT_STORAGE_SIGNED_URL_TTL_SECONDS=300
 ```
 
-Untuk subtotal tepat atau di atas batas, `amount = subtotal` dan seluruh fee Pakasir menjadi bagian pengguna.
+Catatan:
+
+- AWS S3 dapat menggunakan endpoint kosong dan region AWS yang sesuai.
+- Penyedia S3-compatible seperti R2 atau MinIO dapat mengisi endpoint khusus.
+- File produk sebaiknya privat. Di form produk, simpan object key seperti `products/template.zip`.
+- `OBJECT_STORAGE_PUBLIC_BASE_URL` hanya diperlukan untuk avatar yang harus dapat ditampilkan publik melalui CDN/bucket publik.
+- Mode download default adalah `proxy`, sehingga URL sumber tidak tampil di frontend dan kuota dapat dikembalikan bila streaming gagal.
+- Mode `redirect` hanya digunakan untuk object storage signed URL; kuota dianggap terpakai saat redirect diterbitkan.
+
+Untuk memindahkan avatar base64 lama dari MongoDB ke object storage:
+
+```bash
+npm run migrate:avatars
+```
+
+Jalankan setelah object storage dan public base URL dikonfigurasi. Script menghapus object baru apabila penyimpanan perubahan user gagal.
+
+## Arsitektur transaksi
+
+### Checkout
+
+1. Produk dan harga dibaca ulang dari database.
+2. Voucher dihitung ulang di server.
+3. Order dibuat dengan status `initializing` dan idempotency key.
+4. Stok produk terbatas dicatat sebagai reservasi per item, sementara kuota diskon direservasi dalam transaksi MongoDB.
+5. Saldo wallet dipindahkan ke `heldBalance` secara idempoten.
+6. Untuk transaksi gateway, aplikasi membuat transaksi provider dan menyimpan Order serta Payment secara atomik.
+7. Jika pencatatan lokal gagal setelah transaksi provider terbentuk, aplikasi mencoba cancel sebagai kompensasi.
+8. Bila cancel gagal, order masuk `compensation_required` dan maintenance akan memverifikasi ulang sebelum melepaskan aset.
+
+### Pembayaran berhasil
+
+Dalam satu transaksi MongoDB:
+
+- reservasi stok dikomit menjadi penjualan;
+- saldo tertahan dikomit menjadi pengeluaran;
+- kuota diskon dikomit;
+- order menjadi `paid/fulfilled`;
+- akses download diberikan;
+- cart terkait dibersihkan;
+- Payment diperbarui secara idempoten.
+
+### Pembayaran gagal atau kedaluwarsa
+
+Setelah status provider diverifikasi:
+
+- saldo tertahan dikembalikan;
+- stok reservasi per item dilepas;
+- kuota diskon dilepas;
+- order menjadi final non-paid;
+- Payment dan notifikasi diperbarui.
+
+Order `failed`, `expired`, `cancelled`, atau `refunded` tidak dibuka kembali setelah asetnya dilepas. Order yang masih `pending` atau `compensation_required` selalu direkonsiliasi terhadap provider terlebih dahulu.
+
+## Maintenance dan cron
+
+Endpoint mesin:
+
+```text
+GET /api/system/maintenance
+Authorization: Bearer <CRON_SECRET>
+```
+
+Vercel cron sudah didefinisikan pada `vercel.json` setiap 10 menit. Proses maintenance:
+
+- menutup checkout `initializing` yang macet;
+- memeriksa ulang order pending yang kedaluwarsa;
+- menyelesaikan `compensation_required`;
+- mengembalikan saldo, stok, dan promo hanya setelah status provider aman;
+- memproses deposit kedaluwarsa;
+- memakai lock idempoten agar run yang bertumpuk tidak memproses order yang sama secara bersamaan.
+
+Untuk menjalankan manual dari CLI:
+
+```bash
+npm run maintenance
+```
+
+Endpoint observability:
+
+```text
+GET /healthz
+GET /readyz
+GET /api/system/ready
+```
+
+`healthz` hanya menunjukkan proses aplikasi hidup. `readyz` juga memeriksa koneksi database.
+
+## Download dan keamanan file
+
+Akses download mensyaratkan:
+
+- session user aktif;
+- order milik user;
+- payment berstatus `paid`;
+- `accessGranted=true`;
+- token JWT dengan issuer, audience, subject, dan expiry yang benar;
+- kuota download masih tersedia.
+
+Untuk URL legacy, server:
+
+- hanya menerima HTTPS publik;
+- menolak credential URL dan port non-443;
+- menolak localhost serta IP private/reserved IPv4 dan IPv6;
+- memeriksa hasil DNS;
+- memvalidasi ulang setiap redirect;
+- mengikat koneksi ke IP publik yang sudah diperiksa untuk mengurangi DNS rebinding;
+- mengembalikan kuota bila proxy stream gagal atau client terputus.
+
+`DOWNLOAD_ALLOWED_HOSTS` dapat digunakan sebagai allowlist domain. Kosong berarti semua host publik HTTPS diizinkan.
+
+## Keamanan aplikasi
+
+Implementasi utama:
+
+- Helmet dan Content Security Policy dengan nonce;
+- cookie session `httpOnly`, `sameSite=lax`, dan `secure` pada production;
+- session MongoDB terenkripsi oleh `connect-mongo`;
+- CSRF untuk operasi browser non-GET;
+- sanitasi key MongoDB dan field sensitif;
+- bcrypt cost 12;
+- lock akun dan rate limiter autentikasi;
+- OTP single-use dengan expiry dan batas percobaan;
+- regenerasi session setelah login;
+- `sessionVersion` untuk logout semua perangkat;
+- rate limiter terpisah untuk browser, API, webhook, maintenance, checkout, OTP, dan AI;
+- request ID dan structured JSON logging;
+- audit log admin dengan redaksi secret;
+- proteksi admin agar tidak menonaktifkan diri sendiri atau menghapus admin aktif terakhir.
+
+Log audit admin tersedia di:
+
+```text
+/admin/logs/audit
+```
+
+## Frontend, responsivitas, dan PWA
+
+- Mobile menu publik memakai drawer kanan.
+- Sidebar admin menjadi drawer kiri pada layar kecil.
+- Kedua drawer mendukung Escape, focus trap, focus restore, overlay, dan status ARIA.
+- Breakpoint navigasi utama konsisten pada 900 px.
+- Stylesheet dibagi menjadi modul `core`, `clean-ui`, `responsive`, `storefront`, `feature-pack`, dan `accessibility`.
+- Service worker hanya meng-cache aset publik; halaman akun, wallet, checkout, payment, order, dan admin tidak disimpan sebagai dokumen offline.
+- SEO mencakup canonical, robots, Open Graph, Twitter Card, dan JSON-LD Product/Offer/Rating.
+- Sorting harga memakai harga efektif, termasuk promo dan flash sale aktif.
+
+## Pengujian
+
+```bash
+npm run check
+npm test
+npm run test:integration
+npm audit --omit=dev
+```
+
+`npm run check` memeriksa file wajib, sintaks seluruh JavaScript, dan kompilasi template EJS.
+
+Test biasa tidak membutuhkan database. Test integrasi konkurensi membutuhkan database replica set terpisah:
+
+```env
+TEST_MONGODB_URI=mongodb://127.0.0.1:27017/?replicaSet=rs0
+```
+
+Test integrasi membuat database sementara, menguji dua reservasi stok dan promo secara bersamaan, lalu menghapus database tersebut. Tanpa `TEST_MONGODB_URI`, test integrasi akan ditandai `SKIP`, bukan dianggap lulus eksekusi database.
 
 ## Seed admin
 
-Isi `ADMIN_EMAIL`. Bila user dengan email tersebut sudah ada, perintah hanya mempromosikannya menjadi admin. Bila belum ada, isi sementara `ADMIN_INITIAL_PASSWORD` dengan password kuat.
+```env
+ADMIN_EMAIL=admin@example.com
+ADMIN_INITIAL_PASSWORD=<password-kuat-sementara>
+```
 
 ```bash
 npm run seed:admin
 ```
 
-Tidak ada password admin default di source code atau README.
+Bila user dengan email tersebut sudah ada, script mempromosikannya menjadi admin. Jangan menyimpan password awal di repository atau environment lebih lama dari yang diperlukan.
 
-## Menjalankan test
+## Deployment Vercel
 
-```bash
-npm test
-npm run check
-```
+1. Push repository tanpa `.env` dan `node_modules`.
+2. Import repository ke Vercel.
+3. Tambahkan environment variable production berdasarkan `.env.example`.
+4. Gunakan MongoDB Atlas/replica set.
+5. Set `NODE_ENV=production` dan `APP_URL=https://domain-anda`.
+6. Isi `CRON_SECRET` agar Vercel Cron dapat mengautentikasi endpoint maintenance.
+7. Aktifkan Pakasir hanya setelah credential dan webhook siap.
+8. Deploy, buka `/readyz`, lalu lakukan checkout sandbox end-to-end.
+9. Jalankan seed admin menggunakan environment production.
 
-Test mencakup perhitungan transaksi, produk Rp0, checkout gratis, voucher 100%, registrasi/reset, login, kode verifikasi teks, flash sale, voucher semua produk, promo produk tertentu, webhook idempoten, proteksi download, harga database, parser AI, pembatalan transaksi, opsi pembayaran saldo penuh, dan pembayaran gabungan.
+`package-lock.json` disertakan agar build menggunakan dependency tree yang reproducible. Gunakan `npm ci`, bukan menghapus lockfile.
 
-## Chatbot AI dan auto-deskripsi produk
+## Operasional production
 
-API default mengikuti endpoint yang diminta:
+Sebelum menerima uang pengguna:
 
-```env
-AI_ENABLED=true
-AI_BASE_URL=https://api.siputzx.my.id
-AI_PATH=/api/ai/glm47flash
-AI_TEMPERATURE=0.7
-AI_TIMEOUT_MS=30000
-```
+- uji checkout gratis, wallet, gateway, hybrid, voucher, expiry, cancel, dan webhook;
+- jalankan test konkurensi pada replica set;
+- pastikan cron benar-benar terpanggil;
+- pastikan SMTP mengirim OTP dan invoice;
+- lakukan uji download file kecil dan besar;
+- cek audit log, webhook log, email log, dan structured log;
+- rotasi secret yang pernah terpublikasi;
+- backup database dan aktifkan alert provider/database;
+- pantau order `compensation_required`;
+- tinjau ulang aturan fee provider secara berkala.
 
-Chatbot hanya menerima konteks publik yang dipilih server: nama produk, deskripsi singkat, kategori, harga, stok, versi, tag, batas download, dan URL halaman publik. `digitalFileUrl`, data SMTP, session secret, API key Pakasir, dan data pribadi pengguna tidak dimasukkan ke prompt. Riwayat percakapan dibatasi di session dan endpoint dilindungi CSRF serta rate limit.
-
-Pada dashboard admin, buka form tambah/edit produk lalu isi minimal nama dan kategori. Tekan **Generate dengan AI**. Jika API tidak tersedia atau respons bukan JSON valid, server mengisi template konten lokal agar form tetap dapat digunakan. Chatbot juga memiliki jawaban fallback untuk bantuan dasar dan rekomendasi produk saat layanan AI eksternal sedang gagal.
-
-## Zyphra Wallet
-
-Dompet dibuat otomatis ketika pengguna membuka halaman `/wallet`. Pengguna dapat:
-
-- melihat saldo tersedia dan saldo yang sedang digunakan pada pesanan;
-- mengisi saldo melalui `/wallet/deposit`;
-- melihat riwayat deposit dan mutasi saldo;
-- mengklaim voucher saldo dari admin;
-- menggunakan saldo penuh saat checkout;
-- menggabungkan saldo dengan metode pembayaran lain saat saldo belum mencukupi.
-
-Setiap perubahan saldo dicatat pada `WalletTransaction` dengan idempotency key. Saldo pesanan pending dipindahkan ke `heldBalance`; saldo baru menjadi pengeluaran setelah pesanan berhasil dan otomatis dikembalikan jika transaksi gagal, kedaluwarsa, atau dibatalkan.
-
-Voucher saldo dibuat dari menu **Admin → Voucher & Promo** dengan manfaat **Saldo gratis untuk dompet pengguna**. Kode ini tidak dapat digunakan sebagai diskon checkout. Klaim disimpan di `WalletVoucherClaim`, mengikuti periode aktif, kuota total, dan batas per pengguna.
-
-Admin dapat melihat dompet, deposit, mutasi, melakukan penyesuaian saldo, dan menonaktifkan dompet tertentu melalui `/admin/wallets`. Batas deposit dan status fitur dompet dapat diatur dari `/admin/settings`.
-
-## Produk gratis dan checkout Rp0
-
-Admin dapat membuat produk gratis dengan mengisi harga `0`. Harga promo dan harga flash sale juga dapat diisi `0` selama memenuhi aturan harga yang lebih rendah dari harga aktif.
-
-Voucher atau kode promo boleh membuat subtotal setelah diskon menjadi tepat `Rp0`. Untuk pesanan seperti ini:
-
-1. Website tidak meminta pengguna memilih QRIS atau Virtual Account.
-2. Tidak ada request pembuatan transaksi ke Pakasir.
-3. Order disimpan dengan metode `free`, fee gateway `0`, dan total `0`.
-4. Status langsung menjadi `paid` dan `fulfilled` melalui konfirmasi internal.
-5. Stok dan jumlah terjual diperbarui satu kali.
-6. Kuota voucher dicatat satu kali.
-7. Produk langsung muncul di **Produk Saya** dan dapat diunduh.
-8. Invoice dan notifikasi email tetap dibuat.
-
-Jika keranjang berisi produk gratis dan berbayar sekaligus, payment gateway hanya digunakan selama subtotal akhir masih lebih dari Rp0.
-
-## Pembatalan transaksi
-
-Pengguna dapat membatalkan order melalui halaman pembayaran atau detail pesanan selama status masih `pending`. Admin juga dapat membatalkan dari detail order. Alurnya:
-
-1. Server memastikan order milik pengguna dan belum dibayar.
-2. Server mengecek Transaction Detail Pakasir.
-3. Jika sudah `completed`, order diproses sebagai paid dan pembatalan ditolak.
-4. Jika masih pending, server memanggil Transaction Cancel Pakasir.
-5. Server mengecek ulang status dan menyimpan waktu, pelaku, alasan, serta respons pembatalan.
-
-Pembatalan dibuat idempoten dan menggunakan lock database agar klik berulang tidak menjalankan proses bersamaan.
-
-## Menguji pembayaran sandbox
-
-1. Aktifkan mode Sandbox pada proyek Pakasir.
-2. Buat order dari website.
-3. Gunakan tombol cek status setelah simulasi.
-4. Simulasi dapat dipanggil melalui endpoint resmi Pakasir dengan `project`, `order_id`, `amount` yang sama dengan `pakasirAmount`, dan `api_key`.
-5. Periksa `/admin/logs/webhooks` dan detail order.
-
-Jangan menggunakan nilai total yang terlihat di browser sebagai input API. Controller checkout selalu mengambil ulang produk, stok, promo, fee, dan subtotal dari database.
-
-## Deploy ke Vercel
-
-1. Push proyek ke GitHub tanpa `.env`. ZIP ini sengaja tidak menyertakan `package-lock.json`; Vercel akan memasang dependency dari `package.json`.
-2. Import repository di Vercel.
-3. Tambahkan seluruh environment variable dari `.env.example` pada Project Settings → Environment Variables.
-4. Set `NODE_ENV=production` dan `APP_URL=https://domain-anda`.
-5. Deploy.
-6. Atur URL webhook Pakasir menjadi `https://domain-anda/webhooks/pakasir`.
-7. Jalankan seed admin dari lokal dengan `MONGODB_URI` production, atau gunakan Vercel CLI dengan environment production.
-
-`api/index.js` mengekspor Express app tanpa `app.listen()`. `server.js` hanya digunakan untuk localhost. Koneksi Mongoose dicache agar cold start tidak membuat koneksi baru pada setiap request. Session disimpan di MongoDB, bukan memory. Produk dan invoice tidak ditulis ke filesystem Vercel.
-
-## Struktur utama
+## Struktur proyek
 
 ```text
-api/                 entry point Vercel
-config/              environment dan database
-controllers/         auth, produk, cart, checkout, order, payment, AI, admin
-emails/              template HTML email
-middlewares/         auth, CSRF, rate limit, sanitasi, error
-models/              schema Mongoose
-public/               CSS dan JavaScript frontend
+api/                 entry point serverless
+config/              database dan environment
+controllers/         request/response layer
+emails/              template email
+middlewares/         auth, CSRF, limiter, sanitasi, observability
+models/              schema MongoDB
+public/               JavaScript, CSS modular, manifest, service worker
 routes/               route modular
-scripts/              seed admin dan pemeriksaan proyek
-services/             email, kode verifikasi, pembayaran, wallet, order, promo, AI, download
-utils/                helper keamanan dan format
-views/                EJS publik, akun, invoice, dan admin
-tests/                test dasar
+scripts/              seed, maintenance, migrasi, pemeriksaan proyek
+services/             logika bisnis dan integrasi
+utils/                helper keamanan dan logging
+views/                template EJS publik, akun, dan admin
+tests/                unit/source tests dan integration concurrency test
 ```
 
-## Error umum
+## Perintah tersedia
 
-### `MONGODB_URI belum diisi`
-
-Pastikan `.env` berada di root dan connection string lengkap.
-
-### Transaksi MongoDB gagal dengan pesan replica set
-
-Gunakan MongoDB Atlas atau deployment MongoDB yang mendukung transaction/replica set.
-
-### OTP tidak terkirim
-
-Periksa SMTP, port, TLS, app password, dan dashboard `/admin/logs/emails`.
-
-### CAPTCHA tidak terlihat
-
-Pastikan gambar dari `/auth/captcha.svg` tidak diblokir browser. Muat ulang halaman atau tekan tombol **Muat ulang kode**. Session MongoDB juga harus aktif agar challenge dapat diverifikasi.
-
-### Webhook tidak mengubah status
-
-Pastikan URL publik benar, amount webhook sama dengan `pakasirAmount`, proyek sama dengan slug, serta Transaction Detail API dapat diakses dengan API key.
-
-### Fee Pakasir tidak dapat direkonsiliasi
-
-Perbarui aturan fee pada dashboard admin sesuai biaya Pakasir terbaru. Aplikasi sengaja menolak order bila respons aktual tidak dapat menghasilkan pembagian fee yang konsisten.
-
-### File besar gagal diproksikan di Vercel
-
-Vercel memiliki batas durasi dan bandwidth function. Gunakan object storage yang mendukung file delivery efisien atau pindahkan endpoint download ke server yang cocok untuk streaming file besar. URL sumber tetap tidak disisipkan ke frontend.
-
-## Catatan keamanan operasional
-
-- Rotasi seluruh secret bila pernah terpublikasi.
-- Batasi akses database dan gunakan user database khusus aplikasi.
-- Gunakan HTTPS di production.
-- Jangan menaruh API key di view, JavaScript frontend, database setting publik, atau repository.
-- Tinjau log webhook/email secara rutin.
-- Perbarui dependency dan konfigurasi fee ketika provider mengubah dokumentasi atau biaya.
+```text
+npm run dev              development server
+npm start                production-style server
+npm test                 test utama
+npm run test:integration test konkurensi MongoDB
+npm run check            pemeriksaan struktur/sintaks/template
+npm run seed:admin       membuat atau mempromosikan admin
+npm run maintenance      menjalankan maintenance manual
+npm run migrate:avatars  migrasi avatar base64 ke object storage
+```

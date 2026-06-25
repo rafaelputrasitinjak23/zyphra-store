@@ -1,14 +1,29 @@
-require('dotenv').config();
-const app = require('./app');
+const { assertRuntimeConfig, env } = require('./config/env');
 const { connectDatabase } = require('./config/database');
-const { env } = require('./config/env');
+const logger = require('./utils/logger');
+
+assertRuntimeConfig();
+const app = require('./app');
 
 (async () => {
   await connectDatabase();
-  app.listen(env.port, () => {
-    console.log(`TOKOZYPHRA berjalan di ${env.appUrl}`);
+  const server = app.listen(env.port, () => {
+    logger.info('server.started', { appUrl: env.appUrl, port: env.port, environment: env.nodeEnv });
   });
+
+  const shutdown = (signal) => {
+    logger.info('server.shutdown_requested', { signal });
+    server.close((error) => {
+      if (error) {
+        logger.error('server.shutdown_failed', { error });
+        process.exit(1);
+      }
+      process.exit(0);
+    });
+  };
+  process.once('SIGTERM', shutdown);
+  process.once('SIGINT', shutdown);
 })().catch((error) => {
-  console.error('Gagal menjalankan server:', error);
+  logger.error('server.start_failed', { error });
   process.exit(1);
 });

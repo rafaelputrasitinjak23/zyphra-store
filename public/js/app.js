@@ -11,28 +11,60 @@
     element.hidden = hidden;
   }
 
+  const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+  function keepFocusInside(event, container) {
+    if (event.key !== 'Tab') return;
+    const focusable = $$(focusableSelector, container).filter((element) => !element.hidden && element.getAttribute('aria-hidden') !== 'true');
+    if (!focusable.length) {
+      event.preventDefault();
+      container.focus();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   function setupPublicNav() {
     const button = $('[data-nav-toggle]');
     const nav = $('[data-nav]');
     const overlay = $('[data-nav-overlay]');
     const closeButton = $('[data-nav-close]');
     if (!button || !nav) return;
+    const mobile = window.matchMedia('(max-width: 900px)');
+    let previousFocus = null;
 
-    const setOpen = (open) => {
-      nav.classList.toggle('open', open);
-      document.body.classList.toggle('nav-open', open);
-      button.setAttribute('aria-expanded', String(open));
-      toggleHidden(overlay, !open);
-      if (open) nav.focus?.();
+    const setOpen = (open, restoreFocus = true) => {
+      const shouldOpen = Boolean(open && mobile.matches);
+      if (shouldOpen) previousFocus = document.activeElement;
+      nav.classList.toggle('open', shouldOpen);
+      document.body.classList.toggle('nav-open', shouldOpen);
+      button.setAttribute('aria-expanded', String(shouldOpen));
+      nav.setAttribute('aria-hidden', String(mobile.matches && !shouldOpen));
+      toggleHidden(overlay, !shouldOpen);
+      if (shouldOpen) window.requestAnimationFrame(() => (closeButton || nav).focus());
+      else if (restoreFocus && previousFocus instanceof HTMLElement) previousFocus.focus();
     };
 
     button.addEventListener('click', () => setOpen(!nav.classList.contains('open')));
     closeButton?.addEventListener('click', () => setOpen(false));
     overlay?.addEventListener('click', () => setOpen(false));
-    $$('a', nav).forEach((link) => link.addEventListener('click', () => setOpen(false)));
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') setOpen(false);
+    $$('a', nav).forEach((link) => link.addEventListener('click', () => setOpen(false, false)));
+    nav.addEventListener('keydown', (event) => {
+      if (nav.classList.contains('open')) keepFocusInside(event, nav);
     });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && nav.classList.contains('open')) setOpen(false);
+    });
+    mobile.addEventListener?.('change', () => setOpen(false, false));
+    setOpen(false, false);
   }
 
   function setupAdminNav() {
@@ -41,21 +73,33 @@
     const overlay = $('[data-admin-overlay]');
     const closeButton = $('[data-admin-close]');
     if (!openButton || !sidebar) return;
+    const mobile = window.matchMedia('(max-width: 900px)');
+    let previousFocus = null;
 
-    const setOpen = (open) => {
-      sidebar.classList.toggle('open', open);
-      document.body.classList.toggle('admin-sidebar-open', open);
-      openButton.setAttribute('aria-expanded', String(open));
-      toggleHidden(overlay, !open);
+    const setOpen = (open, restoreFocus = true) => {
+      const shouldOpen = Boolean(open && mobile.matches);
+      if (shouldOpen) previousFocus = document.activeElement;
+      sidebar.classList.toggle('open', shouldOpen);
+      document.body.classList.toggle('admin-sidebar-open', shouldOpen);
+      openButton.setAttribute('aria-expanded', String(shouldOpen));
+      sidebar.setAttribute('aria-hidden', String(mobile.matches && !shouldOpen));
+      toggleHidden(overlay, !shouldOpen);
+      if (shouldOpen) window.requestAnimationFrame(() => (closeButton || sidebar).focus());
+      else if (restoreFocus && previousFocus instanceof HTMLElement) previousFocus.focus();
     };
 
     openButton.addEventListener('click', () => setOpen(!sidebar.classList.contains('open')));
     closeButton?.addEventListener('click', () => setOpen(false));
     overlay?.addEventListener('click', () => setOpen(false));
-    $$('a', sidebar).forEach((link) => link.addEventListener('click', () => setOpen(false)));
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') setOpen(false);
+    $$('a', sidebar).forEach((link) => link.addEventListener('click', () => setOpen(false, false)));
+    sidebar.addEventListener('keydown', (event) => {
+      if (sidebar.classList.contains('open')) keepFocusInside(event, sidebar);
     });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && sidebar.classList.contains('open')) setOpen(false);
+    });
+    mobile.addEventListener?.('change', () => setOpen(false, false));
+    setOpen(false, false);
   }
 
   function setupToasts() {
@@ -179,8 +223,8 @@
         input.value = '';
         return;
       }
-      if (file.size > 2 * 1024 * 1024) {
-        if (message) message.textContent = 'Ukuran foto maksimal 2 MB.';
+      if (file.size > 750 * 1024) {
+        if (message) message.textContent = 'Ukuran foto maksimal 750 KB.';
         input.value = '';
         return;
       }
@@ -366,7 +410,14 @@
             link.href = item.url || '#';
             link.target = '_blank';
             link.rel = 'noopener noreferrer';
-            link.innerHTML = `<strong>${item.title || 'Support'}</strong><span>${item.description || ''}</span><b>${item.label || 'Kunjungi'} <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></b>`;
+            const strong = document.createElement('strong');
+            strong.textContent = item.title || 'Support';
+            const detail = document.createElement('span');
+            detail.textContent = item.description || '';
+            const action = document.createElement('b');
+            action.textContent = item.label || 'Kunjungi';
+            action.setAttribute('aria-label', `${item.label || 'Kunjungi'} ${item.title || 'Support'}`);
+            link.append(strong, detail, action);
             options.appendChild(link);
           });
         }
@@ -376,6 +427,11 @@
         window.setTimeout(() => shell.classList.add('is-open'), 80);
       })
       .catch(() => {});
+  }
+
+  function setupServiceWorker() {
+    if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+    navigator.serviceWorker.register('/public/sw.js', { scope: '/' }).catch(() => {});
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -393,5 +449,6 @@
     setupAiProductCopy();
     setupAiChat();
     setupSupportPopup();
+    setupServiceWorker();
   });
 })();

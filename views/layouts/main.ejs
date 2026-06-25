@@ -3,23 +3,44 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="TOKOZYPHRA - marketplace script, bot, template, API, dan source code digital.">
+  <% const pageTitle = seo?.title || title; const fullTitle = pageTitle ? `${pageTitle} — TOKOZYPHRA` : 'TOKOZYPHRA'; %>
+  <title><%= fullTitle %></title>
+  <meta name="description" content="<%= seo?.description || 'TOKOZYPHRA - marketplace produk digital.' %>">
+  <meta name="robots" content="<%= seo?.robots || 'index,follow' %>">
+  <link rel="canonical" href="<%= seo?.canonical || currentUrl %>">
+  <meta property="og:locale" content="id_ID">
+  <meta property="og:site_name" content="TOKOZYPHRA">
+  <meta property="og:type" content="<%= seo?.type || 'website' %>">
+  <meta property="og:title" content="<%= fullTitle %>">
+  <meta property="og:description" content="<%= seo?.description || 'TOKOZYPHRA - marketplace produk digital.' %>">
+  <meta property="og:url" content="<%= seo?.canonical || currentUrl %>">
+  <% if (seo?.image) { %><meta property="og:image" content="<%= seo.image %>"><% } %>
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= fullTitle %>">
+  <meta name="twitter:description" content="<%= seo?.description || 'TOKOZYPHRA - marketplace produk digital.' %>">
+  <% if (seo?.image) { %><meta name="twitter:image" content="<%= seo.image %>"><% } %>
   <meta name="csrf-token" content="<%= csrfToken %>">
   <meta name="current-path" content="<%= currentPath %>">
-  <title><%= title ? `${title} — TOKOZYPHRA` : 'TOKOZYPHRA' %></title>
   <meta name="theme-color" content="#111827">
   <link rel="manifest" href="/public/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/public/icons/icon-192.svg">
-  <link rel="stylesheet" href="/public/css/app.css?v=4.5.1-logo-white-bg">
-  <link rel="stylesheet" href="/public/css/feature-pack.css?v=1.0.0-support-notification-docs-pwa">
-  <script src="/public/js/app.js?v=4.5.1-logo-white-bg" defer></script>
+  <link rel="stylesheet" href="/public/css/app.css?v=6.0.0-production-hardening">
+  <link rel="stylesheet" href="/public/css/core.css?v=6.0.0-production-hardening">
+  <link rel="stylesheet" href="/public/css/clean-ui.css?v=6.0.0-production-hardening">
+  <link rel="stylesheet" href="/public/css/responsive.css?v=6.0.0-production-hardening">
+  <link rel="stylesheet" href="/public/css/storefront.css?v=6.0.0-production-hardening">
+  <link rel="stylesheet" href="/public/css/feature-pack.css?v=1.1.0-production-hardening">
+  <link rel="stylesheet" href="/public/css/accessibility.css?v=1.0.0">
+  <script src="/public/js/app.js?v=6.0.0-production-hardening" defer></script>
+  <% if (seo?.jsonLd) { %><script type="application/ld+json" nonce="<%= cspNonce %>"><%- JSON.stringify(seo.jsonLd).replace(/</g, '\\u003c') %></script><% } %>
 </head>
 <body class="ui-clean <%= currentPath.startsWith('/admin') ? 'is-admin-page' : '' %>">
+  <a class="skip-link" href="#main-content">Lewati ke konten utama</a>
   <% if (!currentPath.startsWith('/admin')) { %>
     <%- include('../partials/header') %>
   <% } %>
   <%- include('../partials/toasts') %>
-  <main class="<%= currentPath.startsWith('/admin') ? 'admin-main' : '' %>"><%- body %></main>
+  <main id="main-content" class="<%= currentPath.startsWith('/admin') ? 'admin-main' : '' %>"><%- body %></main>
   <% if (!currentPath.startsWith('/admin')) { %>
     <%- include('../partials/footer') %>
     <%- include('../partials/ai-chat') %>

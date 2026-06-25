@@ -20,6 +20,6 @@
     <% if (product.shortDescription) { %><p><%= product.shortDescription %></p><% } %>
     <div class="product-card-rating"><span class="review-stars"><% for (let i = 1; i <= 5; i += 1) { %><span class="<%= i <= Math.round(product.ratingAverage || 0) ? 'active' : '' %>">★</span><% } %></span><strong><%= Number(product.ratingAverage || 0).toFixed(1) %></strong><small>(<%= product.ratingCount || 0 %>)</small></div>
     <div class="product-stats"><span><%= product.soldCount || 0 %> terjual</span><span>v<%= product.version %></span></div>
-    <div class="product-card-footer"><span class="stock-text"><%= product.unlimitedStock ? 'Stok tersedia' : (product.stock > 0 ? `${product.stock} stok tersisa` : 'Stok habis') %></span><a class="button button-sm" href="/products/<%= product.slug %>">Lihat detail</a></div>
+    <div class="product-card-footer"><span class="stock-text"><%= product.unlimitedStock ? 'Stok tersedia' : (availableStock(product) > 0 ? `${availableStock(product)} stok tersisa` : 'Stok habis') %></span><a class="button button-sm" href="/products/<%= product.slug %>">Lihat detail</a></div>
   </div>
 </article>
