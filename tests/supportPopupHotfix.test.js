@@ -1,15 +1,12 @@
-const assert = require('assert');
-const fs = require('fs');
-const path = require('path');
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { read } = require('./helpers/projectFiles');
 
-const root = path.resolve(__dirname, '..');
-function read(file) { return fs.readFileSync(path.join(root, file), 'utf8'); }
-
-assert(read('models/StoreSetting.js').includes('Terima kasih kepada support kami'), 'default thanks title missing');
-assert(read('views/partials/support-popup.ejs').includes('THANKS TO SUPPORT'), 'popup should be thanks to support');
-assert(read('views/admin/support-popup.ejs').includes('Popup thanks support'), 'admin page should use thanks support wording');
-assert(read('services/settingService.js').includes('Kunjungi Vercel'), 'Vercel button label should be sponsor visit label');
-assert(read('services/settingService.js').includes('Kunjungi Pakasir'), 'Pakasir button label should be sponsor visit label');
-assert(read('views/layouts/main.ejs').includes('4.3.1-thanks-support-popup'), 'cache version not updated');
-
-console.log('Thanks support popup hotfix checks passed');
+test('popup ucapan dukungan menggunakan konten dan cache versi terbaru', () => {
+  assert.match(read('models/StoreSetting.js'), /Terima kasih kepada support kami/);
+  assert.match(read('views/partials/support-popup.ejs'), /THANKS TO SUPPORT/);
+  assert.match(read('views/admin/support-popup.ejs'), /Popup thanks support/);
+  assert.match(read('services/settingService.js'), /Kunjungi Vercel/);
+  assert.match(read('services/settingService.js'), /Kunjungi Pakasir/);
+  assert.match(read('views/layouts/main.ejs'), /6\.0\.0-production-hardening/);
+});

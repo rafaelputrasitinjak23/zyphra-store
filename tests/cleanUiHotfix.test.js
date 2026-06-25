@@ -1,21 +1,21 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
+const { read, readStyles } = require('./helpers/projectFiles');
 
-const root = path.resolve(__dirname, '..');
-const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
-
-test('layout mengaktifkan clean UI untuk seluruh halaman', () => {
+test('layout mengaktifkan UI bersih dan stylesheet modular', () => {
   const layout = read('views/layouts/main.ejs');
-  assert.match(layout, /class="ui-clean/);
-  assert.match(layout, /3\.0\.0-clean-ui/);
+  assert.match(layout, /<body class="ui-clean/);
+  for (const stylesheet of ['core.css', 'clean-ui.css', 'responsive.css', 'storefront.css', 'accessibility.css']) {
+    assert.match(layout, new RegExp(stylesheet.replace('.', '\\.')));
+  }
+  assert.match(layout, /6\.0\.0-production-hardening/);
 });
 
-test('halaman utama menggunakan hero dan showcase sederhana', () => {
+test('halaman utama memakai hero dan showcase marketplace saat ini', () => {
   const home = read('views/home.ejs');
-  assert.match(home, /clean-hero/);
-  assert.match(home, /clean-showcase/);
+  assert.match(home, /warung-hero/);
+  assert.match(home, /warung-remix-board/);
+  assert.match(home, /warung-results-section/);
 });
 
 test('footer menggunakan tampilan bersih dan ringan', () => {
@@ -24,8 +24,8 @@ test('footer menggunakan tampilan bersih dan ringan', () => {
   assert.match(footer, /clean-footer-grid/);
 });
 
-test('tampilan mobile account dipaksa satu kolom penuh', () => {
-  const css = read('public/css/app.css');
-  assert.match(css, /\.ui-clean \.account-layout\{display:flex!important;flex-direction:column!important/);
-  assert.match(css, /\.ui-clean \.nav\{right:0!important;left:auto!important/);
+test('layout akun dan drawer mobile dipaksa responsif', () => {
+  const css = readStyles();
+  assert.match(css, /account-layout[\s\S]*grid-template-columns:minmax\(0,1fr\)!important/);
+  assert.match(css, /\.nav\{[\s\S]*right:0!important;[\s\S]*left:auto!important/);
 });

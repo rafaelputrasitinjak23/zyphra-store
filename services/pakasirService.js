@@ -1,10 +1,11 @@
 const axios = require('axios');
+const crypto = require('crypto');
 const { env } = require('../config/env');
 const { AppError } = require('../utils/errors');
 const { normalizeAuthoritativeFee } = require('./feeService');
 
 function ensureConfig() {
-  if (!env.pakasir.slug || !env.pakasir.apiKey) throw new AppError('Pakasir belum dikonfigurasi.', 503, 'PAKASIR_NOT_CONFIGURED');
+  if (!env.pakasir.enabled || !env.pakasir.slug || !env.pakasir.apiKey) throw new AppError('Pakasir belum dikonfigurasi.', 503, 'PAKASIR_NOT_CONFIGURED');
 }
 function client() { return axios.create({ baseURL: env.pakasir.baseUrl, timeout: 20000, headers: { 'Content-Type': 'application/json' } }); }
 async function createTransaction({ method, orderId, amount }) {
@@ -54,9 +55,17 @@ async function createReconciledTransaction({ method, orderId, subtotal, threshol
   }
   throw new AppError('Fee Pakasir tidak dapat direkonsiliasi. Periksa konfigurasi fee metode pembayaran.', 502, 'PAKASIR_FEE_MISMATCH');
 }
+function safeEqual(value, expected) {
+  const left = Buffer.from(String(value || ''));
+  const right = Buffer.from(String(expected || ''));
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+}
 function validateWebhookShape(payload, secretHeader) {
-  if (!payload || payload.project !== env.pakasir.slug || !payload.order_id || !Number.isInteger(Number(payload.amount))) return false;
-  if (env.pakasir.webhookSecret && secretHeader !== env.pakasir.webhookSecret) return false;
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return false;
+  if (payload.project !== env.pakasir.slug || !/^[A-Za-z0-9._:-]{3,120}$/.test(String(payload.order_id || ''))) return false;
+  const amount = Number(payload.amount);
+  if (!Number.isSafeInteger(amount) || amount < 0) return false;
+  if (env.pakasir.webhookSecret && !safeEqual(secretHeader, env.pakasir.webhookSecret)) return false;
   return true;
 }
 module.exports = { createTransaction, cancelTransaction, getTransactionDetail, simulatePayment, createReconciledTransaction, validateWebhookShape };

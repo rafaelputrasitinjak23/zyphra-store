@@ -1,17 +1,23 @@
 const Cart = require('../models/Cart');
 const { AppError } = require('../utils/errors');
+const { availableStock, hasAvailableStock } = require('../utils/inventory');
 const { getProductPriceInfo } = require('./productPricingService');
 
 function priceCartRow(product, requestedQuantity = 1, now = new Date()) {
   const quantity = product.allowMultipleQuantity ? Math.max(1, Math.min(99, Number(requestedQuantity || 1))) : 1;
-  if (!product.unlimitedStock && product.stock < quantity) throw new AppError(`Stok ${product.name} tidak mencukupi.`, 400, 'INSUFFICIENT_STOCK');
+  if (!hasAvailableStock(product, quantity)) throw new AppError(`Stok ${product.name} tidak mencukupi.`, 400, 'INSUFFICIENT_STOCK');
   const priceInfo = getProductPriceInfo(product, now);
   const unitPrice = priceInfo.effectivePrice;
-  return { product, quantity, unitPrice, lineTotal: unitPrice * quantity, priceInfo };
+  return { product, quantity, unitPrice, lineTotal: unitPrice * quantity, priceInfo, availableStock: availableStock(product) };
 }
 
 async function getPricedCart(userId, now = new Date()) {
-  const cart = await Cart.findOne({ user: userId }).populate({ path: 'items.product', match: { active: true }, populate: { path: 'category' } });
+  const cart = await Cart.findOne({ user: userId }).populate({
+    path: 'items.product',
+    match: { active: true },
+    select: '+reservedStock',
+    populate: { path: 'category' }
+  });
   if (!cart) return { cart: null, items: [], subtotal: 0 };
   const items = [];
   for (const row of cart.items) {

@@ -1,15 +1,14 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
+const { read, readStyles } = require('./helpers/projectFiles');
 
-test('thumbnail kartu produk memiliki tinggi tetap sehingga nama dan harga terlihat', () => {
-  const css = fs.readFileSync(path.join(__dirname, '../public/css/app.css'), 'utf8');
+test('thumbnail kartu produk memiliki tinggi stabil dan gambar contain', () => {
+  const css = readStyles();
   assert.match(css, /\.product-image\s*\{[^}]*height:230px[^}]*flex:0 0 230px/s);
   assert.match(css, /\.product-image img\s*\{[^}]*object-fit:contain/s);
 });
 
-test('stylesheet menggunakan cache busting versi clean UI', () => {
-  const layout = fs.readFileSync(path.join(__dirname, '../views/layouts/main.ejs'), 'utf8');
-  assert.match(layout, /app\.css\?v=3\.0\.0-clean-ui/);
+test('stylesheet menggunakan cache busting produksi', () => {
+  const layout = read('views/layouts/main.ejs');
+  assert.match(layout, /app\.css\?v=6\.0\.0-production-hardening/);
 });

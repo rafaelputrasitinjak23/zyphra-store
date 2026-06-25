@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Payment = require('../models/Payment');
-const Product = require('../models/Product');
 const Cart = require('../models/Cart');
 const { AppError } = require('../utils/errors');
 const emailService = require('./emailService');
 const walletService = require('./walletService');
-const { commitDiscountUsage } = require('./discountService');
+const stockReservationService = require('./stockReservationService');
+const { commitDiscountUsage, releaseDiscountUsage } = require('./discountService');
 
 function paymentUpsert(transaction, order) {
   const provider = transaction.provider === 'internal' ? 'internal' : 'pakasir';
@@ -15,7 +15,7 @@ function paymentUpsert(transaction, order) {
     method: order.paymentMethod,
     amount: Number(transaction.amount ?? order.pakasirAmount ?? 0),
     fee: Number(transaction.fee ?? order.gatewayFee ?? 0),
-    totalPayment: Number(transaction.total_payment ?? Math.max(0, order.total - order.walletAmount) ?? 0),
+    totalPayment: Number(transaction.total_payment ?? Math.max(0, order.total - order.walletAmount)),
     paymentNumber: order.paymentNumber || undefined,
     expiresAt: order.expiresAt || undefined
   };
@@ -38,45 +38,39 @@ async function markPaid(orderId, transaction) {
         paidOrder = order;
         return;
       }
+      if (['failed', 'expired', 'cancelled', 'refunded'].includes(order.paymentStatus)) {
+        throw new AppError('Pesanan yang telah difinalkan tidak dapat dipenuhi kembali.', 409, 'ORDER_FINALIZED');
+      }
 
-      if (Number(transaction.amount) !== order.pakasirAmount || transaction.order_id !== order.orderNumber) {
+      if (Number(transaction.amount) !== Number(order.pakasirAmount) || String(transaction.order_id) !== order.orderNumber) {
         throw new AppError('Nominal atau ID transaksi tidak cocok.', 400, 'PAYMENT_MISMATCH');
       }
 
-      for (const item of order.items) {
-        const product = await Product.findById(item.product).session(session);
-        if (!product || !product.active) throw new AppError(`Produk ${item.name} tidak tersedia.`, 409, 'PRODUCT_UNAVAILABLE');
-        if (!product.unlimitedStock) {
-          const updated = await Product.findOneAndUpdate(
-            { _id: product._id, stock: { $gte: item.quantity } },
-            { $inc: { stock: -item.quantity, soldCount: item.quantity } },
-            { new: true, session }
-          );
-          if (!updated) throw new AppError(`Stok ${item.name} habis saat pesanan diproses.`, 409, 'STOCK_COMMIT_FAILED');
-        } else {
-          await Product.updateOne({ _id: product._id }, { $inc: { soldCount: item.quantity } }, { session });
-        }
-      }
-
+      await stockReservationService.commitOrderStock(order, session);
       if (order.walletAmount > 0) await walletService.commitReservedForOrder(order, session);
 
       order.paymentStatus = 'paid';
       order.orderStatus = 'fulfilled';
       order.paidAt = transaction.completed_at ? new Date(transaction.completed_at) : new Date();
-      order.stockCommitted = true;
       order.accessGranted = true;
       order.lastWebhookData = transaction;
+      order.compensation.required = false;
+      order.compensation.lastError = undefined;
       await order.save({ session });
 
+      await commitDiscountUsage(order._id, session);
       await Payment.updateOne({ order: order._id }, paymentUpsert(transaction, order), { session, upsert: true });
       await Cart.updateOne(
         { user: order.user },
         { $pull: { items: { product: { $in: order.items.map((item) => item.product) } } } },
         { session }
       );
-      await commitDiscountUsage(order._id, session);
-      paidOrder = order;
+      paidOrder = await Order.findById(order._id).session(session);
     });
+  } catch (error) {
+    const current = await Order.findById(orderId);
+    if (current?.paymentStatus === 'paid') paidOrder = current;
+    else throw error;
   } finally {
     await session.endSession();
   }
@@ -119,7 +113,6 @@ async function fulfillFreeOrder(orderId) {
   if (!((order.paymentChannel === 'free' || order.paymentMethod === 'free') && order.total === 0 && order.subtotal === 0 && order.pakasirAmount === 0)) {
     throw new AppError('Pesanan ini bukan transaksi gratis.', 400, 'ORDER_NOT_FREE');
   }
-  order.paymentChannel = 'free';
   if (['cancelled', 'refunded'].includes(order.paymentStatus)) throw new AppError('Pesanan yang dibatalkan tidak dapat dikonfirmasi ulang.', 409, 'FREE_ORDER_CANNOT_REOPEN');
   return markPaid(order._id, {
     provider: 'internal', transaction_id: `FREE-${order.orderNumber}`, order_id: order.orderNumber,
@@ -157,14 +150,19 @@ async function updateNonPaidStatus(order, status, transaction) {
       current.paymentStatus = normalized;
       current.orderStatus = 'cancelled';
       current.lastWebhookData = transaction;
-      if (current.walletAmount > 0) await walletService.releaseReservedForOrder(current, `Pesanan ${normalized}.`, session);
+      current.compensation.required = false;
       await current.save({ session });
+
+      if (current.walletAmount > 0) await walletService.releaseReservedForOrder(current, `Pesanan ${normalized}.`, session);
+      await stockReservationService.releaseOrderStock(current, `Pesanan ${normalized}.`, session);
+      await releaseDiscountUsage(current, session);
+
       await Payment.updateOne(
         { order: current._id },
-        { $set: { status, lastCheckResponse: transaction, lastCheckedAt: new Date() } },
+        { $set: { status: normalized, lastCheckResponse: transaction, lastCheckedAt: new Date() } },
         { session }
       );
-      updatedOrder = current;
+      updatedOrder = await Order.findById(current._id).session(session);
     });
   } finally {
     await session.endSession();
@@ -181,7 +179,7 @@ async function updateNonPaidStatus(order, status, transaction) {
       'Pesanan belum selesai',
       {
         name: claimed.user.name,
-        message: `Pesanan ${claimed.orderNumber} tidak dapat diselesaikan. Saldo yang sempat digunakan telah dikembalikan secara otomatis.`,
+        message: `Pesanan ${claimed.orderNumber} tidak dapat diselesaikan. Saldo dan stok yang sempat direservasi telah dipulihkan secara otomatis.`,
         action: { label: 'Lihat pesanan', url: `${require('../config/env').env.appUrl}/orders/${claimed.orderNumber}` }
       },
       `payment_${normalized}`
@@ -190,4 +188,4 @@ async function updateNonPaidStatus(order, status, transaction) {
   return updatedOrder;
 }
 
-module.exports = { markPaid, fulfillFreeOrder, fulfillWalletOrder, updateNonPaidStatus };
+module.exports = { markPaid, fulfillFreeOrder, fulfillWalletOrder, updateNonPaidStatus, paymentUpsert };

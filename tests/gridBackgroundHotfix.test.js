@@ -1,14 +1,12 @@
-const assert = require('assert');
-const fs = require('fs');
-const path = require('path');
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { read, readStyles } = require('./helpers/projectFiles');
 
-const root = path.resolve(__dirname, '..');
-const css = fs.readFileSync(path.join(root, 'public/css/app.css'), 'utf8');
-const main = fs.readFileSync(path.join(root, 'views/layouts/main.ejs'), 'utf8');
-
-assert(css.includes('--grid-bg'), 'grid background variable missing');
-assert(css.includes('linear-gradient(var(--grid-line)'), 'grid line CSS missing');
-assert(css.includes('background-attachment:fixed'), 'fixed grid background missing');
-assert(main.includes('4.2.0-grid-bg'), 'CSS cache version not bumped');
-
-console.log('Grid background hotfix checks passed');
+test('tema final tidak meninggalkan grid background pada halaman', () => {
+  const css = readStyles();
+  const main = read('views/layouts/main.ejs');
+  assert.match(css, /--grid-bg:#ffffff!important/);
+  assert.match(css, /background-image:none!important/);
+  assert.match(css, /background-attachment:scroll!important/);
+  assert.match(main, /6\.0\.0-production-hardening/);
+});
