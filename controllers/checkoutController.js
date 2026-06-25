@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const QRCode = require('qrcode');
 const Order = require('../models/Order');
 const Payment = require('../models/Payment');
+const Product = require('../models/Product');
 const { getPricedCart } = require('../services/cartService');
 const { getStoreSettings } = require('../services/settingService');
 const { calculateFeeSplit } = require('../services/feeService');
@@ -128,6 +129,18 @@ async function show(req, res) {
 
   if (!isFree && !paymentOptions.length) throw new AppError('Belum ada pilihan pembayaran yang tersedia.', 503, 'NO_PAYMENT_METHOD');
 
+  const cartProductIds = items.map((item) => item.product._id);
+  const categoryIds = [...new Set(items.map((item) => String(item.product.category?._id || item.product.category || '')).filter(Boolean))];
+  const tags = [...new Set(items.flatMap((item) => item.product.tags || []).filter(Boolean))];
+  const relevance = [];
+  if (categoryIds.length) relevance.push({ category: { $in: categoryIds } });
+  if (tags.length) relevance.push({ tags: { $in: tags } });
+  const relatedProducts = await Product.find({
+    active: true,
+    _id: { $nin: cartProductIds },
+    ...(relevance.length ? { $or: relevance } : {})
+  }).select('+reservedStock').populate('category').sort({ featured: -1, soldCount: -1, ratingAverage: -1 }).limit(5);
+
   const nonce = crypto.randomBytes(24).toString('hex');
   req.session.checkoutNonce = nonce;
   res.render('checkout/index', {
@@ -140,6 +153,7 @@ async function show(req, res) {
     walletEnabled: settings.wallet?.enabled !== false && wallet.status === 'active',
     paymentOptions,
     nonce,
+    relatedProducts,
     appliedDiscount: discountResult ? {
       code: discountResult.discount.code,
       name: discountResult.discount.name,

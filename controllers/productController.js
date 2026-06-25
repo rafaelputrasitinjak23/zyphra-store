@@ -132,7 +132,7 @@ async function detail(req, res) {
   const reviewFilter = { product: product._id, status: 'published' };
 
   const [related, recentlyViewed, reviews, reviewTotal, ratingRows, currentUserReview, verifiedOrder] = await Promise.all([
-    Product.find(relatedQuery).select('+reservedStock').populate('category').sort({ soldCount: -1, featured: -1 }).limit(4),
+    Product.find(relatedQuery).select('+reservedStock').populate('category').sort({ soldCount: -1, featured: -1 }).limit(5),
     Product.find({ _id: { $in: recentIds.slice(0, 4) }, active: true }).select('+reservedStock').populate('category').limit(4),
     Review.find(reviewFilter).populate('user', 'name avatar').sort({ createdAt: -1 }).skip((reviewPage - 1) * reviewLimit).limit(reviewLimit),
     Review.countDocuments(reviewFilter),
