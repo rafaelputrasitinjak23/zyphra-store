@@ -1,2 +1,3 @@
-const app = require('../app');
-module.exports = app;
+const { assertRuntimeConfig } = require('../config/env');
+assertRuntimeConfig();
+module.exports = require('../app');

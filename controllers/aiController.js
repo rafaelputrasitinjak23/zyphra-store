@@ -5,6 +5,7 @@ const { askAi, parseJsonFromText, fallbackProductCopy, sanitizeProductCopy } = r
 const { AppError } = require('../utils/errors');
 const { rupiah, formatDate } = require('../utils/helpers');
 const { getProductPriceInfo } = require('../services/productPricingService');
+const { availableStock } = require('../utils/inventory');
 
 function tokens(value) {
   return String(value || '').toLowerCase().split(/[^a-z0-9]+/i).filter((word) => word.length > 2).slice(0, 80);
@@ -25,7 +26,7 @@ function productContext(product) {
     `Kategori: ${product.category?.name || 'Digital'}`,
     `Harga: ${rupiah(effectivePrice)}${pricing.compareAtPrice ? ` (harga sebelumnya ${rupiah(pricing.compareAtPrice)})` : ''}`,
     `Flash sale: ${pricing.flashActive ? `aktif sampai ${formatDate(pricing.flashEndsAt)}` : pricing.flashUpcoming ? `akan mulai ${formatDate(pricing.flashStartsAt)}` : 'tidak aktif'}`,
-    `Stok: ${product.unlimitedStock ? 'tidak terbatas' : product.stock}`,
+    `Stok tersedia: ${product.unlimitedStock ? 'tidak terbatas' : availableStock(product)}`,
     `Versi: ${product.version}`,
     `Deskripsi singkat: ${product.shortDescription}`,
     `Tag: ${(product.tags || []).join(', ') || '-'}`,
@@ -36,7 +37,7 @@ function productContext(product) {
 
 async function buildWebsiteContext(message, currentPath) {
   const [products, categories, settings] = await Promise.all([
-    Product.find({ active: true }).select('name slug shortDescription price promoPrice flashSale category thumbnail unlimitedStock stock version tags featured downloadLimit soldCount updatedAt').populate('category', 'name slug').sort({ featured: -1, soldCount: -1, createdAt: -1 }).limit(200).lean(),
+    Product.find({ active: true }).select('name slug shortDescription price promoPrice flashSale category thumbnail unlimitedStock stock +reservedStock version tags featured downloadLimit soldCount updatedAt').populate('category', 'name slug').sort({ featured: -1, soldCount: -1, createdAt: -1 }).limit(200).lean(),
     Category.find({ active: true }).select('name slug description').sort({ name: 1 }).lean(),
     getStoreSettings()
   ]);

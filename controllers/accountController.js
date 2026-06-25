@@ -4,6 +4,7 @@ const User = require('../models/User');
 const { AppError } = require('../utils/errors');
 const { normalizePhone, normalizeBio, validateAvatarData } = require('../services/profileService');
 const walletService = require('../services/walletService');
+const objectStorageService = require('../services/objectStorageService');
 
 async function dashboard(req, res) {
   const [aggregateResult, latestOrders, wallet] = await Promise.all([
@@ -53,23 +54,48 @@ async function updateProfile(req, res) {
   const name = String(req.body.name || '').trim();
   if (name.length < 2 || name.length > 80) throw new AppError('Nama harus 2-80 karakter.', 400);
 
-  req.user.name = name;
-  req.user.phone = normalizePhone(req.body.phone);
-  req.user.bio = normalizeBio(req.body.bio);
-  req.user.notificationPreferences = {
+  const user = await User.findById(req.user._id).select('+avatarStorageKey');
+  if (!user) throw new AppError('Pengguna tidak ditemukan.', 404, 'USER_NOT_FOUND');
+  const previousAvatarKey = user.avatarStorageKey;
+  let uploadedAvatarKey = '';
+
+  user.name = name;
+  user.phone = normalizePhone(req.body.phone);
+  user.bio = normalizeBio(req.body.bio);
+  user.notificationPreferences = {
     orderUpdates: req.body.orderUpdates === 'on',
     productNews: req.body.productNews === 'on'
   };
 
-  if (req.body.removeAvatar === '1') {
-    req.user.avatar = undefined;
-    req.user.avatarUpdatedAt = new Date();
-  } else if (req.body.avatarData) {
-    req.user.avatar = validateAvatarData(req.body.avatarData);
-    req.user.avatarUpdatedAt = new Date();
+  try {
+    if (req.body.removeAvatar === '1') {
+      user.avatar = undefined;
+      user.avatarStorageKey = undefined;
+      user.avatarUpdatedAt = new Date();
+    } else if (req.body.avatarData) {
+      const validated = validateAvatarData(req.body.avatarData);
+      const stored = await objectStorageService.uploadAvatar({ userId: user._id, dataUrl: validated });
+      if (stored) {
+        uploadedAvatarKey = stored.key;
+        user.avatar = stored.url;
+        user.avatarStorageKey = stored.key;
+      } else {
+        user.avatar = validated;
+        user.avatarStorageKey = undefined;
+      }
+      user.avatarUpdatedAt = new Date();
+    }
+
+    await user.save();
+  } catch (error) {
+    if (uploadedAvatarKey) await objectStorageService.deleteObject(uploadedAvatarKey);
+    throw error;
   }
 
-  await req.user.save();
+  if (previousAvatarKey && previousAvatarKey !== user.avatarStorageKey) {
+    await objectStorageService.deleteObject(previousAvatarKey);
+  }
+
   req.flash('success', 'Profil dan preferensi berhasil diperbarui.');
   res.redirect('/account/profile');
 }

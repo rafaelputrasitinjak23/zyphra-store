@@ -1,12 +1,15 @@
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const QRCode = require('qrcode');
 const Order = require('../models/Order');
 const Payment = require('../models/Payment');
 const { getPricedCart } = require('../services/cartService');
 const { getStoreSettings } = require('../services/settingService');
 const { calculateFeeSplit } = require('../services/feeService');
-const { validateDiscountForCart, normalizeCode } = require('../services/discountService');
+const { validateDiscountForCart, normalizeCode, reserveDiscountUsage } = require('../services/discountService');
 const walletService = require('../services/walletService');
+const stockReservationService = require('../services/stockReservationService');
+const logger = require('../utils/logger');
 const pakasir = require('../services/pakasirService');
 const orderService = require('../services/orderService');
 const emailService = require('../services/emailService');
@@ -232,7 +235,6 @@ async function create(req, res) {
         if (walletAmount <= 0 || walletAmount >= subtotal) throw new AppError('Pilihan kombinasi saldo tidak tersedia.', 400, 'HYBRID_NOT_AVAILABLE');
         paymentChannel = 'hybrid';
       } else {
-        walletAmount = 0;
         paymentChannel = 'gateway';
       }
 
@@ -255,6 +257,7 @@ async function create(req, res) {
 
   const orderNumber = randomId('ORD-');
   const invoiceNumber = randomId('INV-');
+  const provisionalExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
   const order = await Order.create({
     orderNumber,
     invoiceNumber,
@@ -276,12 +279,27 @@ async function create(req, res) {
     ...(discountResult?.snapshot || {}),
     ...breakdown,
     paymentMethod,
-    paymentChannel
+    paymentChannel,
+    paymentStatus: 'initializing',
+    expiresAt: provisionalExpiry
   });
 
   delete req.session.checkoutDiscountCode;
+  let gatewayCreated = false;
+  let gatewayCancelAmount = breakdown.pakasirAmount;
+  let gatewaySnapshot = null;
 
   try {
+    const reservationSession = await mongoose.startSession();
+    try {
+      await reservationSession.withTransaction(async () => {
+        await stockReservationService.reserveOrderStock(order._id, reservationSession);
+        await reserveDiscountUsage(order._id, reservationSession);
+      });
+    } finally {
+      await reservationSession.endSession();
+    }
+
     if (walletAmount > 0) {
       await walletService.reserveForOrder({ userId: req.user._id, orderId: order._id, orderNumber, amount: walletAmount });
     }
@@ -305,7 +323,21 @@ async function create(req, res) {
       threshold: settings.feeSplitThreshold,
       initialAmount: breakdown.pakasirAmount
     });
+    gatewayCreated = true;
     const payment = result.payment;
+    gatewayCancelAmount = Number(payment.amount || result.split.pakasirAmount);
+    gatewaySnapshot = {
+      pakasirAmount: gatewayCancelAmount,
+      pakasirTransactionId: payment.transaction_id || payment.order_id,
+      paymentNumber: payment.payment_number,
+      expiresAt: payment.expired_at ? new Date(payment.expired_at) : provisionalExpiry,
+      gatewayFee: result.split.gatewayFee,
+      userFee: result.split.userFee,
+      merchantFee: result.split.merchantFee,
+      merchantNet: walletAmount + result.split.merchantNet,
+      total: walletAmount + result.split.total
+    };
+
     Object.assign(order, {
       gatewayFee: result.split.gatewayFee,
       userFee: result.split.userFee,
@@ -315,25 +347,40 @@ async function create(req, res) {
       pakasirAmount: result.split.pakasirAmount,
       pakasirTransactionId: payment.transaction_id || payment.order_id,
       paymentNumber: payment.payment_number,
-      expiresAt: payment.expired_at ? new Date(payment.expired_at) : new Date(Date.now() + 24 * 60 * 60 * 1000)
+      expiresAt: payment.expired_at ? new Date(payment.expired_at) : provisionalExpiry,
+      paymentStatus: 'pending'
     });
     if (rule.method === 'qris' && payment.payment_number) {
       order.paymentQrDataUrl = await QRCode.toDataURL(payment.payment_number, { margin: 1, width: 320 });
     }
-    await order.save();
-    await Payment.create({
-      order: order._id,
-      providerTransactionId: order.pakasirTransactionId,
-      method: rule.method,
-      amount: payment.amount,
-      fee: payment.fee,
-      totalPayment: payment.total_payment,
-      status: payment.status || 'pending',
-      paymentNumber: payment.payment_number,
-      expiresAt: order.expiresAt,
-      createRequest: result.safeRequest,
-      createResponse: result.raw
-    });
+
+    const persistenceSession = await mongoose.startSession();
+    try {
+      await persistenceSession.withTransaction(async () => {
+        await order.save({ session: persistenceSession });
+        await Payment.updateOne(
+          { order: order._id },
+          {
+            $set: {
+              providerTransactionId: order.pakasirTransactionId,
+              method: rule.method,
+              amount: payment.amount,
+              fee: payment.fee,
+              totalPayment: payment.total_payment,
+              status: payment.status || 'pending',
+              paymentNumber: payment.payment_number,
+              expiresAt: order.expiresAt,
+              createRequest: result.safeRequest,
+              createResponse: result.raw
+            },
+            $setOnInsert: { provider: 'pakasir' }
+          },
+          { upsert: true, session: persistenceSession }
+        );
+      });
+    } finally {
+      await persistenceSession.endSession();
+    }
 
     if (env.smtp.adminEmail) {
       await emailService.sendSimple(env.smtp.adminEmail, 'Pesanan baru', {
@@ -344,8 +391,46 @@ async function create(req, res) {
     }
     return res.redirect(`/payments/${orderNumber}`);
   } catch (error) {
-    if (walletAmount > 0) await walletService.releaseReservedForOrder(order, 'Checkout tidak dapat diselesaikan.').catch(() => {});
-    await Order.updateOne({ _id: order._id, paymentStatus: { $ne: 'paid' } }, { $set: { paymentStatus: 'failed', orderStatus: 'cancelled' } }).catch(() => {});
+    let compensationSucceeded = !gatewayCreated;
+    if (gatewayCreated) {
+      try {
+        await pakasir.cancelTransaction({ orderId: orderNumber, amount: gatewayCancelAmount });
+        compensationSucceeded = true;
+      } catch (compensationError) {
+        logger.error('checkout.compensation_failed', {
+          requestId: req.id,
+          orderNumber,
+          error: compensationError
+        });
+        await Order.updateOne(
+          { _id: order._id, paymentStatus: { $ne: 'paid' } },
+          {
+            $set: {
+              ...(gatewaySnapshot || {}),
+              paymentStatus: 'compensation_required',
+              orderStatus: 'awaiting_payment',
+              'compensation.required': true,
+              'compensation.lastError': compensationError.message,
+              'compensation.lastAttemptAt': new Date()
+            },
+            $inc: { 'compensation.attempts': 1 }
+          }
+        ).catch(() => {});
+      }
+    }
+
+    if (compensationSucceeded) {
+      const current = await Order.findById(order._id).catch(() => null);
+      if (current && current.paymentStatus !== 'paid') {
+        await orderService.updateNonPaidStatus(current, 'failed', {
+          provider: gatewayCreated ? 'pakasir' : 'internal',
+          order_id: orderNumber,
+          amount: gatewayCancelAmount,
+          status: 'failed',
+          reason: error.message
+        }).catch((cleanupError) => logger.error('checkout.cleanup_failed', { requestId: req.id, orderNumber, error: cleanupError }));
+      }
+    }
     throw error;
   }
 }

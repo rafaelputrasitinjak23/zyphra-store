@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const User = require('../models/User');
@@ -11,6 +12,8 @@ const Wallet = require('../models/Wallet');
 const WalletTransaction = require('../models/WalletTransaction');
 const WalletDeposit = require('../models/WalletDeposit');
 const Review = require('../models/Review');
+const AuditLog = require('../models/AuditLog');
+const SystemState = require('../models/SystemState');
 const reviewService = require('../services/reviewService');
 const { getStoreSettings } = require('../services/settingService');
 const { slugify } = require('../utils/helpers');
@@ -21,6 +24,8 @@ const orderService = require('../services/orderService');
 const emailService = require('../services/emailService');
 const cancellationService = require('../services/orderCancellationService');
 const walletService = require('../services/walletService');
+const auditService = require('../services/auditService');
+const objectStorageService = require('../services/objectStorageService');
 
 function number(value, fallback = 0) { const parsed = Number(value); return Number.isFinite(parsed) ? Math.round(parsed) : fallback; }
 function bool(value) { return value === 'on' || value === 'true' || value === true; }
@@ -29,11 +34,15 @@ function array(value) { return Array.isArray(value) ? value : value ? [value] : 
 function productPayload(body) {
   const gallery = String(body.gallery || '').split(/\r?\n|,/).map((v) => v.trim()).filter(Boolean);
   const tags = String(body.tags || '').split(',').map((v) => v.trim()).filter(Boolean);
+  const digitalStorageKey = String(body.digitalStorageKey || '').trim();
+  if (digitalStorageKey && !objectStorageService.enabled()) throw new AppError('Aktifkan OBJECT_STORAGE_ENABLED sebelum memakai object key.', 400, 'OBJECT_STORAGE_DISABLED');
   return {
     name: String(body.name || '').trim(), slug: slugify(body.slug || body.name), shortDescription: String(body.shortDescription || '').trim(), description: String(body.description || '').trim(),
     price: number(body.price), promoPrice: body.promoPrice === '' ? null : number(body.promoPrice), category: body.category, thumbnail: String(body.thumbnail || '').trim(), gallery,
     unlimitedStock: bool(body.unlimitedStock), stock: number(body.stock), allowMultipleQuantity: bool(body.allowMultipleQuantity), version: String(body.version || '1.0.0').trim(),
-    changelog: String(body.changelog || '').trim(), tags, active: bool(body.active), featured: bool(body.featured), digitalFileUrl: assertSafeExternalUrl(String(body.digitalFileUrl || '').trim()),
+    changelog: String(body.changelog || '').trim(), tags, active: bool(body.active), featured: bool(body.featured),
+    digitalFileUrl: String(body.digitalFileUrl || '').trim() ? assertSafeExternalUrl(String(body.digitalFileUrl).trim()) : '',
+    digitalStorageKey: digitalStorageKey ? objectStorageService.productObjectKey(digitalStorageKey) : '',
     fileName: String(body.fileName || '').trim(), instructions: String(body.instructions || '').trim(), downloadLimit: Math.max(1, number(body.downloadLimit, 5)),
     flashSale: {
       enabled: bool(body.flashSaleEnabled),
@@ -93,7 +102,8 @@ async function newDiscount(req, res) {
   res.render('admin/discounts/form', { title: 'Tambah voucher/kode promo', discount: null, products: await Product.find({ active: true }).sort({ name: 1 }) });
 }
 async function createDiscount(req, res) {
-  await DiscountCode.create(discountPayload(req.body));
+  const discount = await DiscountCode.create(discountPayload(req.body));
+  await auditService.record({ req, action: 'discount.create', entityType: 'DiscountCode', entityId: discount._id, after: discount });
   req.flash('success', 'Voucher atau kode promo berhasil dibuat.');
   res.redirect('/admin/discounts');
 }
@@ -105,16 +115,20 @@ async function editDiscount(req, res) {
 async function updateDiscount(req, res) {
   const discount = await DiscountCode.findById(req.params.id);
   if (!discount) throw new AppError('Voucher atau kode promo tidak ditemukan.', 404);
+  const before = discount.toObject();
   Object.assign(discount, discountPayload(req.body));
   await discount.save();
+  await auditService.record({ req, action: 'discount.update', entityType: 'DiscountCode', entityId: discount._id, before, after: discount });
   req.flash('success', 'Voucher atau kode promo diperbarui.');
   res.redirect('/admin/discounts');
 }
 async function toggleDiscount(req, res) {
   const discount = await DiscountCode.findById(req.params.id);
   if (!discount) throw new AppError('Voucher atau kode promo tidak ditemukan.', 404);
+  const before = discount.toObject();
   discount.active = !discount.active;
   await discount.save();
+  await auditService.record({ req, action: 'discount.toggle', entityType: 'DiscountCode', entityId: discount._id, before, after: discount });
   req.flash('success', 'Status voucher atau kode promo diperbarui.');
   res.redirect('/admin/discounts');
 }
@@ -128,17 +142,87 @@ async function dashboard(req, res) {
   ]);
   res.render('admin/dashboard', { title: 'Dashboard admin', stats: { users, products, orders, ...(revenue[0] || { gross: 0, userFees: 0, merchantFees: 0, net: 0, count: 0 }) }, recent, chart });
 }
-async function products(req, res) { res.render('admin/products/list', { title: 'Kelola produk', products: await Product.find().populate('category').sort({ createdAt: -1 }) }); }
+async function products(req, res) { res.render('admin/products/list', { title: 'Kelola produk', products: await Product.find().select('+reservedStock').populate('category').sort({ createdAt: -1 }) }); }
 async function newProduct(req, res) { res.render('admin/products/form', { title: 'Tambah produk', product: null, categories: await Category.find().sort({ name: 1 }) }); }
-async function createProduct(req, res) { const payload = productPayload(req.body); if (!payload.name || !payload.slug || !payload.digitalFileUrl || !payload.category || payload.price < 0) throw new AppError('Data produk wajib belum lengkap.', 400); validateFlashSale(payload); await Product.create(payload); req.flash('success', 'Produk berhasil ditambahkan.'); res.redirect('/admin/products'); }
-async function editProduct(req, res) { const product = await Product.findById(req.params.id).select('+digitalFileUrl'); if (!product) throw new AppError('Produk tidak ditemukan.', 404); res.render('admin/products/form', { title: 'Edit produk', product, categories: await Category.find().sort({ name: 1 }) }); }
-async function updateProduct(req, res) { const product = await Product.findById(req.params.id).select('+digitalFileUrl'); if (!product) throw new AppError('Produk tidak ditemukan.', 404); const payload = productPayload(req.body); validateFlashSale(payload); Object.assign(product, payload); await product.save(); req.flash('success', 'Produk diperbarui.'); res.redirect('/admin/products'); }
-async function toggleProduct(req, res) { const product = await Product.findById(req.params.id); if (!product) throw new AppError('Produk tidak ditemukan.', 404); product.active = !product.active; await product.save(); req.flash('success', 'Status produk diperbarui.'); res.redirect('/admin/products'); }
+async function createProduct(req, res) {
+  const payload = productPayload(req.body);
+  if (!payload.name || !payload.slug || (!payload.digitalFileUrl && !payload.digitalStorageKey) || !payload.category || payload.price < 0) throw new AppError('Data produk wajib belum lengkap.', 400);
+  validateFlashSale(payload);
+  const product = await Product.create(payload);
+  await auditService.record({ req, action: 'product.create', entityType: 'Product', entityId: product._id, after: product });
+  req.flash('success', 'Produk berhasil ditambahkan.');
+  res.redirect('/admin/products');
+}
+async function editProduct(req, res) { const product = await Product.findById(req.params.id).select('+digitalFileUrl +digitalStorageKey +reservedStock'); if (!product) throw new AppError('Produk tidak ditemukan.', 404); res.render('admin/products/form', { title: 'Edit produk', product, categories: await Category.find().sort({ name: 1 }) }); }
+async function updateProduct(req, res) {
+  const product = await Product.findById(req.params.id).select('+digitalFileUrl +digitalStorageKey +reservedStock');
+  if (!product) throw new AppError('Produk tidak ditemukan.', 404);
+  const before = product.toObject();
+  const payload = productPayload(req.body);
+  validateFlashSale(payload);
+  if (payload.stock < Number(product.reservedStock || 0)) {
+    throw new AppError(`Stok tidak boleh lebih kecil dari ${product.reservedStock} unit yang sedang direservasi.`, 409, 'STOCK_BELOW_RESERVED');
+  }
+  Object.assign(product, payload);
+  await product.save();
+  await auditService.record({ req, action: 'product.update', entityType: 'Product', entityId: product._id, before, after: product });
+  req.flash('success', 'Produk diperbarui.');
+  res.redirect('/admin/products');
+}
+async function toggleProduct(req, res) {
+  const product = await Product.findById(req.params.id);
+  if (!product) throw new AppError('Produk tidak ditemukan.', 404);
+  const before = product.toObject();
+  product.active = !product.active;
+  await product.save();
+  await auditService.record({ req, action: 'product.toggle', entityType: 'Product', entityId: product._id, before, after: product });
+  req.flash('success', 'Status produk diperbarui.');
+  res.redirect('/admin/products');
+}
 async function categories(req, res) { res.render('admin/categories', { title: 'Kategori', categories: await Category.find().sort({ name: 1 }) }); }
-async function createCategory(req, res) { const name = String(req.body.name || '').trim(); if (!name) throw new AppError('Nama kategori wajib diisi.', 400); await Category.create({ name, slug: slugify(req.body.slug || name), description: String(req.body.description || ''), active: true }); req.flash('success', 'Kategori ditambahkan.'); res.redirect('/admin/categories'); }
-async function updateCategory(req, res) { const category = await Category.findById(req.params.id); if (!category) throw new AppError('Kategori tidak ditemukan.', 404); category.name = String(req.body.name || category.name).trim(); category.slug = slugify(req.body.slug || category.name); category.description = String(req.body.description || ''); category.active = bool(req.body.active); await category.save(); req.flash('success', 'Kategori diperbarui.'); res.redirect('/admin/categories'); }
+async function createCategory(req, res) { const name = String(req.body.name || '').trim(); if (!name) throw new AppError('Nama kategori wajib diisi.', 400); const category = await Category.create({ name, slug: slugify(req.body.slug || name), description: String(req.body.description || ''), active: true }); await auditService.record({ req, action: 'category.create', entityType: 'Category', entityId: category._id, after: category }); req.flash('success', 'Kategori ditambahkan.'); res.redirect('/admin/categories'); }
+async function updateCategory(req, res) { const category = await Category.findById(req.params.id); if (!category) throw new AppError('Kategori tidak ditemukan.', 404); const before = category.toObject(); category.name = String(req.body.name || category.name).trim(); category.slug = slugify(req.body.slug || category.name); category.description = String(req.body.description || ''); category.active = bool(req.body.active); await category.save(); await auditService.record({ req, action: 'category.update', entityType: 'Category', entityId: category._id, before, after: category }); req.flash('success', 'Kategori diperbarui.'); res.redirect('/admin/categories'); }
 async function users(req, res) { res.render('admin/users', { title: 'Pengguna', users: await User.find().sort({ createdAt: -1 }).limit(300) }); }
-async function updateUser(req, res) { const user = await User.findById(req.params.id); if (!user) throw new AppError('Pengguna tidak ditemukan.', 404); if (String(user._id) === String(req.user._id) && req.body.status === 'blocked') throw new AppError('Admin tidak dapat memblokir dirinya sendiri.', 400); user.role = ['user', 'admin'].includes(req.body.role) ? req.body.role : user.role; user.status = ['active', 'blocked', 'pending'].includes(req.body.status) ? req.body.status : user.status; user.sessionVersion += 1; await user.save(); req.flash('success', 'Pengguna diperbarui.'); res.redirect('/admin/users'); }
+async function updateUser(req, res) {
+  const targetRole = ['user', 'admin'].includes(req.body.role) ? req.body.role : null;
+  const targetStatus = ['active', 'blocked', 'pending'].includes(req.body.status) ? req.body.status : null;
+  let before;
+  let updated;
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      await SystemState.findOneAndUpdate(
+        { key: 'admin-invariant' },
+        { $inc: { version: 1 } },
+        { upsert: true, new: true, session, setDefaultsOnInsert: true }
+      );
+      const user = await User.findById(req.params.id).session(session);
+      if (!user) throw new AppError('Pengguna tidak ditemukan.', 404);
+      before = user.toObject();
+      const nextRole = targetRole || user.role;
+      const nextStatus = targetStatus || user.status;
+
+      if (String(user._id) === String(req.user._id) && (nextRole !== 'admin' || nextStatus !== 'active')) {
+        throw new AppError('Admin tidak dapat menurunkan peran atau menonaktifkan akunnya sendiri.', 400, 'ADMIN_SELF_LOCKOUT');
+      }
+      if (user.role === 'admin' && user.status === 'active' && (nextRole !== 'admin' || nextStatus !== 'active')) {
+        const activeAdmins = await User.countDocuments({ role: 'admin', status: 'active' }).session(session);
+        if (activeAdmins <= 1) throw new AppError('Minimal satu admin aktif harus tetap tersedia.', 409, 'LAST_ADMIN_REQUIRED');
+      }
+
+      user.role = nextRole;
+      user.status = nextStatus;
+      user.sessionVersion += 1;
+      await user.save({ session });
+      updated = user.toObject();
+    });
+  } finally {
+    await session.endSession();
+  }
+  await auditService.record({ req, action: 'user.access_update', entityType: 'User', entityId: req.params.id, before, after: updated });
+  req.flash('success', 'Pengguna diperbarui.');
+  res.redirect('/admin/users');
+}
 async function orders(req, res) { const query = req.query.status ? { paymentStatus: req.query.status } : {}; res.render('admin/orders/list', { title: 'Pesanan', orders: await Order.find(query).populate('user', 'name email').sort({ createdAt: -1 }).limit(500), status: req.query.status || '' }); }
 async function orderDetail(req, res) { const order = await Order.findOne({ orderNumber: req.params.orderNumber }).populate('user', 'name email'); if (!order) throw new AppError('Pesanan tidak ditemukan.', 404); const payment = await Payment.findOne({ order: order._id }); res.render('admin/orders/detail', { title: order.orderNumber, order, payment }); }
 async function recheckOrder(req, res) {
@@ -157,18 +241,22 @@ async function recheckOrder(req, res) {
   const transaction = await pakasir.getTransactionDetail({ orderId: order.orderNumber, amount: order.pakasirAmount });
   if (['completed', 'paid'].includes(transaction.status)) await orderService.markPaid(order._id, transaction);
   else if (['failed', 'expired', 'cancelled'].includes(transaction.status)) await orderService.updateNonPaidStatus(order, transaction.status, transaction);
+  await auditService.record({ req, action: 'order.recheck', entityType: 'Order', entityId: order._id, after: await Order.findById(order._id), metadata: { providerStatus: transaction.status } });
   req.flash('success', `Status Pakasir: ${transaction.status}`);
   return res.redirect(`/admin/orders/${order.orderNumber}`);
 }
 async function cancelOrder(req, res) {
+  const before = await Order.findOne({ orderNumber: req.params.orderNumber });
   const order = await cancellationService.cancelOrder({ orderNumber: req.params.orderNumber, userId: req.user._id, isAdmin: true, reason: req.body.reason || 'Dibatalkan oleh admin' });
+  await auditService.record({ req, action: 'order.cancel', entityType: 'Order', entityId: order._id, before, after: order, metadata: { reason: req.body.reason } });
   req.flash('success', `Transaksi ${order.orderNumber} berhasil dibatalkan.`);
   res.redirect(`/admin/orders/${order.orderNumber}`);
 }
-async function resendInvoice(req, res) { const order = await Order.findOne({ orderNumber: req.params.orderNumber }).populate('user'); if (!order) throw new AppError('Pesanan tidak ditemukan.', 404); const result = await emailService.sendInvoice(order.user.email, order); if (!result.sent) throw new AppError('Invoice gagal dikirim. Lihat log email.', 503); req.flash('success', 'Invoice dikirim ulang.'); res.redirect(`/admin/orders/${order.orderNumber}`); }
+async function resendInvoice(req, res) { const order = await Order.findOne({ orderNumber: req.params.orderNumber }).populate('user'); if (!order) throw new AppError('Pesanan tidak ditemukan.', 404); const result = await emailService.sendInvoice(order.user.email, order); if (!result.sent) throw new AppError('Invoice gagal dikirim. Lihat log email.', 503); await auditService.record({ req, action: 'order.invoice_resend', entityType: 'Order', entityId: order._id, metadata: { orderNumber: order.orderNumber } }); req.flash('success', 'Invoice dikirim ulang.'); res.redirect(`/admin/orders/${order.orderNumber}`); }
 async function settings(req, res) { res.render('admin/settings', { title: 'Pengaturan toko', settings: await getStoreSettings() }); }
 async function updateSettings(req, res) {
   const settings = await getStoreSettings();
+  const before = settings.toObject();
   const threshold = number(req.body.feeSplitThreshold, settings.feeSplitThreshold);
   if (threshold < 0) throw new AppError('Batas fee tidak valid.', 400);
   settings.feeSplitThreshold = threshold;
@@ -180,7 +268,10 @@ async function updateSettings(req, res) {
   settings.wallet.enabled = bool(req.body.walletEnabled);
   settings.wallet.minDeposit = Math.max(1000, number(req.body.walletMinDeposit, settings.wallet.minDeposit));
   settings.wallet.maxDeposit = Math.max(settings.wallet.minDeposit, number(req.body.walletMaxDeposit, settings.wallet.maxDeposit));
-  await settings.save(); req.flash('success', 'Pengaturan disimpan.'); res.redirect('/admin/settings');
+  await settings.save();
+  await auditService.record({ req, action: 'store.settings_update', entityType: 'StoreSetting', entityId: settings._id, before, after: settings });
+  req.flash('success', 'Pengaturan disimpan.');
+  res.redirect('/admin/settings');
 }
 async function wallets(req, res) {
   const [walletList, totals, depositStats, recentTransactions, recentDeposits] = await Promise.all([
@@ -202,13 +293,16 @@ async function wallets(req, res) {
 async function adjustWallet(req, res) {
   const user = await User.findById(req.params.userId);
   if (!user) throw new AppError('Pengguna tidak ditemukan.', 404);
-  await walletService.adminAdjustBalance({
+  const walletBefore = await Wallet.findOne({ user: user._id });
+  const transaction = await walletService.adminAdjustBalance({
     userId: user._id,
     amount: req.body.amount,
     direction: req.body.direction === 'debit' ? 'debit' : 'credit',
     adminId: req.user._id,
     reason: req.body.reason || 'Penyesuaian saldo oleh admin'
   });
+  const walletAfter = await Wallet.findOne({ user: user._id });
+  await auditService.record({ req, action: 'wallet.adjust', entityType: 'Wallet', entityId: walletAfter?._id || user._id, before: walletBefore, after: walletAfter, metadata: { transactionId: transaction?._id, direction: req.body.direction, amount: req.body.amount, reason: req.body.reason } });
   req.flash('success', `Saldo ${user.name} berhasil diperbarui.`);
   res.redirect('/admin/wallets');
 }
@@ -217,8 +311,10 @@ async function adjustWallet(req, res) {
 async function updateWalletStatus(req, res) {
   const wallet = await Wallet.findOne({ user: req.params.userId }).populate('user', 'name');
   if (!wallet) throw new AppError('Dompet pengguna tidak ditemukan.', 404, 'WALLET_NOT_FOUND');
+  const before = wallet.toObject();
   wallet.status = req.body.status === 'locked' ? 'locked' : 'active';
   await wallet.save();
+  await auditService.record({ req, action: 'wallet.status_update', entityType: 'Wallet', entityId: wallet._id, before, after: wallet });
   req.flash('success', `Dompet ${wallet.user?.name || 'pengguna'} ${wallet.status === 'locked' ? 'dinonaktifkan sementara' : 'diaktifkan kembali'}.`);
   res.redirect('/admin/wallets');
 }
@@ -243,12 +339,14 @@ async function toggleReview(req, res) {
   review.moderatedBy = req.user._id;
   await review.save();
   await reviewService.recalculateProductRating(review.product);
+  await auditService.record({ req, action: 'review.moderate', entityType: 'Review', entityId: review._id, after: review });
   req.flash('success', review.status === 'published' ? 'Ulasan ditampilkan kembali.' : 'Ulasan disembunyikan.');
   res.redirect(req.get('referer') || '/admin/reviews');
 }
 
 async function webhookLogs(req, res) { res.render('admin/logs/webhooks', { title: 'Log webhook', logs: await WebhookLog.find().sort({ createdAt: -1 }).limit(200) }); }
 async function emailLogs(req, res) { res.render('admin/logs/emails', { title: 'Log email', logs: await EmailLog.find().select('+retryType').sort({ createdAt: -1 }).limit(200) }); }
+async function auditLogs(req, res) { res.render('admin/logs/audit', { title: 'Audit admin', logs: await AuditLog.find().populate('actor', 'name email').sort({ createdAt: -1 }).limit(500) }); }
 
 async function retryEmail(req, res) {
   const log = await EmailLog.findById(req.params.id).select('+retryType +retryPayload');
@@ -262,9 +360,10 @@ async function retryEmail(req, res) {
     result = await emailService.sendSimple(log.to, log.subject, log.retryPayload.data, log.retryPayload.template);
   }
   log.retryCount += 1; log.lastRetryAt = new Date(); await log.save();
+  await auditService.record({ req, action: 'email.retry', entityType: 'EmailLog', entityId: log._id, metadata: { retryType: log.retryType, success: Boolean(result.sent) } });
   if (!result.sent) throw new AppError('Percobaan ulang email masih gagal.', 503, 'EMAIL_RETRY_FAILED');
   req.flash('success', 'Email berhasil dikirim ulang.');
   res.redirect('/admin/logs/emails');
 }
 
-module.exports = { dashboard, products, newProduct, createProduct, editProduct, updateProduct, toggleProduct, discounts, newDiscount, createDiscount, editDiscount, updateDiscount, toggleDiscount, categories, createCategory, updateCategory, users, updateUser, orders, orderDetail, recheckOrder, cancelOrder, resendInvoice, settings, updateSettings, wallets, adjustWallet, updateWalletStatus, reviews, toggleReview, webhookLogs, emailLogs, retryEmail };
+module.exports = { dashboard, products, newProduct, createProduct, editProduct, updateProduct, toggleProduct, discounts, newDiscount, createDiscount, editDiscount, updateDiscount, toggleDiscount, categories, createCategory, updateCategory, users, updateUser, orders, orderDetail, recheckOrder, cancelOrder, resendInvoice, settings, updateSettings, wallets, adjustWallet, updateWalletStatus, reviews, toggleReview, webhookLogs, emailLogs, auditLogs, retryEmail };

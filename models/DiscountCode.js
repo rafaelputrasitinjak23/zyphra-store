@@ -16,6 +16,7 @@ const schema = new mongoose.Schema({
   usageLimit: { type: Number, min: 0, default: 0 },
   perUserLimit: { type: Number, min: 1, default: 1 },
   usedCount: { type: Number, min: 0, default: 0 },
+  reservedCount: { type: Number, min: 0, default: 0 },
   startsAt: { type: Date, required: true, index: true },
   endsAt: { type: Date, required: true, index: true },
   active: { type: Boolean, default: true, index: true }

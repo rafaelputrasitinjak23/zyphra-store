@@ -1,5 +1,6 @@
 const { getStoreSettings, normalizeSupportPopup } = require('../services/settingService');
 const { AppError } = require('../utils/errors');
+const auditService = require('../services/auditService');
 
 function bool(value) { return value === 'on' || value === 'true' || value === true; }
 function text(value, fallback = '', limit = 400) { return String(value || fallback).trim().slice(0, limit); }
@@ -8,10 +9,10 @@ function safeUrl(value, fallback) {
   if (!raw) return fallback;
   try {
     const url = new URL(raw);
-    if (!['https:', 'http:'].includes(url.protocol)) throw new Error('invalid protocol');
+    if (url.protocol !== 'https:' || url.username || url.password) throw new Error('invalid protocol');
     return url.toString();
   } catch {
-    throw new AppError('URL popup thanks support harus valid dan diawali http/https.', 400, 'INVALID_SUPPORT_POPUP_URL');
+    throw new AppError('URL popup thanks support harus berupa HTTPS publik.', 400, 'INVALID_SUPPORT_POPUP_URL');
   }
 }
 function providerPayload(source, prefix, fallback) {
@@ -52,6 +53,7 @@ async function edit(req, res) {
 async function update(req, res) {
   const settings = await getStoreSettings();
   const popup = normalizeSupportPopup(settings.supportPopup || {});
+  const before = settings.toObject();
   settings.supportPopup = {
     enabled: bool(req.body.enabled),
     showOnHomeOnly: bool(req.body.showOnHomeOnly),
@@ -63,6 +65,7 @@ async function update(req, res) {
     pakasir: providerPayload(req.body, 'pakasir', popup.pakasir)
   };
   await settings.save();
+  await auditService.record({ req, action: 'support_popup.update', entityType: 'StoreSetting', entityId: settings._id, before, after: settings });
   req.flash('success', 'Popup thanks support berhasil diperbarui.');
   res.redirect('/admin/support-popup');
 }

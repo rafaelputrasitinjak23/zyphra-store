@@ -3,6 +3,7 @@ const ProductDocumentation = require('../models/ProductDocumentation');
 const Order = require('../models/Order');
 const { AppError } = require('../utils/errors');
 const notificationService = require('../services/notificationService');
+const auditService = require('../services/auditService');
 
 function parseFaq(body) {
   const questions = Array.isArray(body.faqQuestion) ? body.faqQuestion : [body.faqQuestion].filter(Boolean);
@@ -47,7 +48,9 @@ async function adminUpdate(req, res) {
     updatedBy: req.user._id
   };
 
+  const before = await ProductDocumentation.findOne({ product: product._id }).lean();
   const doc = await ProductDocumentation.findOneAndUpdate({ product: product._id }, { $set: payload, $setOnInsert: { product: product._id } }, { new: true, upsert: true, setDefaultsOnInsert: true });
+  await auditService.record({ req, action: 'documentation.update', entityType: 'ProductDocumentation', entityId: doc._id, before, after: doc, metadata: { productId: product._id } });
 
   if (doc.published) {
     const buyers = await Order.distinct('user', { paymentStatus: 'paid', 'items.product': product._id });

@@ -57,6 +57,7 @@ router.get('/settings', asyncHandler(controller.settings));
 router.post('/settings', asyncHandler(controller.updateSettings));
 router.get('/logs/webhooks', asyncHandler(controller.webhookLogs));
 router.get('/logs/emails', asyncHandler(controller.emailLogs));
+router.get('/logs/audit', asyncHandler(controller.auditLogs));
 router.post('/logs/emails/:id/retry', asyncHandler(controller.retryEmail));
 
 module.exports = router;

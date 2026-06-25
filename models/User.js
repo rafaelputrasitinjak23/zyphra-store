@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, lowercase: true, trim: true, unique: true, index: true },
   passwordHash: { type: String, select: false },
   avatar: { type: String, trim: true, maxlength: 1200000 },
+  avatarStorageKey: { type: String, trim: true, select: false, maxlength: 1024 },
   avatarUpdatedAt: Date,
   phone: { type: String, trim: true, maxlength: 24, default: '' },
   bio: { type: String, trim: true, maxlength: 160, default: '' },

@@ -84,21 +84,27 @@ async function processOrderWebhook(payload) {
 
 async function webhook(req, res) {
   const payload = req.body;
+  if (!pakasir.validateWebhookShape(payload, req.get('x-webhook-secret'))) {
+    return res.status(400).json({ received: false, code: 'WEBHOOK_INVALID', requestId: req.id });
+  }
+
   const eventKey = webhookEventKey(payload);
   let log = await WebhookLog.findOne({ eventKey });
   if (log && ['processed', 'ignored'].includes(log.status)) return res.status(200).json({ received: true, duplicate: true });
   if (log && log.status === 'received') return res.status(202).json({ received: true, processing: true });
+
   if (log) {
     log.status = 'received';
     log.error = undefined;
     log.payload = payload;
+    log.headers = { 'user-agent': String(req.get('user-agent') || '').slice(0, 300), requestId: req.id };
     await log.save();
   } else {
     try {
       log = await WebhookLog.create({
         eventKey,
-        orderNumber: payload?.order_id,
-        headers: { 'user-agent': req.get('user-agent'), 'x-webhook-secret': req.get('x-webhook-secret') ? '[provided]' : undefined },
+        orderNumber: payload.order_id,
+        headers: { 'user-agent': String(req.get('user-agent') || '').slice(0, 300), requestId: req.id },
         payload
       });
     } catch (error) {
@@ -110,20 +116,19 @@ async function webhook(req, res) {
   }
 
   try {
-    if (!pakasir.validateWebhookShape(payload, req.get('x-webhook-secret'))) throw new AppError('Webhook tidak valid.', 400, 'WEBHOOK_INVALID');
     let result = await processDepositWebhook(payload);
     if (!result) result = await processOrderWebhook(payload);
     log.status = result.status === 'pending' ? 'ignored' : 'processed';
     log.verifiedResponse = { type: result.type, transaction: result.transaction };
     log.processedAt = new Date();
     await log.save();
-    return res.status(200).json({ received: true });
+    return res.status(200).json({ received: true, requestId: req.id });
   } catch (error) {
     log.status = 'failed';
-    log.error = error.message;
+    log.error = String(error.message || 'Webhook processing failed').slice(0, 1000);
     log.processedAt = new Date();
     await log.save();
-    return res.status(error.statusCode || 400).json({ received: false });
+    return res.status(error.statusCode || 400).json({ received: false, code: error.code || 'WEBHOOK_FAILED', requestId: req.id });
   }
 }
 

@@ -4,6 +4,7 @@ const Order = require('../models/Order');
 const { randomId } = require('../utils/helpers');
 const { AppError } = require('../utils/errors');
 const notificationService = require('../services/notificationService');
+const auditService = require('../services/auditService');
 
 async function list(req, res) {
   const tickets = await SupportTicket.find({ user: req.user._id }).populate('product').sort({ latestMessageAt: -1 });
@@ -115,10 +116,12 @@ async function adminReply(req, res) {
   const body = String(req.body.message || '').trim();
   if (body.length < 2 || body.length > 5000) throw new AppError('Pesan harus 2-5000 karakter.', 400, 'INVALID_MESSAGE');
 
+  const before = ticket.toObject();
   ticket.messages.push({ sender: req.user._id, senderRole: 'admin', body });
   ticket.status = 'answered';
   ticket.latestMessageAt = new Date();
   await ticket.save();
+  await auditService.record({ req, action: 'support.reply', entityType: 'SupportTicket', entityId: ticket._id, before, after: ticket, metadata: { ticketNumber: ticket.ticketNumber } });
 
   await notificationService.notifyUser(ticket.user, {
     type: 'support',
@@ -135,9 +138,11 @@ async function adminReply(req, res) {
 async function adminClose(req, res) {
   const ticket = await SupportTicket.findOne({ ticketNumber: req.params.ticketNumber });
   if (!ticket) throw new AppError('Tiket tidak ditemukan.', 404, 'TICKET_NOT_FOUND');
+  const before = ticket.toObject();
   ticket.status = 'closed';
   ticket.closedAt = new Date();
   await ticket.save();
+  await auditService.record({ req, action: 'support.close', entityType: 'SupportTicket', entityId: ticket._id, before, after: ticket, metadata: { ticketNumber: ticket.ticketNumber } });
 
   await notificationService.notifyUser(ticket.user, {
     type: 'support',

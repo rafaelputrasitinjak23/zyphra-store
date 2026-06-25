@@ -11,13 +11,15 @@ const schema = new mongoose.Schema({
   gallery: [{ type: String }],
   unlimitedStock: { type: Boolean, default: true },
   stock: { type: Number, min: 0, default: 0 },
+  reservedStock: { type: Number, min: 0, default: 0, select: false },
   allowMultipleQuantity: { type: Boolean, default: false },
   version: { type: String, default: '1.0.0' },
   changelog: { type: String, default: '' },
   tags: [{ type: String, trim: true }],
   active: { type: Boolean, default: true, index: true },
   featured: { type: Boolean, default: false, index: true },
-  digitalFileUrl: { type: String, required: true, select: false },
+  digitalFileUrl: { type: String, default: '', select: false },
+  digitalStorageKey: { type: String, default: '', select: false },
   fileName: { type: String, default: '' },
   instructions: { type: String, default: '' },
   downloadLimit: { type: Number, min: 1, default: 5 },
@@ -32,6 +34,14 @@ const schema = new mongoose.Schema({
     endsAt: { type: Date, default: null }
   }
 }, { timestamps: true });
+schema.pre('validate', function validateDigitalSource(next) {
+  const sourceWasChanged = this.isNew || this.isModified('digitalFileUrl') || this.isModified('digitalStorageKey');
+  if (!sourceWasChanged) return next();
+  if (!this.digitalFileUrl && !this.digitalStorageKey) {
+    return next(new Error('Produk memerlukan URL file atau object key storage.'));
+  }
+  return next();
+});
 schema.virtual('effectivePrice').get(function () { const base = this.promoPrice !== null && this.promoPrice < this.price ? this.promoPrice : this.price; const now = Date.now(); const flash = this.flashSale || {}; return flash.enabled && flash.price !== null && flash.price < base && flash.startsAt && flash.endsAt && now >= new Date(flash.startsAt).getTime() && now < new Date(flash.endsAt).getTime() ? flash.price : base; });
-schema.set('toJSON', { virtuals: true, transform(doc, ret) { delete ret.digitalFileUrl; return ret; } });
+schema.set('toJSON', { virtuals: true, transform(doc, ret) { delete ret.digitalFileUrl; delete ret.digitalStorageKey; return ret; } });
 module.exports = mongoose.model('Product', schema);
