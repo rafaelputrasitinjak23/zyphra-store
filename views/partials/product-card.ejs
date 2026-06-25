@@ -1,25 +1,30 @@
 <% const pricing = productPrice(product); %>
-<article class="product-card">
-  <a class="product-image" href="/products/<%= product.slug %>" aria-label="Lihat <%= product.name %>">
+<% const stockAvailable = product.unlimitedStock || availableStock(product) > 0; %>
+<article class="product-card market-product-card <%= !stockAvailable ? 'is-sold-out' : '' %>">
+  <a class="product-image market-product-image" href="/products/<%= product.slug %>" aria-label="Lihat <%= product.name %>">
     <img src="<%= product.thumbnail %>" alt="Thumbnail <%= product.name %>" loading="lazy">
-    <span class="product-image-price"><%= pricing.effectivePrice === 0 ? 'Gratis' : rupiah(pricing.effectivePrice) %></span>
-    <% if (pricing.flashActive) { %><span class="flash-sale-ribbon">FLASH SALE</span><% } %>
+    <div class="market-product-badges" aria-hidden="true">
+      <span class="market-product-badge-left <%= pricing.flashActive ? 'is-flash' : '' %>">
+        <% if (pricing.flashActive) { %>FLASH SALE<% } else if (product.featured) { %>UNGGULAN<% } else { %><%= product.category?.name || 'DIGITAL' %><% } %>
+      </span>
+      <% if (pricing.discountPercent > 0) { %><span class="market-discount-badge">-<%= pricing.discountPercent %>%</span><% } %>
+    </div>
+    <% if (!stockAvailable) { %><span class="market-soldout-overlay">Stok habis</span><% } %>
   </a>
-  <div class="product-body">
-    <div class="meta-row">
-      <span class="badge"><%= product.category?.name || 'Digital' %></span>
-      <% if (pricing.flashActive) { %><span class="badge badge-danger">Hemat <%= pricing.discountPercent %>%</span><% } else if (product.featured) { %><span class="badge badge-accent">Unggulan</span><% } %>
+
+  <div class="product-body market-product-body">
+    <span class="product-field-label sr-only">Nama script</span>
+    <h3 class="market-product-title"><a href="/products/<%= product.slug %>"><%= product.name %></a></h3>
+
+    <div class="market-product-pricing">
+      <span class="product-field-label sr-only">Harga script</span>
+      <% if (pricing.compareAtPrice) { %><span class="old-price"><%= rupiah(pricing.compareAtPrice) %></span><% } else { %><span class="old-price is-placeholder" aria-hidden="true">&nbsp;</span><% } %>
+      <strong><%= pricing.effectivePrice === 0 ? 'Gratis' : rupiah(pricing.effectivePrice) %></strong>
     </div>
-    <% if (pricing.flashActive) { %>
-      <div class="flash-countdown compact" data-flash-expiry="<%= pricing.flashEndsAt.toISOString() %>"><span>Berakhir dalam</span><strong data-flash-countdown>--:--:--</strong></div>
-    <% } %>
-    <div class="product-card-main">
-      <div class="product-card-name"><span class="product-field-label">Nama script</span><h3><a href="/products/<%= product.slug %>"><%= product.name %></a></h3></div>
-      <div class="product-card-price"><span class="product-field-label">Harga script</span><% if (pricing.compareAtPrice) { %><span class="old-price"><%= rupiah(pricing.compareAtPrice) %></span><% } %><strong><%= pricing.effectivePrice === 0 ? 'Gratis' : rupiah(pricing.effectivePrice) %></strong></div>
+
+    <div class="market-product-meta">
+      <span class="market-rating"><b aria-hidden="true">★</b><strong><%= Number(product.ratingAverage || 0).toFixed(1) %></strong><small>(<%= product.ratingCount || 0 %>)</small></span>
+      <span class="market-sold"><%= product.soldCount || 0 %> terjual</span>
     </div>
-    <% if (product.shortDescription) { %><p><%= product.shortDescription %></p><% } %>
-    <div class="product-card-rating"><span class="review-stars"><% for (let i = 1; i <= 5; i += 1) { %><span class="<%= i <= Math.round(product.ratingAverage || 0) ? 'active' : '' %>">★</span><% } %></span><strong><%= Number(product.ratingAverage || 0).toFixed(1) %></strong><small>(<%= product.ratingCount || 0 %>)</small></div>
-    <div class="product-stats"><span><%= product.soldCount || 0 %> terjual</span><span>v<%= product.version %></span></div>
-    <div class="product-card-footer"><span class="stock-text"><%= product.unlimitedStock ? 'Stok tersedia' : (availableStock(product) > 0 ? `${availableStock(product)} stok tersisa` : 'Stok habis') %></span><a class="button button-sm" href="/products/<%= product.slug %>">Lihat detail</a></div>
   </div>
 </article>

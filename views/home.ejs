@@ -43,11 +43,38 @@
   </div>
 </section>
 
-<% if (flashSales?.length) { %>
-<section class="section flash-sale-section">
-  <div class="container">
-    <div class="section-head"><div><span class="eyebrow">FLASH SALE</span><h2>Harga spesial terbatas</h2><p>Promo pilihan dengan waktu terbatas.</p></div><a href="/products">Lihat semua</a></div>
-    <div class="product-grid"><% flashSales.forEach(product => { %><%- include('partials/product-card', { product }) %><% }) %></div>
+<% if (flashSales?.length) { const flashProduct = flashSales[0]; const flashPricing = productPrice(flashProduct); const flashAvailable = availableStock(flashProduct); const flashSold = Number(flashProduct.soldCount || 0); const flashProgress = flashProduct.unlimitedStock ? Math.min(92, Math.max(18, flashSold)) : Math.min(100, Math.round((flashSold / Math.max(1, flashSold + flashAvailable)) * 100)); %>
+<section class="section flash-sale-section flash-sale-showcase-section">
+  <div class="container flash-sale-container">
+    <article class="flash-sale-showcase">
+      <a class="flash-sale-media" href="/products/<%= flashProduct.slug %>" aria-label="Lihat <%= flashProduct.name %>">
+        <span class="flash-super-deal">⚡ SUPER DEAL</span>
+        <img src="<%= flashProduct.thumbnail %>" alt="<%= flashProduct.name %>">
+      </a>
+
+      <div class="flash-sale-copy">
+        <span class="flash-sale-eyebrow">⚡ Flash Sale</span>
+        <h2><%= flashProduct.name %></h2>
+        <p><%= flashProduct.shortDescription %></p>
+        <div class="flash-price-box">
+          <% if (flashPricing.compareAtPrice) { %><span class="old-price"><%= rupiah(flashPricing.compareAtPrice) %></span><% } %>
+          <strong><%= flashPricing.effectivePrice === 0 ? 'Gratis' : rupiah(flashPricing.effectivePrice) %></strong>
+          <% if (flashPricing.discountPercent > 0) { %><small>Hemat <%= flashPricing.discountPercent %>% selama promo berlangsung</small><% } %>
+        </div>
+      </div>
+
+      <div class="flash-sale-action">
+        <div class="flash-timer-card">
+          <span>Berakhir dalam</span>
+          <strong data-flash-expiry="<%= flashPricing.flashEndsAt.toISOString() %>"><b data-flash-countdown>--:--:--</b></strong>
+        </div>
+        <div class="flash-stock-card">
+          <div><span><%= flashProduct.unlimitedStock ? 'Stok tersedia' : `Sisa ${flashAvailable}` %></span><strong>Terjual <%= flashSold %></strong></div>
+          <progress value="<%= flashProgress %>" max="100"></progress>
+        </div>
+        <a class="button flash-sale-cta" href="/products/<%= flashProduct.slug %>">Ambil sekarang <span aria-hidden="true">→</span></a>
+      </div>
+    </article>
   </div>
 </section>
 <% } %>

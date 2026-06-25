@@ -1,26 +1,77 @@
-<section class="page-head"><div class="container"><span class="eyebrow">CHECKOUT</span><h1><%= isFree ? 'Konfirmasi pesanan' : 'Pilih cara pembayaran' %></h1><p><%= isFree ? 'Pesanan ini dapat diselesaikan tanpa pembayaran.' : 'Gunakan saldo dompet atau pilih metode pembayaran yang tersedia.' %></p></div></section>
-<section class="section pt-small"><div class="container checkout-grid">
-  <form method="post" action="/checkout" class="panel form-stack">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="checkoutNonce" value="<%= nonce %>">
-    <% if (isFree) { %>
-      <input type="hidden" name="paymentOption" value="free">
-      <div class="free-checkout-box"><div class="free-checkout-icon"><svg viewBox="0 0 24 24"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 7v14M12 7H7.5A2.5 2.5 0 1 1 10 4.5C10 6 12 7 12 7Zm0 0h4.5A2.5 2.5 0 1 0 14 4.5C14 6 12 7 12 7Z"/></svg></div><div><span class="badge badge-accent">GRATIS</span><h2>Pesanan siap dikonfirmasi</h2><p>Produk akan langsung tersedia di akun setelah Anda menekan tombol di bawah.</p></div></div>
-      <button class="button button-block" type="submit" data-submit-lock>Konfirmasi pesanan</button>
-    <% } else { %>
-      <div class="checkout-wallet-banner"><span><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM16 11h5v5h-5z"/></svg></span><div><small>Saldo TOKOZYPHRA Wallet</small><strong><%= rupiah(wallet.balance) %></strong></div><a href="/wallet/deposit">Isi saldo</a></div>
-      <h2>Cara pembayaran</h2>
-      <div class="payment-methods checkout-payment-options">
-        <% paymentOptions.forEach((option, index) => { %><label class="payment-option payment-option-rich"><input type="radio" name="paymentOption" value="<%= option.value %>" <%= index === 0 ? 'checked' : '' %> required><span class="payment-option-icon"><svg viewBox="0 0 24 24"><path d="<%= option.type === 'wallet' || option.type === 'hybrid' ? 'M4 7h16v12H4zM16 11h5v5h-5z' : 'M4 7h16v10H4zM7 14h4' %>"/></svg></span><span class="payment-option-copy"><strong><%= option.label %></strong><small><%= option.description %></small><% if (option.type === 'hybrid') { %><em>Saldo <%= rupiah(option.walletAmount) %> + pembayaran <%= rupiah(option.quote.total) %></em><% } %></span><b><%= rupiah(option.total) %></b></label><% }) %>
+<section class="page-head checkout-page-head">
+  <div class="container checkout-container">
+    <span class="eyebrow">CHECKOUT AMAN</span>
+    <h1><%= isFree ? 'Konfirmasi pesanan' : 'Selesaikan pesanan Anda' %></h1>
+    <p><%= isFree ? 'Pesanan gratis dapat langsung dikonfirmasi.' : 'Periksa produk, pilih metode pembayaran, lalu selesaikan transaksi.' %></p>
+    <div class="checkout-steps" aria-label="Tahapan checkout"><span class="is-done">1 Keranjang</span><i></i><span class="is-active">2 Pembayaran</span><i></i><span>3 Selesai</span></div>
+  </div>
+</section>
+
+<section class="section checkout-modern-section">
+  <div class="container checkout-container checkout-grid checkout-modern-grid">
+    <form method="post" action="/checkout" class="panel form-stack checkout-payment-card">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="checkoutNonce" value="<%= nonce %>">
+
+      <div class="checkout-card-heading">
+        <span class="checkout-heading-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM16 11h5v5h-5z"/></svg></span>
+        <div><span>LANGKAH 2</span><h2><%= isFree ? 'Konfirmasi produk' : 'Pilih cara pembayaran' %></h2><p><%= isFree ? 'Tidak ada biaya yang perlu dibayar.' : 'Pilih opsi yang paling nyaman untuk transaksi Anda.' %></p></div>
       </div>
-      <button class="button button-block" type="submit" data-submit-lock>Lanjutkan pembayaran</button>
-    <% } %>
-  </form>
-  <aside class="summary-card">
-    <h2>Rincian pesanan</h2>
-    <% items.forEach(item => { %><div class="summary-row"><span><%= item.product.name %> × <%= item.quantity %><% if (item.priceInfo.flashActive) { %><small class="flash-inline">Flash sale</small><% } %></span><strong><%= item.lineTotal === 0 ? 'Gratis' : rupiah(item.lineTotal) %></strong></div><% }) %>
-    <hr><div class="summary-row"><span>Subtotal</span><strong><%= itemsSubtotal === 0 ? 'Gratis' : rupiah(itemsSubtotal) %></strong></div>
-    <% if (appliedDiscount) { %><div class="applied-discount"><div><span class="badge"><%= appliedDiscount.kind === 'voucher' ? 'Voucher' : 'Kode promo' %></span><strong><%= appliedDiscount.code %></strong><small><%= appliedDiscount.scope === 'all' ? 'Berlaku untuk seluruh keranjang' : 'Berlaku untuk produk pilihan' %></small></div><b>-<%= rupiah(appliedDiscount.amount) %></b></div><form method="post" action="/checkout/discount/remove"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="text-button danger" type="submit">Hapus kode</button></form><% } else if (itemsSubtotal > 0) { %><form class="discount-form" method="post" action="/checkout/discount"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label>Punya voucher atau kode promo?<div class="input-action"><input name="discountCode" placeholder="Masukkan kode" maxlength="40" autocomplete="off"><button class="button button-sm" type="submit">Terapkan</button></div></label></form><% } %>
-    <hr><div class="summary-row total"><span>Total produk</span><strong><%= isFree ? 'Gratis' : rupiah(subtotal) %></strong></div>
-    <p class="muted">Rincian akhir menyesuaikan cara pembayaran yang Anda pilih.</p>
-  </aside>
-</div></section>
+
+      <% if (isFree) { %>
+        <input type="hidden" name="paymentOption" value="free">
+        <div class="free-checkout-box"><div class="free-checkout-icon"><svg viewBox="0 0 24 24"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 7v14M12 7H7.5A2.5 2.5 0 1 1 10 4.5C10 6 12 7 12 7Zm0 0h4.5A2.5 2.5 0 1 0 14 4.5C14 6 12 7 12 7Z"/></svg></div><div><span class="badge badge-accent">GRATIS</span><h2>Pesanan siap dikonfirmasi</h2><p>Produk akan langsung tersedia di akun setelah tombol konfirmasi ditekan.</p></div></div>
+        <button class="button button-block checkout-submit-button" type="submit" data-submit-lock>Konfirmasi pesanan</button>
+      <% } else { %>
+        <div class="checkout-wallet-banner"><span><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM16 11h5v5h-5z"/></svg></span><div><small>Saldo TOKOZYPHRA Wallet</small><strong><%= rupiah(wallet.balance) %></strong></div><a href="/wallet/deposit">Isi saldo</a></div>
+        <div class="payment-methods checkout-payment-options">
+          <% paymentOptions.forEach((option, index) => { %>
+            <label class="payment-option payment-option-rich checkout-payment-option">
+              <input type="radio" name="paymentOption" value="<%= option.value %>" <%= index === 0 ? 'checked' : '' %> required>
+              <span class="payment-option-icon"><svg viewBox="0 0 24 24"><path d="<%= option.type === 'wallet' || option.type === 'hybrid' ? 'M4 7h16v12H4zM16 11h5v5h-5z' : 'M4 7h16v10H4zM7 14h4' %>"/></svg></span>
+              <span class="payment-option-copy"><strong><%= option.label %></strong><small><%= option.description %></small><% if (option.type === 'hybrid') { %><em>Saldo <%= rupiah(option.walletAmount) %> + pembayaran <%= rupiah(option.quote.total) %></em><% } %></span>
+              <b><%= rupiah(option.total) %></b>
+              <span class="payment-radio-mark" aria-hidden="true"></span>
+            </label>
+          <% }) %>
+        </div>
+        <button class="button button-block checkout-submit-button" type="submit" data-submit-lock>Lanjutkan pembayaran</button>
+        <div class="checkout-security-note"><span>🛡 Transaksi terenkripsi</span><span>✓ Harga dihitung ulang oleh server</span></div>
+      <% } %>
+    </form>
+
+    <aside class="summary-card checkout-order-card">
+      <div class="checkout-summary-heading"><div><span>RINGKASAN</span><h2>Pesanan Anda</h2></div><a href="/cart">Ubah</a></div>
+      <div class="checkout-product-list">
+        <% items.forEach(item => { %>
+          <article class="checkout-product-item">
+            <img src="<%= item.product.thumbnail %>" alt="<%= item.product.name %>">
+            <div><strong><%= item.product.name %></strong><span><%= item.product.category?.name || 'Produk digital' %> · Qty <%= item.quantity %></span><% if (item.priceInfo.flashActive) { %><small class="flash-inline">Flash sale</small><% } %></div>
+            <b><%= item.lineTotal === 0 ? 'Gratis' : rupiah(item.lineTotal) %></b>
+          </article>
+        <% }) %>
+      </div>
+
+      <div class="checkout-price-breakdown">
+        <div class="summary-row"><span>Subtotal</span><strong><%= itemsSubtotal === 0 ? 'Gratis' : rupiah(itemsSubtotal) %></strong></div>
+        <% if (appliedDiscount) { %>
+          <div class="applied-discount"><div><span class="badge"><%= appliedDiscount.kind === 'voucher' ? 'Voucher' : 'Kode promo' %></span><strong><%= appliedDiscount.code %></strong><small><%= appliedDiscount.scope === 'all' ? 'Berlaku untuk seluruh keranjang' : 'Berlaku untuk produk pilihan' %></small></div><b>-<%= rupiah(appliedDiscount.amount) %></b></div>
+          <form method="post" action="/checkout/discount/remove"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="text-button danger" type="submit">Hapus kode</button></form>
+        <% } else if (itemsSubtotal > 0) { %>
+          <form class="discount-form checkout-discount-form" method="post" action="/checkout/discount"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label>Voucher atau kode promo<div class="input-action"><input name="discountCode" placeholder="Masukkan kode" maxlength="40" autocomplete="off"><button class="button button-sm" type="submit">Pakai</button></div></label></form>
+        <% } %>
+        <div class="summary-row total"><span>Total produk</span><strong><%= isFree ? 'Gratis' : rupiah(subtotal) %></strong></div>
+      </div>
+      <div class="checkout-guarantee"><span>✓</span><div><strong>Pembelian terlindungi</strong><p>Produk diberikan setelah pembayaran berhasil diverifikasi.</p></div></div>
+    </aside>
+  </div>
+</section>
+
+<% if (relatedProducts?.length) { %>
+<section class="section related-product-section checkout-related-section">
+  <div class="container checkout-container">
+    <div class="section-head related-section-head"><div><span class="eyebrow">MUNGKIN ANDA BUTUHKAN</span><h2>Produk relevan</h2><p>Rekomendasi berdasarkan produk di keranjang Anda.</p></div><a href="/products">Lihat semua</a></div>
+    <div class="product-grid related-product-grid checkout-related-grid"><% relatedProducts.forEach(product => { %><%- include('../partials/product-card', { product }) %><% }) %></div>
+  </div>
+</section>
+<% } %>

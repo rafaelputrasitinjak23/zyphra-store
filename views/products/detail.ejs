@@ -1,68 +1,100 @@
 <% const pricing = productPrice(product); %>
-<section class="section product-detail-section">
-  <div class="container product-detail">
-    <div class="gallery-main">
-      <img src="<%= product.thumbnail %>" alt="<%= product.name %>">
-      <% if (product.gallery?.length) { %>
-        <div class="thumb-grid"><% product.gallery.forEach(image => { %><img src="<%= image %>" alt="Galeri <%= product.name %>" loading="lazy"><% }) %></div>
-      <% } %>
-    </div>
-    <div class="product-info product-buy-card">
-      <div class="meta-row"><span class="badge"><%= product.category?.name %></span><span class="badge">v<%= product.version %></span></div>
-      <h1><%= product.name %></h1>
-      <p class="lead"><%= product.shortDescription %></p>
-      <a class="product-rating-summary" href="#reviews" aria-label="Lihat ulasan produk">
-        <span class="review-stars"><% for (let i = 1; i <= 5; i += 1) { %><span class="<%= i <= Math.round(product.ratingAverage || 0) ? 'active' : '' %>">★</span><% } %></span>
-        <strong><%= Number(product.ratingAverage || 0).toFixed(1) %></strong>
-        <span><%= reviewTotal %> ulasan</span>
-      </a>
-      <div class="price-label">Harga produk</div>
-      <div class="detail-price">
-        <% if (pricing.compareAtPrice) { %><span class="old-price"><%= rupiah(pricing.compareAtPrice) %></span><% } %>
-        <strong><%= pricing.effectivePrice === 0 ? 'Gratis' : rupiah(pricing.effectivePrice) %></strong>
-        <% if (pricing.flashActive) { %><span class="discount-badge">Flash Sale -<%= pricing.discountPercent %>%</span><% } else if (pricing.hasPromo) { %><span class="discount-badge">Promo</span><% } %>
-      </div>
-      <% if (pricing.flashActive) { %><div class="flash-countdown" data-flash-expiry="<%= pricing.flashEndsAt.toISOString() %>"><span>Flash sale berakhir dalam</span><strong data-flash-countdown>--:--:--</strong></div><% } else if (pricing.flashUpcoming) { %><div class="notice"><strong>Flash sale akan datang</strong><p>Mulai <%= formatDate(pricing.flashStartsAt) %>.</p></div><% } %>
-      <p class="price-note"><%= pricing.effectivePrice === 0 ? 'Produk ini dapat langsung diklaim secara gratis.' : 'Rincian pembayaran lengkap ditampilkan saat checkout.' %></p>
-      <div class="product-quick-stats">
-        <span><strong><%= product.soldCount || 0 %></strong> terjual</span>
-        <span><strong><%= product.viewCount || 0 %></strong> dilihat</span>
-        <span><strong><%= product.downloadLimit %>×</strong> download</span>
-      </div>
-      <div class="stock"><span class="status-dot"></span><%= product.unlimitedStock ? 'Stok tidak terbatas' : `${availableStock(product)} tersedia` %></div>
-      <% const productAvailable = product.unlimitedStock || availableStock(product) > 0; %>
-      <% if (!productAvailable) { %>
-        <button class="button button-block" type="button" disabled>Stok sedang habis</button>
-      <% } else if (!currentUser) { %>
-        <a class="button button-block" href="/auth/login">Login untuk membeli</a>
-      <% } else { %>
-        <form method="post" action="/cart/add" class="buy-form">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <input type="hidden" name="productId" value="<%= product._id %>">
-          <% if (product.allowMultipleQuantity) { %><label>Jumlah<input type="number" name="quantity" value="1" min="1" max="<%= product.unlimitedStock ? 99 : Math.min(99, availableStock(product)) %>"></label><% } %>
-          <div class="buy-actions">
-            <button class="button button-ghost" type="submit">Tambah ke keranjang</button>
-            <button class="button" type="submit" name="next" value="/checkout">Beli sekarang</button>
-          </div>
-        </form>
-      <% } %>
-
-      <div class="feature-product-actions">
-        <a class="button button-ghost" href="/docs/<%= product.slug %>">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/><path d="M8 7h8M8 11h8"/></svg>
-          Dokumentasi
-        </a>
-        <% if (currentUser) { %>
-          <a class="button button-ghost" href="/support/new?product=<%= product._id %>">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13a8 8 0 0 1 16 0"/><path d="M4 13v5h4v-6H4M20 13v5h-4v-6h4M16 19c-1 1.3-2.3 2-4 2"/></svg>
-            Bantuan
-          </a>
+<% const productAvailable = product.unlimitedStock || availableStock(product) > 0; %>
+<section class="section product-detail-section product-showcase-section">
+  <div class="container product-detail-container">
+    <div class="product-detail product-showcase-grid">
+      <div class="gallery-main product-gallery-card">
+        <div class="product-gallery-stage">
+          <img src="<%= product.thumbnail %>" alt="<%= product.name %>">
+          <% if (pricing.discountPercent > 0) { %><span class="detail-discount-badge">Diskon <%= pricing.discountPercent %>%</span><% } %>
+        </div>
+        <% if (product.gallery?.length) { %>
+          <div class="thumb-grid product-thumb-grid"><% product.gallery.forEach(image => { %><img src="<%= image %>" alt="Galeri <%= product.name %>" loading="lazy"><% }) %></div>
         <% } %>
       </div>
-      <div class="safe-note"><svg viewBox="0 0 24 24"><path d="m12 3 8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7zM9 12l2 2 4-4"/></svg><div><strong>Akses produk praktis</strong><span><%= pricing.effectivePrice === 0 ? 'Produk langsung tersedia setelah pesanan dikonfirmasi.' : 'Produk tersedia setelah pesanan selesai.' %></span></div></div>
+
+      <div class="product-info product-buy-card product-checkout-card">
+        <div class="detail-badge-row">
+          <span class="detail-category-pill"><%= product.category?.name || 'Produk digital' %></span>
+          <span class="detail-instant-pill">⚡ Akses instan</span>
+        </div>
+        <h1><%= product.name %></h1>
+        <p class="lead detail-lead"><%= product.shortDescription %></p>
+
+        <div class="detail-social-proof">
+          <a class="product-rating-summary" href="#reviews" aria-label="Lihat ulasan produk">
+            <span class="review-stars"><% for (let i = 1; i <= 5; i += 1) { %><span class="<%= i <= Math.round(product.ratingAverage || 0) ? 'active' : '' %>">★</span><% } %></span>
+            <strong><%= Number(product.ratingAverage || 0).toFixed(1) %></strong>
+            <span>(<%= reviewTotal %> ulasan)</span>
+          </a>
+          <span class="detail-stat-divider" aria-hidden="true"></span>
+          <span><strong><%= product.soldCount || 0 %></strong> terjual</span>
+          <span class="detail-stat-divider" aria-hidden="true"></span>
+          <span><strong>v<%= product.version %></strong></span>
+        </div>
+
+        <div class="detail-price-panel">
+          <span class="price-label">Harga produk</span>
+          <div class="detail-price">
+            <% if (pricing.compareAtPrice) { %><span class="old-price"><%= rupiah(pricing.compareAtPrice) %></span><% } %>
+            <strong><%= pricing.effectivePrice === 0 ? 'Gratis' : rupiah(pricing.effectivePrice) %></strong>
+          </div>
+          <% if (pricing.discountPercent > 0) { %><p>Anda hemat <strong><%= rupiah(pricing.compareAtPrice - pricing.effectivePrice) %></strong> (<%= pricing.discountPercent %>%)</p><% } else { %><p>Harga transparan tanpa biaya tersembunyi.</p><% } %>
+        </div>
+
+        <% if (pricing.flashActive) { %>
+          <div class="flash-countdown detail-flash-countdown" data-flash-expiry="<%= pricing.flashEndsAt.toISOString() %>"><span>Flash sale berakhir dalam</span><strong data-flash-countdown>--:--:--</strong></div>
+        <% } else if (pricing.flashUpcoming) { %>
+          <div class="notice"><strong>Flash sale akan datang</strong><p>Mulai <%= formatDate(pricing.flashStartsAt) %>.</p></div>
+        <% } %>
+
+        <div class="detail-description-preview">
+          <h2>Deskripsi produk</h2>
+          <p><%= product.shortDescription %></p>
+        </div>
+
+        <div class="detail-feature-chips" aria-label="Keunggulan produk">
+          <span>✓ Produk digital</span>
+          <span>⚡ Akses cepat</span>
+          <span>🛡 Transaksi aman</span>
+          <span>↻ <%= product.downloadLimit %>× download</span>
+        </div>
+
+        <div class="stock detail-stock"><span class="status-dot"></span><%= product.unlimitedStock ? 'Stok tersedia' : `${availableStock(product)} produk tersedia` %></div>
+        <% if (!productAvailable) { %>
+          <button class="button button-block detail-buy-button" type="button" disabled>Stok sedang habis</button>
+        <% } else if (!currentUser) { %>
+          <a class="button button-block detail-buy-button" href="/auth/login">Login untuk membeli</a>
+        <% } else { %>
+          <form method="post" action="/cart/add" class="buy-form detail-buy-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="productId" value="<%= product._id %>">
+            <% if (product.allowMultipleQuantity) { %><label class="detail-quantity">Jumlah<input type="number" name="quantity" value="1" min="1" max="<%= product.unlimitedStock ? 99 : Math.min(99, availableStock(product)) %>"></label><% } %>
+            <div class="buy-actions detail-buy-actions">
+              <button class="button button-ghost" type="submit">+ Keranjang</button>
+              <button class="button detail-buy-button" type="submit" name="next" value="/checkout">Beli sekarang</button>
+            </div>
+          </form>
+        <% } %>
+
+        <div class="detail-secondary-actions">
+          <a href="/docs/<%= product.slug %>"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/></svg> Dokumentasi</a>
+          <% if (currentUser) { %><a href="/support/new?product=<%= product._id %>"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13a8 8 0 0 1 16 0"/><path d="M4 13v5h4v-6H4M20 13v5h-4v-6h4"/></svg> Bantuan</a><% } %>
+        </div>
+        <div class="detail-trust-row"><span>🛡 Transaksi aman</span><i></i><span>✓ Produk tersedia setelah pembayaran</span></div>
+      </div>
     </div>
   </div>
 </section>
+
+<% if (related?.length) { %>
+<section class="section related-product-section detail-related-section">
+  <div class="container product-detail-container">
+    <div class="section-head related-section-head"><div><span class="eyebrow">REKOMENDASI</span><h2>Produk relevan untuk Anda</h2><p>Produk lain yang serupa atau sering dipilih pembeli.</p></div><a href="/products">Lihat semua</a></div>
+    <div class="product-grid related-product-grid"><% related.forEach(item => { %><%- include('../partials/product-card', { product: item }) %><% }) %></div>
+  </div>
+</section>
+<% } %>
 <section class="section section-soft">
   <div class="container detail-tabs">
     <article><h2>Deskripsi</h2><div class="prose preserve-lines"><%= product.description %></div></article>
@@ -198,9 +230,6 @@
     </div>
   </div>
 </section>
-<% if (related?.length) { %>
-<section class="section"><div class="container"><div class="section-head"><div><span class="eyebrow">REKOMENDASI</span><h2>Produk terkait</h2></div></div><div class="product-grid"><% related.forEach(item => { %><%- include('../partials/product-card', { product: item }) %><% }) %></div></div></section>
-<% } %>
 <% if (recentlyViewed?.length) { %>
 <section class="section section-soft"><div class="container"><div class="section-head"><div><span class="eyebrow">TERAKHIR DILIHAT</span><h2>Lanjutkan penjelajahan</h2></div></div><div class="product-grid"><% recentlyViewed.forEach(item => { %><%- include('../partials/product-card', { product: item }) %><% }) %></div></div></section>
 <% } %>

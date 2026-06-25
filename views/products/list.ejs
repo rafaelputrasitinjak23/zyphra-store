@@ -1,39 +1,57 @@
-<section class="page-head">
-  <div class="container">
-    <span class="eyebrow">KATALOG</span>
-    <h1>Daftar script & produk digital</h1>
-    <p><%= pagination.total %> produk tersedia. Nama script dan harga ditampilkan langsung pada setiap produk.</p>
+<section class="catalog-hero">
+  <div class="container catalog-container">
+    <div class="catalog-heading">
+      <span class="catalog-kicker">TOKOZYPHRA DIGITAL MARKET</span>
+      <h1>Katalog Produk</h1>
+      <p>Temukan script, source code, bot, template, dan produk digital siap pakai.</p>
+    </div>
+
+    <form class="catalog-filter" method="get" role="search">
+      <div class="catalog-search search-input">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input name="q" value="<%= filters.q || '' %>" placeholder="Cari produk digital, script, bot, atau template..." aria-label="Cari produk">
+        <button type="submit" aria-label="Jalankan pencarian"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
+      </div>
+      <div class="catalog-filter-row">
+        <label>
+          <span>Kategori</span>
+          <select name="category">
+            <option value="">Semua kategori</option>
+            <% categories.forEach(category => { %>
+              <option value="<%= category.slug %>" <%= filters.category === category.slug ? 'selected' : '' %>><%= category.name %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label>
+          <span>Urutkan</span>
+          <select name="sort">
+            <option value="newest" <%= (filters.sort || 'newest') === 'newest' ? 'selected' : '' %>>Terbaru</option>
+            <option value="popular" <%= filters.sort === 'popular' ? 'selected' : '' %>>Paling populer</option>
+            <option value="rating" <%= filters.sort === 'rating' ? 'selected' : '' %>>Rating tertinggi</option>
+            <option value="price_low" <%= filters.sort === 'price_low' ? 'selected' : '' %>>Harga terendah</option>
+            <option value="price_high" <%= filters.sort === 'price_high' ? 'selected' : '' %>>Harga tertinggi</option>
+          </select>
+        </label>
+        <button class="button catalog-filter-button" type="submit">Terapkan filter</button>
+        <% if (filters.q || filters.category || filters.sort) { %><a class="catalog-reset" href="/products">Reset</a><% } %>
+      </div>
+    </form>
   </div>
 </section>
-<section class="section pt-small">
-  <div class="container">
-    <form class="filter-bar filter-bar-advanced" method="get">
-      <div class="search-input">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-        <input name="q" value="<%= filters.q || '' %>" placeholder="Cari produk, deskripsi, atau tag...">
-      </div>
-      <select name="category">
-        <option value="">Semua kategori</option>
-        <% categories.forEach(category => { %>
-          <option value="<%= category.slug %>" <%= filters.category === category.slug ? 'selected' : '' %>><%= category.name %></option>
-        <% }) %>
-      </select>
-      <select name="sort">
-        <option value="newest" <%= (filters.sort || 'newest') === 'newest' ? 'selected' : '' %>>Terbaru</option>
-        <option value="popular" <%= filters.sort === 'popular' ? 'selected' : '' %>>Paling populer</option>
-        <option value="rating" <%= filters.sort === 'rating' ? 'selected' : '' %>>Rating tertinggi</option>
-        <option value="price_low" <%= filters.sort === 'price_low' ? 'selected' : '' %>>Harga terendah</option>
-        <option value="price_high" <%= filters.sort === 'price_high' ? 'selected' : '' %>>Harga tertinggi</option>
-      </select>
-      <button class="button" type="submit">Terapkan</button>
-    </form>
+
+<section class="section catalog-products-section">
+  <div class="container catalog-container">
+    <div class="catalog-result-bar">
+      <div><strong><%= pagination.total %></strong> produk tersedia</div>
+      <% if (filters.q) { %><span>Hasil untuk “<%= filters.q %>”</span><% } %>
+    </div>
 
     <% if (products.length) { %>
-      <div class="product-grid">
+      <div class="product-grid catalog-product-grid">
         <% products.forEach(product => { %><%- include('../partials/product-card', { product }) %><% }) %>
       </div>
       <% if (pagination.totalPages > 1) { %>
-        <nav class="pagination" aria-label="Navigasi halaman">
+        <nav class="pagination catalog-pagination" aria-label="Navigasi halaman">
           <% const makePageUrl = (target) => { const params = new URLSearchParams(); if (filters.q) params.set('q', filters.q); if (filters.category) params.set('category', filters.category); if (filters.sort) params.set('sort', filters.sort); params.set('page', target); return `/products?${params.toString()}`; }; %>
           <a class="button button-sm button-ghost <%= pagination.page <= 1 ? 'disabled' : '' %>" href="<%= pagination.page > 1 ? makePageUrl(pagination.page - 1) : '#' %>">Sebelumnya</a>
           <span>Halaman <strong><%= pagination.page %></strong> dari <strong><%= pagination.totalPages %></strong></span>
@@ -41,7 +59,7 @@
         </nav>
       <% } %>
     <% } else { %>
-      <div class="empty"><h3>Produk tidak ditemukan</h3><p>Coba kata kunci atau kategori lain.</p><a class="button button-ghost" href="/products">Reset filter</a></div>
+      <div class="empty catalog-empty"><h3>Produk tidak ditemukan</h3><p>Coba kata kunci atau kategori lain.</p><a class="button button-ghost" href="/products">Reset filter</a></div>
     <% } %>
   </div>
 </section>
